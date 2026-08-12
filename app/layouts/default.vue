@@ -1,0 +1,93 @@
+<template>
+  <div class="page-shell studio-shell">
+    <aside class="studio-sidebar" :class="{ 'is-open': mobileNavOpen }">
+      <div class="studio-sidebar__brand">
+        <NuxtLink to="/create" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
+          <span
+            class="grid h-9 w-9 place-items-center rounded-[11px] bg-accent/20 text-accent-soft shadow-[0_0_24px_-4px_rgba(139,124,255,0.55)] transition group-hover:bg-accent/30"
+          >
+            <span class="i-ph-waveform text-[17px]" />
+          </span>
+          <span class="font-display text-[17px] font-700 tracking-tight text-white">CraftAI</span>
+        </NuxtLink>
+      </div>
+
+      <nav class="studio-sidebar__nav">
+        <div v-for="group in groups" :key="group.label" class="studio-nav-group">
+          <p class="studio-nav-group__label">{{ group.label }}</p>
+          <NuxtLink
+            v-for="item in group.items"
+            :key="item.to"
+            :to="item.to"
+            class="studio-nav-link"
+            @click="mobileNavOpen = false"
+          >
+            <span class="text-[16px]" :class="item.icon" />
+            <span>{{ item.label }}</span>
+          </NuxtLink>
+        </div>
+      </nav>
+
+      <div class="studio-sidebar__foot">
+        <p class="text-[11px] leading-relaxed text-ink-500">AI Music & Image Studio</p>
+      </div>
+    </aside>
+
+    <div v-if="mobileNavOpen" class="studio-sidebar-backdrop" @click="mobileNavOpen = false" />
+
+    <div class="studio-main">
+      <header class="studio-topbar md:hidden">
+        <button
+          class="inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-white/5"
+          aria-label="Menu"
+          @click="mobileNavOpen = true"
+        >
+          <span class="i-ph-list text-white/80" />
+        </button>
+        <span class="font-display text-[15px] font-650 text-white">{{ pageTitle }}</span>
+        <span class="w-9" />
+      </header>
+
+      <main class="studio-content">
+        <slot />
+      </main>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+const route = useRoute()
+const mobileNavOpen = ref(false)
+
+const groups = [
+  {
+    label: 'Music',
+    items: [
+      { to: '/create', label: 'Create', icon: 'i-ph-waveform' },
+      { to: '/cover', label: 'Cover', icon: 'i-ph-arrows-clockwise' },
+      { to: '/library', label: 'Library', icon: 'i-ph-music-notes' },
+    ],
+  },
+  {
+    label: 'Image',
+    items: [
+      { to: '/image', label: 'Generate', icon: 'i-ph-image' },
+    ],
+  },
+]
+
+const pageTitle = computed(() => {
+  const map: Record<string, string> = {
+    '/create': 'Create',
+    '/cover': 'Cover',
+    '/library': 'Library',
+    '/image': 'Image',
+  }
+  if (route.path.startsWith('/song/')) return 'Track'
+  return map[route.path] || 'CraftAI'
+})
+
+watch(() => route.fullPath, () => {
+  mobileNavOpen.value = false
+})
+</script>

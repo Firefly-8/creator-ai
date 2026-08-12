@@ -1,0 +1,45 @@
+{
+  "name": "craftai",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "cf:dev": "nuxt dev --port 3000",
+    "cf:build": "nuxt build --preset cloudflare_pages",
+    "cf:preview": "npx wrangler pages dev .output/public --compatibility-date=2025-01-01",
+    "cf:deploy": "npm run cf:build && npx wrangler pages deploy .output/public --project-name craftai",
+    "d1:generate": "drizzle-kit generate",
+    "d1:migrate": "wrangler d1 migrations apply craftai-db",
+    "d1:migrate:local": "wrangler d1 migrations apply craftai-db --local",
+    "cf:deploy:staging": "npm run cf:build && npx wrangler pages deploy .output/public --project-name craftai-staging --config=wrangler.staging.toml",
+    "cf:migrate": "npx wrangler d1 migrations apply craftai-db --remote",
+    "cf:migrate:staging": "npx wrangler d1 migrations apply craftai-db-staging --remote"
+  },
+  "dependencies": {
+    "@iconify-json/ph": "^1.2.2",
+    "@nuxtjs/i18n": "^10.6.0",
+    "@pinia/nuxt": "^0.5.1",
+    "@unocss/nuxt": "^66.5.2",
+    "better-auth": "^1.2.8",
+    "drizzle-orm": "^0.38.4",
+    "firebase": "^12.17.1",
+    "ldrs": "^1.1.9",
+    "nanoid": "^5.1.5",
+    "nuxt": "^3.15.4",
+    "pinia": "^2.2.6",
+    "unocss": "^66.5.2",
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "wavesurfer.js": "^7.10.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250101.0",
+    "drizzle-kit": "^0.30.2",
+    "typescript": "~5.7.3",
+    "wrangler": "^3.100.0"
+  }
+}

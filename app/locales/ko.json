@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "title": "CraftAI — AI 음악 & 이미지 스튜디오",
+    "description": "AI 음악, 이미지 등을 하나의 스튜디오에서 만드세요. 무료로 시작, 신용카드 불필요."
+  },
+  "nav": {
+    "create": "만들기",
+    "pricing": "가격",
+    "blog": "블로그",
+    "login": "로그인",
+    "signup": "회원가입",
+    "dashboard": "대시보드"
+  },
+  "hero": {
+    "title": "AI 음악 & 이미지를",
+    "titleHighlight": "초 단위로 생성",
+    "subtitle": "AI로 노래, 아트워크, 크리에이티브 콘텐츠를 생성하세요. 신용카드 없이 무료로 시작.",
+    "cta": "무료로 시작",
+    "ctaSecondary": "가격 보기",
+    "noSignup": "처음 10개는 가입 없이 생성 가능"
+  },
+  "features": {
+    "title": "창작에 필요한 모든 것",
+    "subtitle": "모든 AI 콘텐츠 창작을 하나의 플랫폼에서",
+    "music": {
+      "title": "AI 음악 생성기",
+      "description": "텍스트 설명으로 완성된 노래를 만드세요. 장르, 무드, 스타일을 선택하세요.",
+      "cta": "음악 생성기 체험"
+    },
+    "image": {
+      "title": "AI 이미지 생성기",
+      "description": "텍스트에서 멋진 아트워크를 생성하세요. SNS, 썸네일에 완벽합니다.",
+      "cta": "이미지 생성기 체험"
+    },
+    "lyrics": {
+      "title": "AI 가사 작성기",
+      "description": "모든 스타일의 가사를 생성하세요. 완벽할 때까지 편집하고 다듬으세요.",
+      "cta": "가사 작성기 체험"
+    }
+  },
+  "cta": {
+    "title": "창작할 준비 되셨나요?",
+    "subtitle": "CraftAI를 사용하는 수천 명의 크리에이터에 동참하세요.",
+    "button": "무료로 시작"
+  },
+  "pricing": {
+    "title": "간단하고 명확한 가격",
+    "subtitle": "무료로 시작. 필요할 때 업그레이드.",
+    "free": "무료",
+    "creator": "크리에이터",
+    "pro": "프로",
+    "popular": "인기",
+    "perMonth": "/월",
+    "getStarted": "시작하기",
+    "subscribe": "구독하기",
+    "faq": {
+      "title": "자주 묻는 질문",
+      "commercial": {
+        "q": "생성된 콘텐츠를 상업적으로 사용할 수 있나요?",
+        "a": "네! 크리에이터와 프로 플랜에는 완전한 상업용 라이선스가 포함됩니다."
+      },
+      "payment": {
+        "q": "어떤 결제 방법을 지원하나요?",
+        "a": "현재 PayPal을 지원합니다. Stripe 지원도 곧 추가될 예정입니다."
+      },
+      "cancel": {
+        "q": "언제든 취소할 수 있나요?",
+        "a": "네, 언제든 취소 가능합니다. 구독은 결제 기간 종료까지 유지됩니다."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "다시 오신 것을 환영합니다",
+      "subtitle": "CraftAI 계정에 로그인하세요",
+      "email": "이메일",
+      "password": "비밀번호",
+      "submit": "로그인",
+      "loading": "로그인 중...",
+      "orContinue": "또는 계속하기",
+      "noAccount": "계정이 없으신가요?",
+      "signUp": "회원가입"
+    },
+    "signup": {
+      "title": "계정 만들기",
+      "subtitle": "AI로 무료로 창작 시작",
+      "name": "이름",
+      "email": "이메일",
+      "password": "비밀번호",
+      "submit": "계정 만들기",
+      "loading": "생성 중...",
+      "agree": "가입하면 이용약관 및 개인정보처리방침에 동의하게 됩니다",
+      "hasAccount": "이미 계정이 있으신가요?",
+      "signIn": "로그인"
+    }
+  },
+  "dashboard": {
+    "title": "대시보드",
+    "subtitle": "작품과 계정 관리",
+    "createNew": "새로 만들기",
+    "musicGenerated": "생성된 음악",
+    "imagesGenerated": "생성된 이미지",
+    "currentPlan": "현재 플랜",
+    "remaining": "이번 달 남은",
+    "upgrade": "업그레이드",
+    "recentCreations": "최근 작품",
+    "noCreations": "아직 작품이 없습니다. 창작을 시작하세요!",
+    "firstCreation": "첫 작품 만들기"
+  },
+  "footer": {
+    "product": "제품",
+    "company": "회사",
+    "legal": "법적 고지",
+    "about": "회사 소개",
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관",
+    "contact": "문의",
+    "copyright": "© 2026 CraftAI. All rights reserved."
+  }
+}

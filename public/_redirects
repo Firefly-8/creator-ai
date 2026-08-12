@@ -1,0 +1,5 @@
+# Redirect robots.txt to API endpoint
+/robots.txt  /api/robots.txt  200
+
+# Sitemap redirect
+/sitemap.xml  /api/sitemap.xml  200

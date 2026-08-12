@@ -1,0 +1,120 @@
+{
+  "meta": {
+    "title": "CraftAI — Studio AI Musique & Images",
+    "description": "Créez de la musique AI, des images et plus — tout en un studio. Gratuit pour commencer, pas de carte de crédit requise."
+  },
+  "nav": {
+    "create": "Créer",
+    "pricing": "Tarifs",
+    "blog": "Blog",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "dashboard": "Tableau de bord"
+  },
+  "hero": {
+    "title": "Créez Musique & Images AI",
+    "titleHighlight": "en quelques secondes",
+    "subtitle": "Générez des chansons, des œuvres et du contenu créatif avec l'IA. Pas de carte de crédit requise — commencez gratuitement.",
+    "cta": "Commencer gratuitement",
+    "ctaSecondary": "Voir les tarifs",
+    "noSignup": "Pas d'inscription pour les 10 premières générations"
+  },
+  "features": {
+    "title": "Tout ce dont vous avez besoin",
+    "subtitle": "Une plateforme pour toute votre création de contenu IA",
+    "music": {
+      "title": "Générateur de Musique AI",
+      "description": "Créez des chansons complètes à partir de descriptions textuelles. Choisissez parmi genres, ambiances et styles.",
+      "cta": "Essayer le générateur"
+    },
+    "image": {
+      "title": "Générateur d'Images AI",
+      "description": "Générez des œuvres époustouflantes à partir de texte. Parfait pour les réseaux sociaux, miniatures et plus.",
+      "cta": "Essayer le générateur"
+    },
+    "lyrics": {
+      "title": "Auteur de Paroles AI",
+      "description": "Générez des paroles de chansons dans tous les styles. Modifiez et perfectionnez jusqu'à satisfaction.",
+      "cta": "Essayer l'auteur"
+    }
+  },
+  "cta": {
+    "title": "Prêt à créer ?",
+    "subtitle": "Rejoignez des milliers de créateurs utilisant CraftAI.",
+    "button": "Commencer gratuitement"
+  },
+  "pricing": {
+    "title": "Tarifs simples et transparents",
+    "subtitle": "Commencez gratuitement. Évoluez quand vous en avez besoin.",
+    "free": "Gratuit",
+    "creator": "Creator",
+    "pro": "Pro",
+    "popular": "Populaire",
+    "perMonth": "/mois",
+    "getStarted": "Commencer",
+    "subscribe": "S'abonner",
+    "faq": {
+      "title": "Questions fréquemment posées",
+      "commercial": {
+        "q": "Puis-je utiliser le contenu généré commercialement ?",
+        "a": "Oui ! Les plans Creator et Pro incluent une licence commerciale complète."
+      },
+      "payment": {
+        "q": "Quels modes de paiement acceptez-vous ?",
+        "a": "Nous acceptons PayPal pour le moment. Stripe sera bientôt disponible."
+      },
+      "cancel": {
+        "q": "Puis-je annuler à tout moment ?",
+        "a": "Oui, annulez à tout moment. Votre abonnement reste actif jusqu'à la fin de la période."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous à votre compte CraftAI",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "submit": "Se connecter",
+      "loading": "Connexion...",
+      "orContinue": "Ou continuer avec",
+      "noAccount": "Pas encore de compte ?",
+      "signUp": "S'inscrire"
+    },
+    "signup": {
+      "title": "Créer un compte",
+      "subtitle": "Commencez à créer avec l'IA gratuitement",
+      "name": "Nom",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "submit": "Créer un compte",
+      "loading": "Création...",
+      "agree": "En vous inscrivant, vous acceptez nos Conditions d'Utilisation et Politique de Confidentialité",
+      "hasAccount": "Déjà un compte ?",
+      "signIn": "Se connecter"
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "subtitle": "Gérez vos créations et votre compte",
+    "createNew": "Nouvelle création",
+    "musicGenerated": "Musique générée",
+    "imagesGenerated": "Images générées",
+    "currentPlan": "Plan actuel",
+    "remaining": "restant ce mois",
+    "upgrade": "Mettre à niveau",
+    "recentCreations": "Créations récentes",
+    "noCreations": "Pas encore de créations. Commencez !",
+    "firstCreation": "Créer votre première"
+  },
+  "footer": {
+    "product": "Produit",
+    "company": "Entreprise",
+    "legal": "Juridique",
+    "about": "À propos",
+    "privacy": "Politique de confidentialité",
+    "terms": "Conditions d'utilisation",
+    "contact": "Contact",
+    "copyright": "© 2026 CraftAI. All rights reserved."
+  }
+}

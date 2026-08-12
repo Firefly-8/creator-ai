@@ -1,0 +1,29 @@
+name = "craftai-staging"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Cloudflare Pages 配置
+pages_build_output_dir = ".output/public"
+
+# D1 迁移配置
+[[d1_databases]]
+binding = "DB"
+database_name = "craftai-db-staging"
+database_id = "8e812571-57b0-4232-bfc4-13264dc9e420"
+migrations_dir = "server/db/migrations"
+
+# R2 存储桶绑定
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "craftai-storage"
+
+# KV 命名空间
+[[kv_namespaces]]
+binding = "CACHE"
+id = "4ebb1e030d274e2dbf35ab559d602649"
+
+# 环境变量
+[vars]
+NUXT_PUBLIC_APP_NAME = "Creator Staging"
+MINIMAX_BASE_URL = "https://api.minimaxi.com"
+NODE_ENV = "staging"

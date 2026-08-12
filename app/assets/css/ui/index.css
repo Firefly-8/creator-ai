@@ -1,0 +1,6 @@
+/**
+ * Pulse UI kit — shared primitives for components under app/components/ui/
+ * Prefer these classes / Vue wrappers over one-off page styles.
+ */
+@import './buttons.css';
+@import './menu.css';
