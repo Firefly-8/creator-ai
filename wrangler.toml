@@ -3,7 +3,11 @@ compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Cloudflare Pages 配置
-pages_build_output_dir = ".output/public"
+pages_build_output_dir = "dist"
+
+# 构建命令
+[build]
+command = "npm run cf:build"
 
 # D1 迁移配置
 [[d1_databases]]
@@ -24,5 +28,5 @@ id = "910cd6d2350548e2a662098ca1e910ba"
 
 # 环境变量（非敏感）
 [vars]
-NUXT_PUBLIC_APP_NAME = "CraftAI"
+NUXT_PUBLIC_APP_NAME = "Creator"
 MINIMAX_BASE_URL = "https://api.minimaxi.com"

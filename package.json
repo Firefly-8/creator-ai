@@ -11,11 +11,11 @@
     "cf:dev": "nuxt dev --port 3000",
     "cf:build": "nuxt build --preset cloudflare_pages",
     "cf:preview": "npx wrangler pages dev .output/public --compatibility-date=2025-01-01",
-    "cf:deploy": "npm run cf:build && npx wrangler pages deploy .output/public --project-name craftai",
+    "cf:deploy": "npm run cf:build && npx wrangler pages deploy dist --project-name craftai",
     "d1:generate": "drizzle-kit generate",
     "d1:migrate": "wrangler d1 migrations apply craftai-db",
     "d1:migrate:local": "wrangler d1 migrations apply craftai-db --local",
-    "cf:deploy:staging": "npm run cf:build && npx wrangler pages deploy .output/public --project-name craftai-staging --config=wrangler.staging.toml",
+    "cf:deploy:staging": "npm run cf:build && npx wrangler pages deploy dist --project-name craftai-staging --config=wrangler.staging.toml",
     "cf:migrate": "npx wrangler d1 migrations apply craftai-db --remote",
     "cf:migrate:staging": "npx wrangler d1 migrations apply craftai-db-staging --remote"
   },
