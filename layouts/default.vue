@@ -3,12 +3,8 @@
     <aside class="studio-sidebar" :class="{ 'is-open': mobileNavOpen }">
       <div class="studio-sidebar__brand">
         <NuxtLink to="/create" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
-          <span
-            class="grid h-9 w-9 place-items-center rounded-[11px] bg-accent/20 text-accent-soft shadow-[0_0_24px_-4px_rgba(139,124,255,0.55)] transition group-hover:bg-accent/30"
-          >
-            <span class="i-ph-waveform text-[17px]" />
-          </span>
-          <span class="font-display text-[17px] font-700 tracking-tight text-white">CraftAI</span>
+          <img src="/logo.png" alt="Creator" class="h-9 w-9 rounded-[11px] object-contain" />
+          <span class="font-display text-[17px] font-700 tracking-tight text-white">Creator</span>
         </NuxtLink>
       </div>
 

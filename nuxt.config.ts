@@ -48,6 +48,7 @@ export default defineNuxtConfig({
         { name: 'robots', content: process.env.NUXT_PUBLIC_DISABLE_INDEX === 'true' ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
       ],
       link: [
+        { rel: 'icon', type: 'image/png', href: '/logo.png' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
         {
