@@ -26,8 +26,8 @@
 
       <div class="studio-sidebar__foot">
         <template v-if="!authLoading && !user">
-          <NuxtLink to="/login" class="btn-secondary w-full text-sm mb-2">Sign In</NuxtLink>
-          <NuxtLink to="/signup" class="btn-primary w-full text-sm">Get Started</NuxtLink>
+          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">Sign In</button>
+          <button class="btn-primary w-full text-sm" @click="openSignup">Get Started</button>
         </template>
         <template v-else-if="user">
           <div class="flex items-center gap-2 mb-2">
@@ -56,7 +56,7 @@
         <span class="font-display text-[15px] font-650 text-white">{{ pageTitle }}</span>
         <div class="flex items-center gap-2 w-9 justify-end">
           <template v-if="!authLoading && !user">
-            <NuxtLink to="/login" class="text-xs text-ink-300 hover:text-white">Sign In</NuxtLink>
+            <button class="text-xs text-ink-300 hover:text-white" @click="openLogin">Sign In</button>
           </template>
         </div>
       </header>
@@ -66,17 +66,19 @@
       </main>
     </div>
   </div>
+  <AuthModal v-model="authModalOpen" :initial-mode="authModalMode" />
 </template>
 
 <script setup lang="ts">
 const route = useRoute()
 const mobileNavOpen = ref(false)
 const { user, loading: authLoading, logout } = useAuth()
+const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
 useRobots()
 
 async function handleLogout() {
   await logout()
-  await navigateTo('/login')
+  await navigateTo('/')
 }
 
 const groups = [
