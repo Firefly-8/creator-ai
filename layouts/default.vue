@@ -72,6 +72,7 @@
 const route = useRoute()
 const mobileNavOpen = ref(false)
 const { user, loading: authLoading, logout } = useAuth()
+useRobots()
 
 async function handleLogout() {
   await logout()
