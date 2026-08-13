@@ -3,7 +3,7 @@ compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Cloudflare Pages 配置
-pages_build_output_dir = ".output/public"
+pages_build_output_dir = "dist"
 
 # D1 数据库绑定
 [[d1_databases]]
@@ -25,5 +25,7 @@ id = "4ebb1e030d274e2dbf35ab559d602649"
 # 环境变量
 [vars]
 NUXT_PUBLIC_APP_NAME = "Creator Staging"
+NUXT_PUBLIC_SITE_URL = "https://staging.creator.yozzytools.com"
+NUXT_PUBLIC_DISABLE_INDEX = "true"
 MINIMAX_BASE_URL = "https://api.minimaxi.com"
 NODE_ENV = "staging"

@@ -45,7 +45,7 @@ export default defineNuxtConfig({
       meta: [
         { name: 'description', content: 'Create AI music, images, and more — all in one studio. Powered by advanced AI models.' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'robots', content: process.env.NUXT_PUBLIC_DISABLE_INDEX === 'true' ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
+        { name: 'robots', content: 'index, follow' },
       ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },

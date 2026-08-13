@@ -1,8 +1,8 @@
 export default defineEventHandler((event) => {
-  const nodeEnv = process.env.NODE_ENV || 'production'
+  const disableIndex = process.env.NUXT_PUBLIC_DISABLE_INDEX === 'true'
 
-  // test/staging 分支：禁止所有爬虫
-  if (nodeEnv !== 'production') {
+  // 测试环境：禁止所有爬虫
+  if (disableIndex) {
     setHeader(event, 'Content-Type', 'text/plain')
     return [
       'User-Agent: *',
@@ -11,7 +11,7 @@ export default defineEventHandler((event) => {
     ].join('\n')
   }
 
-  // master/production 分支：允许正常爬取
+  // 生产环境：允许正常爬取
   setHeader(event, 'Content-Type', 'text/plain')
   return [
     'User-Agent: *',
