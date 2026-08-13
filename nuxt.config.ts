@@ -3,9 +3,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
 
-  // 源目录配置 - Nuxt 在 app/ 下查找 pages, components 等
-  srcDir: 'app/',
-
   modules: [
     '@pinia/nuxt',
     '@unocss/nuxt',
@@ -62,6 +59,7 @@ export default defineNuxtConfig({
   },
 
   i18n: {
+    restructureDir: '',
     locales: [
       { code: 'en', name: 'English', iso: 'en-US', file: 'en.json' },
       { code: 'ja', name: '日本語', iso: 'ja-JP', file: 'ja.json' },
