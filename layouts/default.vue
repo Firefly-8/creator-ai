@@ -29,7 +29,20 @@
       </nav>
 
       <div class="studio-sidebar__foot">
-        <p class="text-[11px] leading-relaxed text-ink-500">AI Music & Image Studio</p>
+        <template v-if="!authLoading && !user">
+          <NuxtLink to="/login" class="btn-secondary w-full text-sm mb-2">Sign In</NuxtLink>
+          <NuxtLink to="/signup" class="btn-primary w-full text-sm">Get Started</NuxtLink>
+        </template>
+        <template v-else-if="user">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">
+              {{ user.email?.charAt(0).toUpperCase() || 'U' }}
+            </div>
+            <span class="text-xs text-ink-300 truncate">{{ user.email }}</span>
+          </div>
+          <button class="btn-secondary w-full text-sm" @click="handleLogout">Sign Out</button>
+        </template>
+        <p class="text-[11px] leading-relaxed text-ink-500 mt-3">AI Music & Image Studio</p>
       </div>
     </aside>
 
@@ -45,7 +58,11 @@
           <span class="i-ph-list text-white/80" />
         </button>
         <span class="font-display text-[15px] font-650 text-white">{{ pageTitle }}</span>
-        <span class="w-9" />
+        <div class="flex items-center gap-2 w-9 justify-end">
+          <template v-if="!authLoading && !user">
+            <NuxtLink to="/login" class="text-xs text-ink-300 hover:text-white">Sign In</NuxtLink>
+          </template>
+        </div>
       </header>
 
       <main class="studio-content">
@@ -58,6 +75,12 @@
 <script setup lang="ts">
 const route = useRoute()
 const mobileNavOpen = ref(false)
+const { user, loading: authLoading, logout } = useAuth()
+
+async function handleLogout() {
+  await logout()
+  await navigateTo('/login')
+}
 
 const groups = [
   {
