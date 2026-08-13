@@ -1,5 +1,6 @@
 name = "craftai-staging"
-compatibility_date = "2025-06-01"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
 
 # Cloudflare Pages 配置
 pages_build_output_dir = "dist"
@@ -21,7 +22,7 @@ bucket_name = "craftai-storage"
 binding = "CACHE"
 id = "4ebb1e030d274e2dbf35ab559d602649"
 
-# 环境变量
+# 环境变量（构建时可用）
 [vars]
 NUXT_PUBLIC_APP_NAME = "Creator Staging"
 NUXT_PUBLIC_SITE_URL = "https://staging.creator.yozzytools.com"
