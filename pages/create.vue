@@ -11,14 +11,14 @@
       <div class="space-y-4">
         <div v-if="remixFrom" class="ui-ops-banner">
           <div>
-            <p class="ui-ops-banner__title">已载入「{{ remixFrom }}」</p>
-            <p class="ui-ops-banner__hint">修改风格 / 歌词等细节后，点击生成新版本（原作品保留）。</p>
+            <p class="ui-ops-banner__title">$t('create.remixedFrom', { title: remixFrom })</p>
+            <p class="ui-ops-banner__hint">$t('create.remixHint')</p>
           </div>
           <UiIconButton
             icon="i-ph-x"
             variant="ghost"
             size="sm"
-            aria-label="清除载入"
+            aria-label="Clear"
             @click="clearRemix"
           />
         </div>
@@ -53,7 +53,7 @@
               @click="genLyrics"
             >
               <span class="i-ph-magic-wand text-[14px]" />
-              {{ lyricsLoading ? '歌词生成中…' : 'Generate lyrics' }}
+              {{ lyricsLoading ? $t('create.lyricsGenerating') : $t('create.generateLyrics') }}
             </UiButton>
           </div>
           <div class="flex flex-wrap gap-1.5">
@@ -73,7 +73,7 @@
             v-model="lyrics"
             class="field lyric-editor !min-h-44"
             :disabled="lyricsLoading"
-            :placeholder="lyricsLoading ? '歌词生成中，请稍候…' : '[Verse]\nYour lines here…\n\n[Chorus]\n…'"
+            :placeholder="lyricsLoading ? $t('create.lyricsWait') : '[Verse]\nYour lines here…\n\n[Chorus]\n…'"
           />
         </div>
 
@@ -87,7 +87,7 @@
             <span class="i-ph-waveform text-[16px]" />
             {{
               lyricsLoading
-                ? '歌词生成中…'
+                ? $t('create.lyricsGenerating')
                 : isGenerating
                   ? 'Generating…'
                   : 'Generate song'
@@ -109,7 +109,7 @@
     <template #results-header>
       <div>
         <h2 class="font-display text-[16px] font-650 text-white">Results</h2>
-        <p class="text-[12px] text-ink-400">制作中与曲库作品</p>
+        <p class="text-[12px] text-ink-400">$t('create.resultsHint')</p>
       </div>
       <UiRefreshButton :loading="songsPending" @click="refreshSongs" />
     </template>
@@ -127,8 +127,8 @@
           :pending="songsPending"
           :active-id="activeSong?.id"
           :busy-id="busyId"
-          empty-title="还没有歌曲"
-          empty-hint="在左侧生成后，作品会出现在这里"
+          empty-title="$t('create.noSongs')"
+          empty-hint="$t('create.noSongsHint')"
           @remix="loadFromSong"
           @regenerate="regenerate"
           @download="downloadSong"
@@ -141,10 +141,11 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
 import { LYRIC_TAGS, type SongPublic } from '~/utils/types'
 import { SONG_PRESETS, type SongPreset } from '~/utils/presets'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: "default", middleware: ["auth"] })
 
 const mode = ref<'custom' | 'simple' | 'instrumental'>('custom')
 const modes = [
@@ -297,7 +298,7 @@ async function genLyrics() {
     if (mode.value === 'instrumental') mode.value = 'custom'
     else if (mode.value === 'simple') mode.value = 'custom'
   } catch (e: any) {
-    errorText.value = e?.data?.statusMessage || e?.message || 'Lyrics generation failed'
+    errorText.value = e?.data?.statusMessage || e?.message || t('create.lyricsFailed')
   } finally {
     lyricsLoading.value = false
   }
@@ -322,7 +323,7 @@ async function submit() {
     statusText.value = res.job.progress
     refreshSongs().catch(() => {})
   } catch (e: any) {
-    errorText.value = e?.data?.statusMessage || e?.message || 'Failed to start generation'
+    errorText.value = e?.data?.statusMessage || e?.message || t('create.generateFailed')
     statusText.value = ''
   } finally {
     submitting.value = false
@@ -332,7 +333,7 @@ async function submit() {
 async function regenerate(song: SongPublic) {
   busyId.value = song.id
   errorText.value = ''
-  statusText.value = '重新生成中…'
+  statusText.value = t('create.regenerating')
   activeSong.value = null
   try {
     const res = await $fetch<{ job: any }>(`/api/songs/${song.id}/regenerate`, {
@@ -342,7 +343,7 @@ async function regenerate(song: SongPublic) {
     statusText.value = res.job.progress
     refreshSongs().catch(() => {})
   } catch (e: any) {
-    errorText.value = e?.data?.statusMessage || e?.message || '重新生成失败'
+    errorText.value = e?.data?.statusMessage || e?.message || t('create.regenerateFailed')
     statusText.value = ''
   } finally {
     busyId.value = null
@@ -362,8 +363,8 @@ function loadFromSong(song: SongPublic) {
   lyrics.value = song.lyrics || ''
   mode.value = inferMode(song)
   activePresetId.value = null
-  remixFrom.value = song.title || '未命名'
-  statusText.value = '已载入参数，可调整后生成'
+  remixFrom.value = song.title || t('create.unnamed')
+  statusText.value = t('create.loadedParams')
   errorText.value = ''
   // Scroll ops into view on mobile
   if (import.meta.client) {
@@ -389,7 +390,7 @@ function openSong(song: SongPublic) {
 }
 
 async function removeSong(song: SongPublic) {
-  if (!confirm(`删除「${song.title}」？此操作不可恢复。`)) return
+  if (!confirm(`${t('create.deleteConfirm', { title: song.title })}`)) return
   busyId.value = song.id
   errorText.value = ''
   try {
@@ -398,7 +399,7 @@ async function removeSong(song: SongPublic) {
     if (remixFrom.value && song.title === remixFrom.value) clearRemix()
     await refreshSongs()
   } catch (e: any) {
-    errorText.value = e?.data?.statusMessage || e?.message || '删除失败'
+    errorText.value = e?.data?.statusMessage || e?.message || t('create.deleteFailed')
   } finally {
     busyId.value = null
   }

@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Library</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">全部生成曲目与翻唱作品。</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">$t('library.subtitle')</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <UiSegmented
@@ -18,7 +18,7 @@
     <template #results-header>
       <div>
         <h2 class="font-display text-[16px] font-650 text-white">Tracks</h2>
-        <p class="text-[12px] text-ink-400">{{ filtered.length }} items</p>
+        <p class="text-[12px] text-ink-400">{{ filtered.length }} $t('library.items')</p>
       </div>
       <div class="flex items-center gap-2">
         <p v-if="actionError" class="max-w-[14rem] truncate text-[12px] text-danger">{{ actionError }}</p>
@@ -31,8 +31,8 @@
         :songs="filtered"
         :pending="pending"
         :busy-id="busyId"
-        empty-title="曲库还是空的"
-        empty-hint="去 Create 生成第一首歌"
+        empty-title="$t('library.emptyTitle')"
+        empty-hint="$t('library.emptyHint')"
         @remix="remixSong"
         @regenerate="regenerate"
         @download="downloadSong"
@@ -44,16 +44,17 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
 import type { SongPublic } from '~/utils/types'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const filter = ref<'all' | 'ready' | 'generating' | 'failed'>('all')
 const filters = [
-  { id: 'all' as const, label: 'All' },
-  { id: 'ready' as const, label: 'Ready' },
-  { id: 'generating' as const, label: '制作中' },
-  { id: 'failed' as const, label: 'Failed' },
+  { id: 'all' as const, label: 't("library.all")' },
+  { id: 'ready' as const, label: 't("library.ready")' },
+  { id: 'generating' as const, label: 't("library.generating")' },
+  { id: 'failed' as const, label: 't("library.failed")' },
 ]
 
 const busyId = ref<string | null>(null)
@@ -81,7 +82,7 @@ async function regenerate(song: SongPublic) {
     await $fetch(`/api/songs/${song.id}/regenerate`, { method: 'POST' })
     await refresh()
   } catch (e: any) {
-    actionError.value = e?.data?.statusMessage || e?.message || '重新生成失败'
+    actionError.value = e?.data?.statusMessage || e?.message || t('library.regenerateFailed')
   } finally {
     busyId.value = null
   }
@@ -101,14 +102,14 @@ function openSong(song: SongPublic) {
 }
 
 async function removeSong(song: SongPublic) {
-  if (!confirm(`删除「${song.title}」？此操作不可恢复。`)) return
+  if (!confirm(`${t('library.deleteConfirm', { title: song.title })}`)) return
   busyId.value = song.id
   actionError.value = ''
   try {
     await $fetch(`/api/songs/${song.id}`, { method: 'DELETE' })
     await refresh()
   } catch (e: any) {
-    actionError.value = e?.data?.statusMessage || e?.message || '删除失败'
+    actionError.value = e?.data?.statusMessage || e?.message || t('library.deleteFailed')
   } finally {
     busyId.value = null
   }

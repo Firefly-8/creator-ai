@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Image</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">文生图 / 图生图 · 场景预设 + 提示词优化</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">$t('image.textToImage') · $t('image.scenePresets') + $t('image.optimizePrompt')</p>
       </div>
     </template>
 
@@ -11,20 +11,20 @@
       <div class="space-y-4">
         <div v-if="remixFrom" class="ui-ops-banner">
           <div>
-            <p class="ui-ops-banner__title">已载入「{{ remixFrom }}」</p>
-            <p class="ui-ops-banner__hint">修改提示词 / 比例 / 场景后生成新图（原图保留）。图生图需确认参考图仍可用。</p>
+            <p class="ui-ops-banner__title">$t('image.remixedFrom', { title: remixFrom })</p>
+            <p class="ui-ops-banner__hint">$t('image.remixHint')</p>
           </div>
           <UiIconButton
             icon="i-ph-x"
             variant="ghost"
             size="sm"
-            aria-label="清除载入"
+            aria-label="Clear"
             @click="clearRemix"
           />
         </div>
         <UiSegmented v-model="mode" :options="modes" equal />
         <section class="space-y-2">
-          <p class="field-label">场景预设</p>
+          <p class="field-label">$t('image.scenePresets')</p>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="preset in IMAGE_SCENE_PRESETS"
@@ -42,12 +42,12 @@
         </section>
 
         <label class="block space-y-2">
-          <span class="field-label">提示词 · {{ prompt.length }}/1500</span>
+          <span class="field-label">$t('image.prompt') · {{ prompt.length }}/1500</span>
           <textarea
             v-model="prompt"
             class="field min-h-32"
             maxlength="1500"
-            placeholder="描述主体、构图、风格、光线…"
+            placeholder="$t('image.promptPlaceholder')"
           />
         </label>
 
@@ -60,7 +60,7 @@
             @click="optimizePrompt"
           >
             <span class="i-ph-magic-wand text-[14px]" />
-            {{ optimizing ? '优化中…' : '对话优化提示词' }}
+            {{ optimizing ? $t('image.optimizing') : $t('image.optimizePrompt') }}
           </UiButton>
           <label class="status-pill cursor-pointer select-none">
             <input v-model="promptOptimizer" type="checkbox" class="accent-[#8b7cff]" >
@@ -68,7 +68,7 @@
           </label>
           <label class="status-pill cursor-pointer select-none">
             <input v-model="deepOptimize" type="checkbox" class="accent-[#8b7cff]" >
-            生成前再优化一轮
+            $t('image.deepOptimize')
           </label>
         </div>
         <p v-if="optimizeNotes" class="field-hint">{{ optimizeNotes }}</p>
@@ -76,13 +76,13 @@
           v-if="promptFinal && promptFinal !== prompt"
           class="rounded-2xl border border-accent/20 bg-accent-mute p-3 text-[12.5px] leading-relaxed text-ink-200"
         >
-          <span class="font-semibold text-accent-soft">将使用：</span>
+          <span class="font-semibold text-accent-soft">$t('image.willUse')</span>
           {{ promptFinal }}
         </p>
 
         <div v-if="mode === 'i2i'" class="space-y-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <span class="field-label">人物参考图（图生图）</span>
-          <p class="field-hint">仅支持 character 人物主体，单人正面照效果最好。</p>
+          <span class="field-label">$t('image.referenceImage')</span>
+          <p class="field-hint">$t('image.referenceHint')</p>
           <input class="field" type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" @change="onRefFile" >
           <p v-if="refName" class="text-[13px] font-medium text-accent-soft">
             <span class="i-ph-check-circle-fill mr-1 text-[14px]" />
@@ -92,26 +92,26 @@
 
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="block space-y-2">
-            <span class="field-label">模型</span>
+            <span class="field-label">$t('image.model')</span>
             <select v-model="model" class="field">
-              <option value="image-01">image-01（通用）</option>
-              <option value="image-01-live">image-01-live（画风）</option>
+              <option value="image-01">image-01 ($t('image.generic'))</option>
+              <option value="image-01-live">image-01-live ($t('image.style'))</option>
             </select>
           </label>
           <label class="block space-y-2">
-            <span class="field-label">宽高比</span>
+            <span class="field-label">$t('image.aspectRatio')</span>
             <select v-model="aspectRatio" class="field">
               <option v-for="a in IMAGE_ASPECT_RATIOS" :key="a.value" :value="a.value">{{ a.label }}</option>
             </select>
           </label>
           <label class="block space-y-2">
-            <span class="field-label">数量</span>
+            <span class="field-label">$t('image.count')</span>
             <select v-model.number="count" class="field">
               <option v-for="n in 4" :key="n" :value="n">{{ n }}</option>
             </select>
           </label>
           <label v-if="model === 'image-01-live'" class="block space-y-2">
-            <span class="field-label">画风（live）</span>
+            <span class="field-label">$t('image.styleType')</span>
             <select v-model="styleType" class="field">
               <option v-for="s in IMAGE_LIVE_STYLES" :key="s" :value="s">{{ s }}</option>
             </select>
@@ -126,7 +126,7 @@
             @click="generate"
           >
             <span class="i-ph-image text-[16px]" />
-            {{ generating ? '生成中…' : 'Generate image' }}
+            {{ generating ? $t('image.generating') : 'Generate image' }}
           </UiButton>
           <span v-if="errorText" class="status-pill !border-danger/30 !text-danger">{{ errorText }}</span>
           <span v-else-if="statusText" class="status-pill">
@@ -248,6 +248,7 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
 import {
   IMAGE_ASPECT_RATIOS,
   IMAGE_LIVE_STYLES,
@@ -256,7 +257,7 @@ import {
   type ImageScenePreset,
 } from '~/utils/imagePresets'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 type ImagePublic = {
   id: string
@@ -278,8 +279,8 @@ type ImagePublic = {
 
 const mode = ref<'t2i' | 'i2i'>('t2i')
 const modes = [
-  { value: 't2i' as const, label: '文生图', icon: 'i-ph-text-aa' },
-  { value: 'i2i' as const, label: '图生图', icon: 'i-ph-user-focus' },
+  { value: 't2i' as const, label: 'Text→Image', icon: 'i-ph-text-aa' },
+  { value: 'i2i' as const, label: 'Image→Image', icon: 'i-ph-user-focus' },
 ]
 
 const scene = ref<ImageScene>('logo')
@@ -365,7 +366,7 @@ async function onRefFile(e: Event) {
     uploadId.value = res.uploadId
     refName.value = res.filename
     mode.value = 'i2i'
-    statusText.value = '参考图已就绪'
+    statusText.value = t('image.refReady')
   } catch (err: any) {
     errorText.value = err?.data?.statusMessage || err?.message || 'Upload failed'
     statusText.value = ''
@@ -402,7 +403,7 @@ async function generate() {
   if (!canGenerate.value) return
   generating.value = true
   errorText.value = ''
-  statusText.value = deepOptimize.value ? '优化提示词并生成中…' : '生成中…'
+  statusText.value = deepOptimize.value ? $t('image.optimizingAndGenerating') : $t('image.generating')
   try {
     const res = await $fetch<{ images: ImagePublic[]; promptFinal: string }>('/api/image/generate', {
       method: 'POST',
@@ -477,13 +478,13 @@ function loadFromImage(img: ImagePublic) {
   deepOptimize.value = !!meta.deepOptimize
   if (meta.uploadId) {
     uploadId.value = String(meta.uploadId)
-    refName.value = '已恢复参考图（来自上次生成）'
+    refName.value = $t('image.restoredRef')
   } else if (img.mode === 'i2i') {
     uploadId.value = null
     refName.value = ''
   }
   remixFrom.value = img.title || '未命名'
-  statusText.value = '已载入参数，可调整后生成'
+  statusText.value = $t('image.loadedParams')
   errorText.value = ''
   document.querySelector('.workspace__ops')?.scrollTo?.({ top: 0, behavior: 'smooth' })
 }
@@ -504,20 +505,20 @@ function downloadImage(img: ImagePublic) {
 
 function imageMenuItems(img: ImagePublic) {
   return [
-    { id: 'remix', label: '调整参数', icon: 'i-ph-pencil-simple' },
+    { id: 'remix', label: t('image.adjustParams'), icon: 'i-ph-pencil-simple' },
     {
       id: 'regenerate',
-      label: '重新生成',
+      label: t('image.regenerate'),
       icon: 'i-ph-arrows-clockwise',
       disabled: busyId.value === img.id || generating.value,
     },
     {
       id: 'download',
-      label: '下载',
+      label: t('image.download'),
       icon: 'i-ph-download-simple',
       disabled: !img.imageUrl,
     },
-    { id: 'open', label: '全屏查看', icon: 'i-ph-eye' },
+    { id: 'open', label: t('image.fullscreen'), icon: 'i-ph-eye' },
     {
       id: 'delete',
       label: '删除',

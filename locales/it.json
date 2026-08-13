@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "title": "Creator — Studio di Musica e Immagini AI",
+    "description": "Crea musica, immagini e altro con l'AI — tutto in uno studio. Gratuito per iniziare, nessuna carta di credito."
+  },
+  "nav": {
+    "create": "Crea",
+    "pricing": "Prezzi",
+    "blog": "Blog",
+    "login": "Accedi",
+    "signup": "Registrati",
+    "dashboard": "Dashboard",
+    "cover": "Cover",
+    "library": "Library",
+    "image": "Image",
+    "logout": "Sign Out",
+    "tagline": "AI Music & Image Studio",
+    "musicGroup": "Music",
+    "imageGroup": "Image"
+  },
+  "hero": {
+    "title": "Crea Musica e Immagini AI",
+    "titleHighlight": "in Secondi",
+    "subtitle": "Genera canzoni, opere d'arte e contenuti creativi con l'AI. Nessuna carta di credito — inizia gratis.",
+    "cta": "Inizia Gratis",
+    "ctaSecondary": "Vedi Prezzi",
+    "noSignup": "Nessuna registrazione necessaria per le prime 10 generazioni"
+  },
+  "features": {
+    "title": "Tutto ciò che Ti Serve per Creare",
+    "subtitle": "Una piattaforma per tutte le tue esigenze di creazione AI",
+    "music": {
+      "title": "Generatore Musicale AI",
+      "description": "Crea canzoni complete da deszioni. Scegli generi, atmosfere e stili.",
+      "cta": "Prova il Generatore Musicale"
+    },
+    "image": {
+      "title": "Generatore di Immagini AI",
+      "description": "Genera opere d'arte straordinarie dal testo. Perfetto per social media, copertine e altro.",
+      "cta": "Prova il Generatore di Immagini"
+    },
+    "lyrics": {
+      "title": "Scrittore di Testi AI",
+      "description": "Genera testi di canzoni in qualsiasi stile. Modifica e perfeziona fino alla perfezione.",
+      "cta": "Prova lo Scrittore di Testi"
+    }
+  },
+  "cta": {
+    "title": "Pronto a Creare?",
+    "subtitle": "Unisciti a migliaia di creatori che usano Creator per i loro contenuti.",
+    "button": "Inizia Gratis"
+  },
+  "pricing": {
+    "title": "Prezzi Semplici e Trasparenti",
+    "subtitle": "Inizia gratis. Fai upgrade quando serve.",
+    "free": "Gratuito",
+    "creator": "Creatore",
+    "pro": "Pro",
+    "popular": "Popolare",
+    "perMonth": "/mese",
+    "getStarted": "Inizia",
+    "subscribe": "Abbonati Ora",
+    "faq": {
+      "title": "Domande Frequenti",
+      "commercial": {
+        "q": "Posso usare i contenuti generati commercialmente?",
+        "a": "Sì! I piani Creatore e Pro includono licenza commerciale completa. Sei il proprietario dei contenuti che crei."
+      },
+      "payment": {
+        "q": "Quali metodi di pagamento accettate?",
+        "a": "Accettiamo PayPal per ora. Supporto Stripe in arrivo."
+      },
+      "cancel": {
+        "q": "Posso cancellare in qualsiasi momento?",
+        "a": "Sì, cancella quando vuoi. Il tuo abbonamento rimane attivo fino alla fine del periodo di fatturazione."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bentornato",
+      "subtitle": "Accedi al tuo account Creator",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Accedi",
+      "loading": "Accesso in corso...",
+      "orContinue": "Oppure continua con",
+      "noAccount": "Non hai un account?",
+      "signUp": "Registrati",
+      "enterPassword": "Enter your password"
+    },
+    "signup": {
+      "title": "Crea il tuo account",
+      "subtitle": "Inizia a creare con l'AI gratis",
+      "name": "Nome",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Crea Account",
+      "loading": "Creazione...",
+      "agree": "Registrandoti, accetti i nostri Termini di Servizio e Informativa sulla Privacy",
+      "hasAccount": "Hai già un account?",
+      "signIn": "Accedi",
+      "minChars": "Min 8 characters",
+      "agreePrefix": "By signing up, you agree to our"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Gestisci le tue creazioni e il tuo account",
+    "createNew": "Crea Nuovo",
+    "musicGenerated": "Musica Generata",
+    "imagesGenerated": "Immagini Generate",
+    "currentPlan": "Piano Attuale",
+    "remaining": "rimanenti questo mese",
+    "upgrade": "Upgrade",
+    "recentCreations": "Creazioni Recenti",
+    "noCreations": "Nessuna creazione ancora. Inizia a creare!",
+    "firstCreation": "Crea la Tua Prima"
+  },
+  "footer": {
+    "product": "Prodotto",
+    "company": "Azienda",
+    "legal": "Legale",
+    "about": "Chi siamo",
+    "privacy": "Informativa sulla Privacy",
+    "terms": "Termini di Servizio",
+    "contact": "Contatto",
+    "copyright": "© 2026 Creator. Tutti i diritti riservati."
+  },
+  "create": {
+    "remixedFrom": "Caricato \"{{ title }}\"",
+    "remixHint": "Modifica stile/testi, poi genera una nuova versione (originale preservato).",
+    "lyricsGenerating": "Generazione testi…",
+    "generateLyrics": "Genera testi",
+    "lyricsWait": "Generazione testi, attendere…",
+    "resultsHint": "In corso e tracce libreria",
+    "noSongs": "Nessuna canzone ancora",
+    "noSongsHint": "Genera a sinistra, le tracce appariranno qui",
+    "lyricsFailed": "Generazione testi fallita",
+    "generateFailed": "Avvio generazione fallito",
+    "regenerating": "Rigenerando…",
+    "regenerateFailed": "Rigenerazione fallita",
+    "unnamed": "Senza titolo",
+    "loadedParams": "Parametri caricati, regola e genera",
+    "deleteConfirm": "Eliminare \"{{ title }}\"? Non si può annullare.",
+    "deleteFailed": "Eliminazione fallita"
+  },
+  "image": {
+    "remixedFrom": "Caricato \"{{ title }}\"",
+    "remixHint": "Modifica prompt/proporzione/scena per generare nuova immagine.",
+    "scenePresets": "Preimpostazioni scena",
+    "prompt": "Prompt",
+    "promptPlaceholder": "Descrivi soggetto, composizione, stile, illuminazione…",
+    "optimizePrompt": "Ottimizza prompt",
+    "optimizing": "Ottimizzazione…",
+    "promptOptimizer": "API prompt_optimizer",
+    "deepOptimize": "Ottimizza di nuovo prima di generare",
+    "willUse": "Sarà usato:",
+    "referenceImage": "Immagine di riferimento (Immagine da Immagine)",
+    "referenceHint": "Solo ritratto personale, frontale funziona meglio.",
+    "model": "Modello",
+    "aspectRatio": "Proporzione",
+    "count": "Quantità",
+    "styleType": "Stile (live)",
+    "generateFailed": "Generazione immagine fallita",
+    "noImages": "Nessuna immagine ancora",
+    "noImagesHint": "Genera a sinistra, le immagini appariranno qui",
+    "deleteConfirm": "Eliminare \"{{ title }}\"? Non si può annullare.",
+    "deleteFailed": "Eliminazione fallita",
+    "download": "Scarica",
+    "fullscreen": "Schermo intero",
+    "regenerate": "Rigenera",
+    "adjustParams": "Regola parametri",
+    "textToImage": "Text-to-Image",
+    "refReady": "Reference image ready",
+    "optimizingAndGenerating": "Optimizing prompt & generating…",
+    "generating": "Generating…",
+    "restoredRef": "Reference restored (from last generation)",
+    "generic": "general",
+    "style": "style"
+  },
+  "cover": {
+    "remixedFrom": "Caricato \"{{ title }}\"",
+    "remixHint": "Modifica stile/testi. Audio di rificimento va ricaricato.",
+    "referenceAudio": "Audio di riferimento",
+    "referenceHint": "6 secondi – 6 minuti · max 50MB",
+    "coverStyle": "Prompt stile cover",
+    "title": "Titolo",
+    "extractLyrics": "Estrai testi",
+    "editLyrics": "Modifica testi",
+    "structure": "Struttura",
+    "featureReady": "Funzione pronta · valida ~24h",
+    "generateFailed": "Generazione cover fallita",
+    "preprocessFailed": "Pre-elaborazione fallita",
+    "stylePlaceholder": "Jazz, smooth, late night lounge, saxophone…",
+    "runExtractFirst": "Run extract first…"
+  },
+  "library": {
+    "all": "Tutte",
+    "ready": "Pronte",
+    "generating": "In corso",
+    "failed": "Fallite",
+    "items": "elementi",
+    "emptyTitle": "Libreria vuota",
+    "emptyHint": "Vai a Creare per generare la tua prima traccia",
+    "deleteConfirm": "Eliminare \"{{ title }}\"? Non si può annullare.",
+    "deleteFailed": "Eliminazione fallita",
+    "regenerateFailed": "Rigenerazione fallita",
+    "subtitle": "All generated tracks and covers"
+  }
+}

@@ -26,31 +26,31 @@
               :class="mode === 'login' ? 'bg-accent text-white' : 'text-ink-300 hover:text-white'"
               @click="mode = 'login'"
             >
-              Sign In
+              $t('nav.login')
             </button>
             <button
               class="flex-1 py-2 text-sm font-medium rounded-lg transition"
               :class="mode === 'signup' ? 'bg-accent text-white' : 'text-ink-300 hover:text-white'"
               @click="mode = 'signup'"
             >
-              Sign Up
+              $t('nav.signup')
             </button>
           </div>
 
           <!-- Title -->
           <div class="text-center mb-6">
             <h2 class="font-display text-2xl font-700 text-white">
-              {{ mode === 'login' ? 'Welcome back' : 'Create account' }}
+              {{ mode === 'login' ? $t('auth.login.title') : $t('auth.signup.title') }}
             </h2>
             <p class="mt-1 text-sm text-ink-300">
-              {{ mode === 'login' ? 'Sign in to your account' : 'Start creating with AI for free' }}
+              {{ mode === 'login' ? $t('auth.login.subtitle') : $t('auth.signup.subtitle') }}
             </p>
           </div>
 
           <!-- Form -->
           <form class="space-y-4" @submit.prevent="handleSubmit">
             <div>
-              <label class="field-label" for="auth-email">Email</label>
+              <label class="field-label" for="auth-email">$t('auth.login.email')</label>
               <input
                 id="auth-email"
                 v-model="email"
@@ -61,13 +61,13 @@
               />
             </div>
             <div>
-              <label class="field-label" for="auth-password">Password</label>
+              <label class="field-label" for="auth-password">$t('auth.login.password')</label>
               <input
                 id="auth-password"
                 v-model="password"
                 type="password"
                 class="field mt-1"
-                :placeholder="mode === 'signup' ? 'Min 8 characters' : 'Enter your password'"
+                :placeholder="mode === 'signup' ? $t('auth.signup.minChars') : $t('auth.login.enterPassword')"
                 required
               />
             </div>
@@ -76,15 +76,15 @@
             </div>
             <button type="submit" class="btn-primary w-full" :disabled="loading">
               {{ loading
-                ? (mode === 'login' ? 'Signing in...' : 'Creating...')
-                : (mode === 'login' ? 'Sign In' : 'Create Account')
+                ? (mode === 'login' ? $t('auth.login.loading') : $t('auth.signup.loading'))
+                : (mode === 'login' ? $t('auth.login.submit') : $t('auth.signup.submit'))
               }}
             </button>
           </form>
 
           <!-- Terms (signup only) -->
           <p v-if="mode === 'signup'" class="mt-4 text-center text-xs text-ink-400">
-            By signing up, you agree to our
+            $t('auth.signup.agreePrefix')
             <NuxtLink to="/terms" class="text-accent-soft hover:text-accent" @click="close">Terms</NuxtLink>
             and
             <NuxtLink to="/privacy" class="text-accent-soft hover:text-accent" @click="close">Privacy</NuxtLink>

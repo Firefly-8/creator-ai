@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "title": "Creator — Estudio de Música e Imágenes con IA",
+    "description": "Crea música, imágenes y más con IA — todo en un solo estudio. Gratis para empezar, sin tarjeta de crédito."
+  },
+  "nav": {
+    "create": "Crear",
+    "pricing": "Precios",
+    "blog": "Blog",
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "dashboard": "Panel",
+    "cover": "Cover",
+    "library": "Library",
+    "image": "Image",
+    "logout": "Sign Out",
+    "tagline": "AI Music & Image Studio",
+    "musicGroup": "Music",
+    "imageGroup": "Image"
+  },
+  "hero": {
+    "title": "Crea Música e Imágenes con IA",
+    "titleHighlight": "en Segundos",
+    "subtitle": "Genera canciones, arte y contenido creativo con IA. Sin tarjeta de crédito — empieza gratis.",
+    "cta": "Empieza Gratis",
+    "ctaSecondary": "Ver Precios",
+    "noSignup": "No necesitas registro para las primeras 10 generaciones"
+  },
+  "features": {
+    "title": "Todo lo que Necesitas para Crear",
+    "subtitle": "Una plataforma para todas tus necesidades de creación con IA",
+    "music": {
+      "title": "Generador de Música con IA",
+      "description": "Crea canciones completas desde descripciones. Elige géneros, estados de ánimo y estilos.",
+      "cta": "Probar Generador de Música"
+    },
+    "image": {
+      "title": "Generador de Imágenes con IA",
+      "description": "Genera arte impresionante desde texto. Perfecto para redes sociales, miniaturas y más.",
+      "cta": "Probar Generador de Imágenes"
+    },
+    "lyrics": {
+      "title": "Escritor de Letras con IA",
+      "description": "Genera letras de canciones en cualquier estilo. Edita y refina hasta que sea perfecto.",
+      "cta": "Probar Escritor de Letras"
+    }
+  },
+  "cta": {
+    "title": "¿Listo para Crear?",
+    "subtitle": "Únete a miles de creadores que usan Creator para su contenido.",
+    "button": "Empieza Gratis"
+  },
+  "pricing": {
+    "title": "Precios Simples y Transparentes",
+    "subtitle": "Empieza gratis. Mejora cuando necesites más.",
+    "free": "Gratis",
+    "creator": "Creador",
+    "pro": "Pro",
+    "popular": "Popular",
+    "perMonth": "/mes",
+    "getStarted": "Comenzar",
+    "subscribe": "Suscribirse Ahora",
+    "faq": {
+      "title": "Preguntas Frecuentes",
+      "commercial": {
+        "q": "¿Puedo usar el contenido generado comercialmente?",
+        "a": "¡Sí! Los planes Creador y Pro incluyen licencia comercial completa. Tú eres dueño del contenido que creas."
+      },
+      "payment": {
+        "q": "¿Qué métodos de pago aceptan?",
+        "a": "Aceptamos PayPal por ahora. Soporte de Stripe próximamente."
+      },
+      "cancel": {
+        "q": "¿Puedo cancelar en cualquier momento?",
+        "a": "Sí, cancela cuando quieras. Tu suscripción permanece activa hasta el final del período de facturación."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de nuevo",
+      "subtitle": "Inicia sesión en tu cuenta de Creator",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "loading": "Iniciando sesión...",
+      "orContinue": "O continuar con",
+      "noAccount": "¿No tienes cuenta?",
+      "signUp": "Regístrate",
+      "enterPassword": "Enter your password"
+    },
+    "signup": {
+      "title": "Crea tu cuenta",
+      "subtitle": "Empieza a crear con IA gratis",
+      "name": "Nombre",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "submit": "Crear Cuenta",
+      "loading": "Creando...",
+      "agree": "Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad",
+      "hasAccount": "¿Ya tienes cuenta?",
+      "signIn": "Inicia sesión",
+      "minChars": "Min 8 characters",
+      "agreePrefix": "By signing up, you agree to our"
+    }
+  },
+  "dashboard": {
+    "title": "Panel",
+    "subtitle": "Gestiona tus creaciones y cuenta",
+    "createNew": "Crear Nuevo",
+    "musicGenerated": "Música Generada",
+    "imagesGenerated": "Imágenes Generadas",
+    "currentPlan": "Plan Actual",
+    "remaining": "restantes este mes",
+    "upgrade": "Mejorar",
+    "recentCreations": "Creaciones Recientes",
+    "noCreations": "Sin creaciones aún. ¡Empieza a crear!",
+    "firstCreation": "Crea Tu Primera"
+  },
+  "footer": {
+    "product": "Producto",
+    "company": "Empresa",
+    "legal": "Legal",
+    "about": "Acerca de",
+    "privacy": "Política de Privacidad",
+    "terms": "Términos de Servicio",
+    "contact": "Contacto",
+    "copyright": "© 2026 Creator. Todos los derechos reservados."
+  },
+  "create": {
+    "remixedFrom": "Cargado \"{{ title }}\"",
+    "remixHint": "Modifica estilo/letras, luego genera una nueva versión (original preservado).",
+    "lyricsGenerating": "Generando letras…",
+    "generateLyrics": "Generar letras",
+    "lyricsWait": "Generando letras, espera…",
+    "resultsHint": "En progreso y pistas de biblioteca",
+    "noSongs": "Sin canciones aún",
+    "noSongsHint": "Genera a la izquierda, las pistas aparecerán aquí",
+    "lyricsFailed": "Error al generar letras",
+    "generateFailed": "Error al iniciar generación",
+    "regenerating": "Regenerando…",
+    "regenerateFailed": "Error al regenerar",
+    "unnamed": "Sin título",
+    "loadedParams": "Parámetros cargados, ajusta y genera",
+    "deleteConfirm": "¿Eliminar \"{{ title }}\"? No se puede deshacer.",
+    "deleteFailed": "Error al eliminar"
+  },
+  "image": {
+    "remixedFrom": "Cargado \"{{ title }}\"",
+    "remixHint": "Modifica prompt/relación/escena para generar nueva imagen.",
+    "scenePresets": "Preajustes de escena",
+    "prompt": "Prompt",
+    "promptPlaceholder": "Describe sujeto, composición, estilo, iluminación…",
+    "optimizePrompt": "Optimizar prompt",
+    "optimizing": "Optimizando…",
+    "promptOptimizer": "API prompt_optimizer",
+    "deepOptimize": "Optimizar de nuevo antes de generar",
+    "willUse": "Se usará:",
+    "referenceImage": "Imagen de referencia (Imagen a Imagen)",
+    "referenceHint": "Solo retrato de personaje, frontal funciona mejor.",
+    "model": "Modelo",
+    "aspectRatio": "Relación de aspecto",
+    "count": "Cantidad",
+    "styleType": "Estilo (live)",
+    "generateFailed": "Error al generar imagen",
+    "noImages": "Sin imágenes aún",
+    "noImagesHint": "Genera a la izquierda, las imágenes aparecerán aquí",
+    "deleteConfirm": "¿Eliminar \"{{ title }}\"? No se puede deshacer.",
+    "deleteFailed": "Error al eliminar",
+    "download": "Descargar",
+    "fullscreen": "Pantalla completa",
+    "regenerate": "Regenerar",
+    "adjustParams": "Ajustar parámetros",
+    "textToImage": "Text-to-Image",
+    "refReady": "Reference image ready",
+    "optimizingAndGenerating": "Optimizing prompt & generating…",
+    "generating": "Generating…",
+    "restoredRef": "Reference restored (from last generation)",
+    "generic": "general",
+    "style": "style"
+  },
+  "cover": {
+    "remixedFrom": "Cargado \"{{ title }}\"",
+    "remixHint": "Modifica estilo/letras. Audio de referencia necesita re-subida.",
+    "referenceAudio": "Audio de referencia",
+    "referenceHint": "6 segundos – 6 minutos · máx 50MB",
+    "coverStyle": "Prompt de estilo de cover",
+    "title": "Título",
+    "extractLyrics": "Extraer letras",
+    "editLyrics": "Editar letras",
+    "structure": "Estructura",
+    "featureReady": "Función lista · válida ~24h",
+    "generateFailed": "Error al generar cover",
+    "preprocessFailed": "Error de preprocesamiento",
+    "stylePlaceholder": "Jazz, smooth, late night lounge, saxophone…",
+    "runExtractFirst": "Run extract first…"
+  },
+  "library": {
+    "all": "Todas",
+    "ready": "Listas",
+    "generating": "En progreso",
+    "failed": "Fallidas",
+    "items": "elementos",
+    "emptyTitle": "Biblioteca vacía",
+    "emptyHint": "Ve a Crear para generar tu primera pista",
+    "deleteConfirm": "¿Eliminar \"{{ title }}\"? No se puede deshacer.",
+    "deleteFailed": "Error al eliminar",
+    "regenerateFailed": "Error al regenerar",
+    "subtitle": "All generated tracks and covers"
+  }
+}

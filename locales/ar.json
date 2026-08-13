@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "title": "Creator — استوديو الموسيقى والصور بالذكاء الاصطناعي",
+    "description": "أنشئ موسيقى وصورًا والمزيد بالذكاء الاصطناعي — كل ذلك في استوديو واحد. ابدأ مجانًا، بدون بطاقة ائتمان."
+  },
+  "nav": {
+    "create": "إنشاء",
+    "pricing": "الأسعار",
+    "blog": "المدونة",
+    "login": "تسجيل الدخول",
+    "signup": "التسجيل",
+    "dashboard": "لوحة التحكم",
+    "cover": "Cover",
+    "library": "Library",
+    "image": "Image",
+    "logout": "Sign Out",
+    "tagline": "AI Music & Image Studio",
+    "musicGroup": "Music",
+    "imageGroup": "Image"
+  },
+  "hero": {
+    "title": "أنشئ موسيقى وصورًا بالذكاء الاصطناعي",
+    "titleHighlight": "في ثوانٍ",
+    "subtitle": "ولّد أغاني وأعمال فنية ومحتوى إبداعي بالذكاء الاصطناعي. بدون بطاقة ائتمان — ابدأ مجانًا.",
+    "cta": "ابدأ مجانًا",
+    "ctaSecondary": "عرض الأسعار",
+    "noSignup": "لا حاجة للتسجيل لأول 10 عمليات إنشاء"
+  },
+  "features": {
+    "title": "كل ما تحتاجه للإنشاء",
+    "subtitle": "منصة واحدة لجميع احتياجاتك في إنشاء المحتوى بالذكاء الاصطناعي",
+    "music": {
+      "title": "مولد الموسيقى بالذكاء الاصطناعي",
+      "description": "أنشئ أغاني كاملة من أوصاف نصية. اختر من بين الأنواع والمزاجات والأنماط.",
+      "cta": "جرّب مولد الموسيقى"
+    },
+    "image": {
+      "title": "مولد الصور بالذكاء الاصطناعي",
+      "description": "ولّد أعمال فنية مذهلة من النص. مثالي لوسائل التواصل والصور المصغرة والمزيد.",
+      "cta": "جرّب مولد الصور"
+    },
+    "lyrics": {
+      "title": "كاتب كلمات الأغاني بالذكاء الاصطناعي",
+      "description": "أنشئ كلمات أغاني بأي أسلوب. حرر وحسّن حتى يصبح مثاليًا.",
+      "cta": "جرّب كاتب الكلمات"
+    }
+  },
+  "cta": {
+    "title": "هل أنت مستعد للإنشاء؟",
+    "subtitle": "انضم إلى آلاف المبدعين الذين يستخدمون Creator لمحتواهم.",
+    "button": "ابدأ مجانًا"
+  },
+  "pricing": {
+    "title": "أسعار بسيطة وشفافة",
+    "subtitle": "ابدأ مجانًا. قم بالترقية عندما تحتاج المزيد.",
+    "free": "مجاني",
+    "creator": "المبدع",
+    "pro": "المحترف",
+    "popular": "الأكثر شعبية",
+    "perMonth": "/شهر",
+    "getStarted": "ابدأ",
+    "subscribe": "اشترك الآن",
+    "faq": {
+      "title": "الأسئلة الشائعة",
+      "commercial": {
+        "q": "هل يمكنني استخدام المحتوى المُنشأ تجاريًا؟",
+        "a": "نعم! خطتا المبدع والمحترف تتضمنان ترخيصًا تجاريًا كاملاً. المحتوى الذي تنشؤه ملكك."
+      },
+      "payment": {
+        "q": "ما طرق الدفع التي تقبلونها؟",
+        "a": "نقبل PayPal حاليًا. دعم Stripe قريبًا."
+      },
+      "cancel": {
+        "q": "هل يمكنني الإلغاء في أي وقت؟",
+        "a": "نعم، ألغِ في أي وقت. يظل اشتراكك نشطًا حتى نهاية فترة الفوترة."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "مرحبًا بعودتك",
+      "subtitle": "سجّل الدخول إلى حسابك في Creator",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "submit": "تسجيل الدخول",
+      "loading": "جارٍ تسجيل الدخول...",
+      "orContinue": "أو تابع مع",
+      "noAccount": "ليس لديك حساب؟",
+      "signUp": "سجّل الآن",
+      "enterPassword": "Enter your password"
+    },
+    "signup": {
+      "title": "أنشئ حسابك",
+      "subtitle": "ابدأ الإنشاء بالذكاء الاصطناعي مجانًا",
+      "name": "الاسم",
+      "email": "البريد الإلكتروني",
+      "password": "كلمة المرور",
+      "submit": "إنشاء حساب",
+      "loading": "جارٍ الإنشاء...",
+      "agree": "بالتسجيل، فإنك توافق على شروط الخدمة وسياسة الخصوصية",
+      "hasAccount": "لديك حساب بالفعل؟",
+      "signIn": "سجّل الدخول",
+      "minChars": "Min 8 characters",
+      "agreePrefix": "By signing up, you agree to our"
+    }
+  },
+  "dashboard": {
+    "title": "لوحة التحكم",
+    "subtitle": "أدر إبداعاتك وحسابك",
+    "createNew": "إنشاء جديد",
+    "musicGenerated": "الموسيقى المُنشأة",
+    "imagesGenerated": "الصور المُنشأة",
+    "currentPlan": "الخطة الحالية",
+    "remaining": "متبقي هذا الشهر",
+    "upgrade": "ترقية",
+    "recentCreations": "الإبداعات الأخيرة",
+    "noCreations": "لا توجد إبداعات بعد. ابدأ بالإنشاء!",
+    "firstCreation": "أنشئ أول عمل لك"
+  },
+  "footer": {
+    "product": "المنتج",
+    "company": "الشركة",
+    "legal": "قانوني",
+    "about": "عن",
+    "privacy": "سياسة الخصوصية",
+    "terms": "شروط الخدمة",
+    "contact": "اتصل بنا",
+    "copyright": "© 2026 Creator. جميع الحقوق محفوظة."
+  },
+  "create": {
+    "remixedFrom": "تم تحميل \"{{ title }}\"",
+    "remixHint": "عدّل الأسلوب/الكلمات، ثم ولّد نسخة جديدة (الأصل محفوظ).",
+    "lyricsGenerating": "جارٍ توليد الكلمات…",
+    "generateLyrics": "توليد الكلمات",
+    "lyricsWait": "جارٍ توليد الكلمات، يرجى الانتظار…",
+    "resultsHint": "قيد التنفيذ ومكتبة المسارات",
+    "noSongs": "لا توجد أغاني بعد",
+    "noSongsHint": "ولّد على اليسار، وستظهر المسارات هنا",
+    "lyricsFailed": "فشل توليد الكلمات",
+    "generateFailed": "فشل بدء التوليد",
+    "regenerating": "جارٍ إعادة التوليد…",
+    "regenerateFailed": "فشل إعادة التوليد",
+    "unnamed": "بدون عنوان",
+    "loadedParams": "تم تحميل المعلمات، اضبط ولولّد",
+    "deleteConfirm": "حذف \"{{ title }}\"؟ لا يمكن التراجع.",
+    "deleteFailed": "فشل الحذف"
+  },
+  "image": {
+    "remixedFrom": "تم تحميل \"{{ title }}\"",
+    "remixHint": "عدّل المطالبة/النسبة/المشهد لتوليد صورة جديدة.",
+    "scenePresets": "إعدادات المشهد المسبقة",
+    "prompt": "المطالبة",
+    "promptPlaceholder": "صف الموضوع، التكوين، الأسلوب، الإضاءة…",
+    "optimizePrompt": "تحسين المطالبة",
+    "optimizing": "جارٍ التحسين…",
+    "promptOptimizer": "API prompt_optimizer",
+    "deepOptimize": "حسّن مرة أخرى قبل التوليد",
+    "willUse": "سيتم استخدام:",
+    "referenceImage": "صورة مرجعية (صورة إلى صورة)",
+    "referenceHint": "فقط شخصية، الواجهة الأمامية تعمل أفضل.",
+    "model": "النموذج",
+    "aspectRatio": "نسبة العرض",
+    "count": "العدد",
+    "styleType": "الأسلوب (live)",
+    "generateFailed": "فشل توليد الصورة",
+    "noImages": "لا توجد صور بعد",
+    "noImagesHint": "ولّد على اليسار، وستظهر الصور هنا",
+    "deleteConfirm": "حذف \"{{ title }}\"؟ لا يمكن التراجع.",
+    "deleteFailed": "فشل الحذف",
+    "download": "تحميل",
+    "fullscreen": "ملء الشاشة",
+    "regenerate": "إعادة توليد",
+    "adjustParams": "ضبط المعلمات",
+    "textToImage": "Text-to-Image",
+    "refReady": "Reference image ready",
+    "optimizingAndGenerating": "Optimizing prompt & generating…",
+    "generating": "Generating…",
+    "restoredRef": "Reference restored (from last generation)",
+    "generic": "general",
+    "style": "style"
+  },
+  "cover": {
+    "remixedFrom": "تم تحميل \"{{ title }}\"",
+    "remixHint": "عدّل الأسلوب/الكلمات. يجب إعادة رفع الصوت المرجعي.",
+    "referenceAudio": "الصوت المرجعي",
+    "referenceHint": "6 ثوانٍ – 6 دقائق · الحد الأقصى 50 ميغابايت",
+    "coverStyle": "مطالبة أسلوب الكوفر",
+    "title": "العنوان",
+    "extractLyrics": "استخراج الكلمات",
+    "editLyrics": "تعديل الكلمات",
+    "structure": "البنية",
+    "featureReady": "الميزة جاهزة · صالحة ~24 ساعة",
+    "generateFailed": "فشل توليد الكوفر",
+    "preprocessFailed": "فشل المعالجة المسبقة",
+    "stylePlaceholder": "Jazz, smooth, late night lounge, saxophone…",
+    "runExtractFirst": "Run extract first…"
+  },
+  "library": {
+    "all": "الكل",
+    "ready": "جاهز",
+    "generating": "قيد التنفيذ",
+    "failed": "فشل",
+    "items": "عناصر",
+    "emptyTitle": "المكتبة فارغة",
+    "emptyHint": "اذهب إلى إنشاء لتوليد أول مسار",
+    "deleteConfirm": "حذف \"{{ title }}\"؟ لا يمكن التراجع.",
+    "deleteFailed": "فشل الحذف",
+    "regenerateFailed": "فشل إعادة التوليد",
+    "subtitle": "All generated tracks and covers"
+  }
+}

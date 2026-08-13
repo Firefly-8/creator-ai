@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "title": "Creator — Estúdio de Música e Imagem com IA",
+    "description": "Crie música, imagens e mais com IA — tudo em um só estúdio. Grátis para começar, sem cartão de crédito."
+  },
+  "nav": {
+    "create": "Criar",
+    "pricing": "Preços",
+    "blog": "Blog",
+    "login": "Entrar",
+    "signup": "Cadastrar",
+    "dashboard": "Painel",
+    "cover": "Cover",
+    "library": "Library",
+    "image": "Image",
+    "logout": "Sign Out",
+    "tagline": "AI Music & Image Studio",
+    "musicGroup": "Music",
+    "imageGroup": "Image"
+  },
+  "hero": {
+    "title": "Crie Música e Imagens com IA",
+    "titleHighlight": "em Segundos",
+    "subtitle": "Gere músicas, artes e conteúdo criativo com IA. Sem cartão de crédito — comece gratuitamente.",
+    "cta": "Começar Grátis",
+    "ctaSecondary": "Ver Preços",
+    "noSignup": "Sem cadastro necessário para as primeiras 10 gerações"
+  },
+  "features": {
+    "title": "Tudo que Você Precisa para Criar",
+    "subtitle": "Uma plataforma para todas as suas necessidades de criação com IA",
+    "music": {
+      "title": "Gerador de Música com IA",
+      "description": "Crie músicas completas a partir de descrições. Escolha gêneros, humores e estilos.",
+      "cta": "Experimentar Gerador de Música"
+    },
+    "image": {
+      "title": "Gerador de Imagens com IA",
+      "description": "Gere artes impressionantes a partir de texto. Perfeito para redes sociais, thumbnails e mais.",
+      "cta": "Experimentar Gerador de Imagens"
+    },
+    "lyrics": {
+      "title": "Escritor de Letras com IA",
+      "description": "Gere letras de músicas em qualquer estilo. Edite e refine até ficar perfeito.",
+      "cta": "Experimentar Escritor de Letras"
+    }
+  },
+  "cta": {
+    "title": "Pronto para Criar?",
+    "subtitle": "Junte-se a milhares de criadores usando o Creator para seu conteúdo.",
+    "button": "Começar Grátis"
+  },
+  "pricing": {
+    "title": "Preços Simples e Transparentes",
+    "subtitle": "Comece grátis. Faça upgrade quando precisar de mais.",
+    "free": "Grátis",
+    "creator": "Criador",
+    "pro": "Pro",
+    "popular": "Popular",
+    "perMonth": "/mês",
+    "getStarted": "Começar",
+    "subscribe": "Assinar Agora",
+    "faq": {
+      "title": "Perguntas Frequentes",
+      "commercial": {
+        "q": "Posso usar o conteúdo gerado comercialmente?",
+        "a": "Sim! Os planos Criador e Pro incluem licença comercial completa. Você é dono do conteúdo que cria."
+      },
+      "payment": {
+        "q": "Quais métodos de pagamento vocês aceitam?",
+        "a": "Aceitamos PayPal por enquanto. Suporte a Stripe em breve."
+      },
+      "cancel": {
+        "q": "Posso cancelar a qualquer momento?",
+        "a": "Sim, cancele quando quiser. Sua assinatura permanece ativa até o final do período de faturamento."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bem-vindo de volta",
+      "subtitle": "Entre na sua conta Creator",
+      "email": "E-mail",
+      "password": "Senha",
+      "submit": "Entrar",
+      "loading": "Entrando...",
+      "orContinue": "Ou continuar com",
+      "noAccount": "Não tem conta?",
+      "signUp": "Cadastre-se",
+      "enterPassword": "Enter your password"
+    },
+    "signup": {
+      "title": "Crie sua conta",
+      "subtitle": "Comece a criar com IA gratuitamente",
+      "name": "Nome",
+      "email": "E-mail",
+      "password": "Senha",
+      "submit": "Criar Conta",
+      "loading": "Criando...",
+      "agree": "Ao se cadastrar, você concorda com nossos Termos de Serviço e Política de Privacidade",
+      "hasAccount": "Já tem conta?",
+      "signIn": "Entrar",
+      "minChars": "Min 8 characters",
+      "agreePrefix": "By signing up, you agree to our"
+    }
+  },
+  "dashboard": {
+    "title": "Painel",
+    "subtitle": "Gerencie suas criações e conta",
+    "createNew": "Criar Novo",
+    "musicGenerated": "Músicas Geradas",
+    "imagesGenerated": "Imagens Geradas",
+    "currentPlan": "Plano Atual",
+    "remaining": "restantes este mês",
+    "upgrade": "Upgrade",
+    "recentCreations": "Criações Recentes",
+    "noCreations": "Nenhuma criação ainda. Comece a criar!",
+    "firstCreation": "Crie Sua Primeira"
+  },
+  "footer": {
+    "product": "Produto",
+    "company": "Empresa",
+    "legal": "Legal",
+    "about": "Sobre",
+    "privacy": "Política de Privacidade",
+    "terms": "Termos de Serviço",
+    "contact": "Contato",
+    "copyright": "© 2026 Creator. Todos os direitos reservados."
+  },
+  "create": {
+    "remixedFrom": "Carregado \"{{ title }}\"",
+    "remixHint": "Modifique estilo/letras, depois gere uma nova versão (original preservado).",
+    "lyricsGenerating": "Gerando letras…",
+    "generateLyrics": "Gerar letras",
+    "lyricsWait": "Gerando letras, aguarde…",
+    "resultsHint": "Em progresso e faixas da biblioteca",
+    "noSongs": "Sem músicas ainda",
+    "noSongsHint": "Gere à esquerda, as faixas aparecerão aqui",
+    "lyricsFailed": "Falha ao gerar letras",
+    "generateFailed": "Falha ao iniciar geração",
+    "regenerating": "Regenerando…",
+    "regenerateFailed": "Falha ao regenerar",
+    "unnamed": "Sem título",
+    "loadedParams": "Parâmetros carregados, ajuste e gere",
+    "deleteConfirm": "Excluir \"{{ title }}\"? Isso não pode ser desfeito.",
+    "deleteFailed": "Falha ao excluir"
+  },
+  "image": {
+    "remixedFrom": "Carregado \"{{ title }}\"",
+    "remixHint": "Modifique prompt/proporção/cena para gerar nova imagem.",
+    "scenePresets": "Predefinições de cena",
+    "prompt": "Prompt",
+    "promptPlaceholder": "Descreva sujeito, composição, estilo, iluminação…",
+    "optimizePrompt": "Otimizar prompt",
+    "optimizing": "Otimizando…",
+    "promptOptimizer": "API prompt_optimizer",
+    "deepOptimize": "Otimizar novamente antes de gerar",
+    "willUse": "Será usado:",
+    "referenceImage": "Imagem de referência (Imagem para Imagem)",
+    "referenceHint": "Apenas retrato de personagem, frente funciona melhor.",
+    "model": "Modelo",
+    "aspectRatio": "Proporção",
+    "count": "Quantidade",
+    "styleType": "Estilo (live)",
+    "generateFailed": "Falha ao gerar imagem",
+    "noImages": "Sem imagens ainda",
+    "noImagesHint": "Gere à esquerda, as imagens aparecerão aqui",
+    "deleteConfirm": "Excluir \"{{ title }}\"? Isso não pode ser desfeito.",
+    "deleteFailed": "Falha ao excluir",
+    "download": "Baixar",
+    "fullscreen": "Tela cheia",
+    "regenerate": "Regenerar",
+    "adjustParams": "Ajustar parâmetros",
+    "textToImage": "Text-to-Image",
+    "refReady": "Reference image ready",
+    "optimizingAndGenerating": "Optimizing prompt & generating…",
+    "generating": "Generating…",
+    "restoredRef": "Reference restored (from last generation)",
+    "generic": "general",
+    "style": "style"
+  },
+  "cover": {
+    "remixedFrom": "Carregado \"{{ title }}\"",
+    "remixHint": "Modifique estilo/letras. Áudio de referência precisa ser reenviado.",
+    "referenceAudio": "Áudio de referência",
+    "referenceHint": "6 segundos – 6 minutos · máx 50MB",
+    "coverStyle": "Prompt de estilo de cover",
+    "title": "Título",
+    "extractLyrics": "Extrair letras",
+    "editLyrics": "Editar letras",
+    "structure": "Estrutura",
+    "featureReady": "Recurso pronto · válido ~24h",
+    "generateFailed": "Falha ao gerar cover",
+    "preprocessFailed": "Falha no pré-processamento",
+    "stylePlaceholder": "Jazz, smooth, late night lounge, saxophone…",
+    "runExtractFirst": "Run extract first…"
+  },
+  "library": {
+    "all": "Todas",
+    "ready": "Prontas",
+    "generating": "Em progresso",
+    "failed": "Falhas",
+    "items": "itens",
+    "emptyTitle": "Biblioteca vazia",
+    "emptyHint": "Vá para Criar para gerar sua primeira faixa",
+    "deleteConfirm": "Excluir \"{{ title }}\"? Isso não pode ser desfeito.",
+    "deleteFailed": "Falha ao excluir",
+    "regenerateFailed": "Falha ao regenerar",
+    "subtitle": "All generated tracks and covers"
+  }
+}

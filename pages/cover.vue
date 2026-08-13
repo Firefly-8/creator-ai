@@ -11,7 +11,7 @@
       <div class="space-y-4">
         <div v-if="remixFrom" class="ui-ops-banner">
           <div>
-            <p class="ui-ops-banner__title">已载入「{{ remixFrom }}」</p>
+            <p class="ui-ops-banner__title">$t('cover.remixedFrom', { title: remixFrom })</p>
             <p class="ui-ops-banner__hint">
               可改风格 / 歌词。参考音频需重新上传（若本地上传仍可用会自动带上）。
             </p>
@@ -20,20 +20,20 @@
             icon="i-ph-x"
             variant="ghost"
             size="sm"
-            aria-label="清除载入"
+            aria-label="Clear"
             @click="clearRemix"
           />
         </div>
         <UiSegmented v-model="mode" :options="modes" equal />
         <label class="block space-y-2">
-          <span class="field-label">Reference audio</span>
+          <span class="field-label">$t('cover.referenceAudio')</span>
           <input
             class="field"
             type="file"
             accept="audio/*,.mp3,.wav,.flac,.m4a"
             @change="onFile"
           >
-          <p class="field-hint">6 seconds – 6 minutes · max 50MB</p>
+          <p class="field-hint">$t('cover.referenceHint')</p>
           <p v-if="uploadName" class="text-[13px] font-medium text-accent-soft">
             <span class="i-ph-check-circle-fill mr-1 text-[14px]" />
             {{ uploadName }}
@@ -41,16 +41,16 @@
         </label>
 
         <label class="block space-y-2">
-          <span class="field-label">Cover style prompt</span>
+          <span class="field-label">$t('cover.coverStyle')</span>
           <textarea
             v-model="prompt"
             class="field min-h-24"
-            placeholder="Jazz, smooth, late night lounge, saxophone…"
+            placeholder="$t('cover.stylePlaceholder')"
           />
         </label>
 
         <label class="block space-y-2">
-          <span class="field-label">Title</span>
+          <span class="field-label">$t('cover.title')</span>
           <input v-model="title" class="field" placeholder="Cover title" >
         </label>
 
@@ -63,15 +63,15 @@
             @click="runPreprocess"
           >
             <span class="i-ph-scan text-[14px]" />
-            Extract lyrics
+            $t('cover.extractLyrics')
           </UiButton>
           <label class="block space-y-2">
-            <span class="field-label">Edit lyrics</span>
-            <textarea v-model="lyrics" class="field lyric-editor !min-h-40" placeholder="Run extract first…" />
+            <span class="field-label">$t('cover.editLyrics')</span>
+            <textarea v-model="lyrics" class="field lyric-editor !min-h-40" placeholder="$t('cover.runExtractFirst')" />
           </label>
-          <p v-if="featureId" class="field-hint">Feature ready · valid ~24h</p>
+          <p v-if="featureId" class="field-hint">$t('cover.featureReady')</p>
           <div v-if="structurePreview.length" class="rounded-xl border border-white/10 bg-ink-950/50 p-3">
-            <p class="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">Structure</p>
+            <p class="text-[11px] font-semibold tracking-[0.14em] text-ink-400 uppercase">$t('cover.structure')</p>
             <ul class="mt-2 space-y-1 text-[12.5px] text-ink-200">
               <li v-for="(seg, i) in structurePreview" :key="i" class="flex justify-between gap-3">
                 <span class="font-medium text-accent-soft">{{ seg.label }}</span>
@@ -141,9 +141,10 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n()
 import type { SongPublic } from '~/utils/types'
 
-definePageMeta({ layout: 'default' })
+definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const mode = ref<'quick' | 'advanced'>('quick')
 const modes = [

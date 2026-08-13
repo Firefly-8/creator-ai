@@ -9,7 +9,14 @@
     "blog": "Blog",
     "login": "Anmelden",
     "signup": "Registrieren",
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "cover": "Cover",
+    "library": "Library",
+    "image": "Image",
+    "logout": "Sign Out",
+    "tagline": "AI Music & Image Studio",
+    "musicGroup": "Music",
+    "imageGroup": "Image"
   },
   "hero": {
     "title": "AI-Musik & Bilder",
@@ -79,7 +86,8 @@
       "loading": "Anmeldung...",
       "orContinue": "Oder fortfahren mit",
       "noAccount": "Noch kein Konto?",
-      "signUp": "Registrieren"
+      "signUp": "Registrieren",
+      "enterPassword": "Enter your password"
     },
     "signup": {
       "title": "Konto erstellen",
@@ -91,7 +99,9 @@
       "loading": "Erstellung...",
       "agree": "Mit der Registrierung stimmst du unseren Nutzungsbedingungen und Datenschutzrichtlinie zu",
       "hasAccount": "Bereits ein Konto?",
-      "signIn": "Anmelden"
+      "signIn": "Anmelden",
+      "minChars": "Min 8 characters",
+      "agreePrefix": "By signing up, you agree to our"
     }
   },
   "dashboard": {
@@ -116,5 +126,86 @@
     "terms": "Nutzungsbedingungen",
     "contact": "Kontakt",
     "copyright": "© 2026 CraftAI. All rights reserved."
+  },
+  "create": {
+    "remixedFrom": "Loaded \"{{ title }}\"",
+    "remixHint": "Modify style/lyrics, then generate a new version (original preserved).",
+    "lyricsGenerating": "Generating lyrics…",
+    "generateLyrics": "Generate lyrics",
+    "lyricsWait": "Generating lyrics, please wait…",
+    "resultsHint": "In progress & library tracks",
+    "noSongs": "No songs yet",
+    "noSongsHint": "Generate on the left, and tracks will appear here",
+    "lyricsFailed": "Lyrics generation failed",
+    "generateFailed": "Failed to start generation",
+    "regenerating": "Regenerating…",
+    "regenerateFailed": "Regeneration failed",
+    "unnamed": "Untitled",
+    "loadedParams": "Parameters loaded, adjust and generate",
+    "deleteConfirm": "Delete \"{{ title }}\"? This cannot be undone.",
+    "deleteFailed": "Delete failed"
+  },
+  "image": {
+    "remixedFrom": "Loaded \"{{ title }}\"",
+    "remixHint": "Modify prompt/ratio/scene to generate a new image (original preserved).",
+    "scenePresets": "Scene presets",
+    "prompt": "Prompt",
+    "promptPlaceholder": "Describe subject, composition, style, lighting…",
+    "optimizePrompt": "Optimize prompt",
+    "optimizing": "Optimizing…",
+    "promptOptimizer": "API prompt_optimizer",
+    "deepOptimize": "Optimize again before generation",
+    "willUse": "Will use:",
+    "referenceImage": "Reference image (Image-to-Image)",
+    "referenceHint": "Character portrait only, front-facing works best.",
+    "model": "Model",
+    "aspectRatio": "Aspect Ratio",
+    "count": "Count",
+    "styleType": "Style (live)",
+    "generateFailed": "Failed to generate image",
+    "noImages": "No images yet",
+    "noImagesHint": "Generate on the left, and images will appear here",
+    "deleteConfirm": "Delete \"{{ title }}\"? This cannot be undone.",
+    "deleteFailed": "Delete failed",
+    "download": "Download",
+    "fullscreen": "Fullscreen",
+    "regenerate": "Regenerate",
+    "adjustParams": "Adjust parameters",
+    "textToImage": "Text-to-Image",
+    "refReady": "Reference image ready",
+    "optimizingAndGenerating": "Optimizing prompt & generating…",
+    "generating": "Generating…",
+    "restoredRef": "Reference restored (from last generation)",
+    "generic": "general",
+    "style": "style"
+  },
+  "cover": {
+    "remixedFrom": "Loaded \"{{ title }}\"",
+    "remixHint": "Modify style/lyrics. Reference audio needs re-upload.",
+    "referenceAudio": "Reference audio",
+    "referenceHint": "6 seconds – 6 minutes · max 50MB",
+    "coverStyle": "Cover style prompt",
+    "title": "Title",
+    "extractLyrics": "Extract lyrics",
+    "editLyrics": "Edit lyrics",
+    "structure": "Structure",
+    "featureReady": "Feature ready · valid ~24h",
+    "generateFailed": "Failed to generate cover",
+    "preprocessFailed": "Preprocessing failed",
+    "stylePlaceholder": "Jazz, smooth, late night lounge, saxophone…",
+    "runExtractFirst": "Run extract first…"
+  },
+  "library": {
+    "all": "All",
+    "ready": "Ready",
+    "generating": "In progress",
+    "failed": "Failed",
+    "items": "items",
+    "emptyTitle": "Library is empty",
+    "emptyHint": "Go to Create to generate your first track",
+    "deleteConfirm": "Delete \"{{ title }}\"? This cannot be undone.",
+    "deleteFailed": "Delete failed",
+    "regenerateFailed": "Regeneration failed",
+    "subtitle": "All generated tracks and covers"
   }
 }

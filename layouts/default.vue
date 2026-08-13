@@ -26,8 +26,8 @@
 
       <div class="studio-sidebar__foot">
         <template v-if="!authLoading && !user">
-          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">Sign In</button>
-          <button class="btn-primary w-full text-sm" @click="openSignup">Get Started</button>
+          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">$t('nav.login')</button>
+          <button class="btn-primary w-full text-sm" @click="openSignup">$t('nav.signup')</button>
         </template>
         <template v-else-if="user">
           <div class="flex items-center gap-2 mb-2">
@@ -36,9 +36,9 @@
             </div>
             <span class="text-xs text-ink-300 truncate">{{ user.email }}</span>
           </div>
-          <button class="btn-secondary w-full text-sm" @click="handleLogout">Sign Out</button>
+          <button class="btn-secondary w-full text-sm" @click="handleLogout">$t('nav.logout')</button>
         </template>
-        <p class="text-[11px] leading-relaxed text-ink-500 mt-3">AI Music & Image Studio</p>
+        <p class="text-[11px] leading-relaxed text-ink-500 mt-3">$t('nav.tagline')</p>
       </div>
     </aside>
 
@@ -56,7 +56,7 @@
         <span class="font-display text-[15px] font-650 text-white">{{ pageTitle }}</span>
         <div class="flex items-center gap-2 w-9 justify-end">
           <template v-if="!authLoading && !user">
-            <button class="text-xs text-ink-300 hover:text-white" @click="openLogin">Sign In</button>
+            <button class="text-xs text-ink-300 hover:text-white" @click="openLogin">$t('nav.login')</button>
           </template>
         </div>
       </header>
@@ -83,17 +83,17 @@ async function handleLogout() {
 
 const groups = [
   {
-    label: 'Music',
+    label: $t('nav.musicGroup'),
     items: [
-      { to: '/create', label: 'Create', icon: 'i-ph-waveform' },
-      { to: '/cover', label: 'Cover', icon: 'i-ph-arrows-clockwise' },
-      { to: '/library', label: 'Library', icon: 'i-ph-music-notes' },
+      { to: '/create', label: $t('nav.create'), icon: 'i-ph-waveform' },
+      { to: '/cover', label: $t('nav.cover'), icon: 'i-ph-arrows-clockwise' },
+      { to: '/library', label: $t('nav.library'), icon: 'i-ph-music-notes' },
     ],
   },
   {
-    label: 'Image',
+    label: $t('nav.imageGroup'),
     items: [
-      { to: '/image', label: 'Generate', icon: 'i-ph-image' },
+      { to: '/image', label: $t('nav.image'), icon: 'i-ph-image' },
     ],
   },
 ]
@@ -103,7 +103,7 @@ const pageTitle = computed(() => {
     '/create': 'Create',
     '/cover': 'Cover',
     '/library': 'Library',
-    '/image': 'Image',
+    '/image': $t('nav.imageGroup'),
   }
   if (route.path.startsWith('/song/')) return 'Track'
   return map[route.path] || 'CraftAI'
