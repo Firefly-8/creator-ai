@@ -26,7 +26,7 @@ export default defineNuxtConfig({
     appSecret: process.env.APP_SECRET || '',
     
     public: {
-      appName: 'CraftAI',
+      appName: 'Creator',
       appVersion: '1.0.0',
       firebaseApiKey: process.env.FIREBASE_API_KEY || '',
       firebaseAuthDomain: process.env.FIREBASE_AUTH_DOMAIN || '',
@@ -59,6 +59,7 @@ export default defineNuxtConfig({
   },
 
   i18n: {
+    restructureDir: '',
     locales: [
       { code: 'en', name: 'English', iso: 'en-US', file: 'en.json' },
       { code: 'ja', name: '日本語', iso: 'ja-JP', file: 'ja.json' },

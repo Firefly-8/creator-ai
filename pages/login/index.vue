@@ -44,10 +44,10 @@
             <div class="relative flex justify-center text-sm"><span class="bg-[#12101a] px-2 text-ink-400">Or continue with</span></div>
           </div>
           <div class="mt-4 grid grid-cols-2 gap-3">
-            <button class="btn-secondary !h-10" :disabled="loading" @click="signInWithGoogle">
+            <button class="btn-secondary !h-10" :disabled="loading" @click="handleGoogleSignIn">
               <span class="i-ph-google-logo text-lg" /> Google
             </button>
-            <button class="btn-secondary !h-10" :disabled="loading" @click="signInWithGitHub">
+            <button class="btn-secondary !h-10" :disabled="loading" @click="handleGitHubSignIn">
               <span class="i-ph-github-logo text-lg" /> GitHub
             </button>
           </div>
@@ -83,7 +83,7 @@ async function handleSubmit() {
   }
 }
 
-async function signInWithGoogle() {
+async function handleGoogleSignIn() {
   loading.value = true
   error.value = ''
   try {
@@ -96,7 +96,7 @@ async function signInWithGoogle() {
   }
 }
 
-async function signInWithGitHub() {
+async function handleGitHubSignIn() {
   error.value = 'GitHub login coming soon'
 }
 

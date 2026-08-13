@@ -3,13 +3,9 @@ compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Cloudflare Pages 配置
-pages_build_output_dir = "dist"
+pages_build_output_dir = ".output/public"
 
-# 构建命令
-[build]
-command = "npm run cf:build"
-
-# D1 迁移配置
+# D1 数据库绑定
 [[d1_databases]]
 binding = "DB"
 database_name = "craftai-db-staging"

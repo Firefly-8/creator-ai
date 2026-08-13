@@ -88,7 +88,7 @@
       "email": "Email",
       "password": "Password",
       "submit": "Create Account",
-      "loading": "Creating..."",
+      "loading": "Creating...",
       "agree": "By signing up, you agree to our Terms of Service and Privacy Policy",
       "hasAccount": "Already have an account?",
       "signIn": "Sign in"

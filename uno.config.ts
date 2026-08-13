@@ -6,7 +6,7 @@ import {
   presetIcons,
   transformerDirectives,
 } from 'unocss'
-import { SONG_PRESETS } from './app/utils/presets'
+import { SONG_PRESETS } from './utils/presets'
 
 const require = createRequire(import.meta.url)
 const phIcons = require('@iconify-json/ph/icons.json')
