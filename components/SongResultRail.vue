@@ -8,8 +8,8 @@
       <div class="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-accent-mute text-accent-soft">
         <span class="i-ph-music-notes text-[22px]" />
       </div>
-      <p class="text-[13.5px] text-ink-300">{{ emptyTitle }}</p>
-      <p class="mt-1 text-[12px] text-ink-500">{{ emptyHint }}</p>
+      <p class="text-[13.5px] text-ink-300">{{  emptyTitle  }}</p>
+      <p class="mt-1 text-[12px] text-ink-500">{{  emptyHint  }}</p>
     </div>
 
     <div v-else class="space-y-2">
@@ -51,20 +51,20 @@
               :to="`/song/${song.id}`"
               class="truncate text-[13.5px] font-650 text-white hover:text-accent-soft"
             >
-              {{ song.title }}
+              {{  song.title  }}
             </NuxtLink>
             <span
               class="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide"
               :class="statusClass(song.status)"
             >
-              {{ statusLabel(song.status) }}
+              {{  statusLabel(song.status)  }}
             </span>
           </div>
           <p class="mt-0.5 truncate text-[11.5px] text-ink-400">
-            {{ song.type }} · {{ formatDuration(song.durationMs) }}
+            {{  song.type  }} · {{  formatDuration(song.durationMs)  }}
           </p>
           <p class="mt-1 line-clamp-1 text-[11.5px] text-ink-500">
-            {{ song.prompt || 'No prompt' }}
+            {{  song.prompt || 'No prompt'  }}
           </p>
         </div>
 

@@ -10,7 +10,7 @@
 
       <nav class="studio-sidebar__nav">
         <div v-for="group in groups" :key="group.label" class="studio-nav-group">
-          <p class="studio-nav-group__label">{{ group.label }}</p>
+          <p class="studio-nav-group__label">{{  group.label  }}</p>
           <NuxtLink
             v-for="item in group.items"
             :key="item.to"
@@ -19,15 +19,15 @@
             @click="mobileNavOpen = false"
           >
             <span class="text-[16px]" :class="item.icon" />
-            <span>{{ item.label }}</span>
+            <span>{{  item.label  }}</span>
           </NuxtLink>
         </div>
       </nav>
 
       <div class="studio-sidebar__foot">
         <template v-if="!authLoading && !user">
-          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">$t('nav.login')</button>
-          <button class="btn-primary w-full text-sm" @click="openSignup">$t('nav.signup')</button>
+          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">{{  $t('nav.login')  }}</button>
+          <button class="btn-primary w-full text-sm" @click="openSignup">{{  $t('nav.signup')  }}</button>
         </template>
         <template v-else-if="user">
           <div class="flex items-center gap-2 mb-2">

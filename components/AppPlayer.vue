@@ -29,10 +29,10 @@
         </div>
         <div class="min-w-0">
           <p class="truncate text-[13.5px] font-semibold text-white">
-            {{ player.current?.title || 'Nothing playing' }}
+            {{  player.current?.title || 'Nothing playing'  }}
           </p>
           <p class="truncate text-[11.5px] text-ink-400">
-            {{ player.current ? formatDuration(player.current.durationMs) : 'Choose a track to start' }}
+            {{  player.current ? formatDuration(player.current.durationMs) : 'Choose a track to start'  }}
           </p>
         </div>
       </div>
@@ -75,7 +75,7 @@
 
         <div class="flex w-full items-center gap-2 px-1">
           <span class="w-10 shrink-0 text-right text-[11px] tabular-nums text-ink-400">
-            {{ formatDuration(player.currentTime * 1000) }}
+            {{  formatDuration(player.currentTime * 1000)  }}
           </span>
           <input
             class="seek"
@@ -89,7 +89,7 @@
             @input="onSeek"
           >
           <span class="w-10 shrink-0 text-[11px] tabular-nums text-ink-400">
-            {{ formatDuration(player.duration * 1000) }}
+            {{  formatDuration(player.duration * 1000)  }}
           </span>
         </div>
       </div>

@@ -24,17 +24,17 @@
           >
         </div>
         <div class="min-w-0 pt-0.5">
-          <p class="text-[11.5px] uppercase tracking-wide text-ink-400">{{ song.type }} · {{ song.model }}</p>
-          <h1 class="font-display text-3xl font-700 text-white md:text-4xl">{{ song.title }}</h1>
+          <p class="text-[11.5px] uppercase tracking-wide text-ink-400">{{  song.type  }} · {{  song.model  }}</p>
+          <h1 class="font-display text-3xl font-700 text-white md:text-4xl">{{  song.title  }}</h1>
           <p class="mt-1.5 text-[14px] text-ink-300">
-            {{ formatDuration(song.durationMs) }}
+            {{  formatDuration(song.durationMs)  }}
             <span class="mx-1.5 text-ink-600">·</span>
             <span
               class="rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase"
               :class="statusClass(song.status)"
-            >{{ statusLabel(song.status) }}</span>
+            >{{  statusLabel(song.status)  }}</span>
           </p>
-          <p v-if="song.errorMessage" class="mt-2 text-sm text-danger">{{ song.errorMessage }}</p>
+          <p v-if="song.errorMessage" class="mt-2 text-sm text-danger">{{  song.errorMessage  }}</p>
         </div>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -52,7 +52,7 @@
         </a>
         <UiButton variant="secondary" @click="showEditor = !showEditor">
           <span class="i-ph-scissors text-[15px]" />
-          {{ showEditor ? 'Hide editor' : 'Edit' }}
+          {{  showEditor ? 'Hide editor' : 'Edit'  }}
         </UiButton>
         <UiButton variant="ghost" class="!text-danger hover:!bg-danger/10" @click="remove">
           Delete
@@ -63,11 +63,11 @@
     <section class="grid gap-4 lg:grid-cols-2">
       <div class="panel p-5">
         <h2 class="font-display text-[16px] font-600 text-white">Prompt</h2>
-        <p class="mt-2.5 whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink-300">{{ song.prompt || '—' }}</p>
+        <p class="mt-2.5 whitespace-pre-wrap text-[13.5px] leading-relaxed text-ink-300">{{  song.prompt || '—'  }}</p>
       </div>
       <div class="panel p-5">
         <h2 class="font-display text-[16px] font-600 text-white">Lyrics</h2>
-        <pre class="mt-2.5 whitespace-pre-wrap font-sans text-[13.5px] leading-relaxed text-ink-300">{{ song.lyrics || '—' }}</pre>
+        <pre class="mt-2.5 whitespace-pre-wrap font-sans text-[13.5px] leading-relaxed text-ink-300">{{  song.lyrics || '—'  }}</pre>
       </div>
     </section>
 

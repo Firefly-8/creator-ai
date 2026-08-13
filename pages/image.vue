@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Image</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">$t('image.textToImage') · $t('image.scenePresets') + $t('image.optimizePrompt')</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">{{  $t('image.textToImage')  }} · {{  $t('image.scenePresets')  }} + {{  $t('image.optimizePrompt')  }}</p>
       </div>
     </template>
 
@@ -400,6 +400,7 @@ async function optimizePrompt() {
 }
 
 async function generate() {
+  if (!requireAuth()) return
   if (!canGenerate.value) return
   generating.value = true
   errorText.value = ''

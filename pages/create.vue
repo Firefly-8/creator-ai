@@ -305,6 +305,7 @@ async function genLyrics() {
 }
 
 async function submit() {
+  if (!requireAuth()) return
   submitting.value = true
   errorText.value = ''
   statusText.value = 'Starting…'

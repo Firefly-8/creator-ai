@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Library</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">$t('library.subtitle')</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">{{  $t('library.subtitle')  }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <UiSegmented

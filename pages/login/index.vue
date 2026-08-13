@@ -31,10 +31,10 @@
             />
           </div>
           <div v-if="error" class="rounded-xl bg-danger/10 p-3 text-sm text-danger">
-            {{ error }}
+            {{  error  }}
           </div>
           <button type="submit" class="btn-primary w-full" :disabled="loading">
-            {{ loading ? 'Signing in...' : 'Sign In' }}
+            {{  loading ? 'Signing in...' : 'Sign In'  }}
           </button>
         </form>
 

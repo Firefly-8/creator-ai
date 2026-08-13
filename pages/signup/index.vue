@@ -21,10 +21,10 @@
             <input id="password" v-model="password" type="password" class="field mt-1" placeholder="Min 8 characters" required />
           </div>
           <div v-if="error" class="rounded-xl bg-danger/10 p-3 text-sm text-danger">
-            {{ error }}
+            {{  error  }}
           </div>
           <button type="submit" class="btn-primary w-full" :disabled="loading">
-            {{ loading ? 'Creating...' : 'Create Account' }}
+            {{  loading ? 'Creating...' : 'Create Account'  }}
           </button>
         </form>
 

@@ -15,7 +15,7 @@
       @click="$emit('update:modelValue', opt.value)"
     >
       <span v-if="opt.icon" class="ui-segment__icon" :class="opt.icon" />
-      <span class="ui-segment__label">{{ opt.label }}</span>
+      <span class="ui-segment__label">{{  opt.label  }}</span>
     </button>
   </div>
 </template>

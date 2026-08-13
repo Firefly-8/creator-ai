@@ -26,7 +26,7 @@
           @click="onSelect(item)"
         >
           <span v-if="item.icon" class="ui-more__icon" :class="item.icon" aria-hidden="true" />
-          <span>{{ item.label }}</span>
+          <span>{{  item.label  }}</span>
         </button>
       </template>
     </div>

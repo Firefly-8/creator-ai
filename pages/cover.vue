@@ -265,6 +265,7 @@ async function runPreprocess() {
 }
 
 async function submit() {
+  if (!requireAuth()) return
   if (!uploadId.value && mode.value === 'quick') {
     errorText.value = 'Upload a reference audio first'
     return

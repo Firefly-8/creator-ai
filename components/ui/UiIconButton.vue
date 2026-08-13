@@ -13,7 +13,7 @@
     :aria-busy="loading || undefined"
   >
     <span class="ui-icon-btn__icon" :class="icon" aria-hidden="true" />
-    <span v-if="label" class="ui-icon-btn__label">{{ label }}</span>
+    <span v-if="label" class="ui-icon-btn__label">{{  label  }}</span>
   </button>
 </template>
 

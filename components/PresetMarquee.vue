@@ -7,7 +7,7 @@
       </div>
       <span class="hidden items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-ink-300 sm:inline-flex">
         <span class="i-ph-sparkle text-[12px] text-accent-soft" />
-        {{ presets.length }} vibes
+        {{  presets.length  }} vibes
       </span>
     </div>
 
@@ -47,8 +47,8 @@
                 <span class="text-[15px]" :class="`i-${preset.icon}`" />
               </span>
               <span class="preset-chip-copy">
-                <span class="preset-chip-cat">{{ preset.category }}</span>
-                <span class="preset-chip-title">{{ preset.shortLabel }}</span>
+                <span class="preset-chip-cat">{{  preset.category  }}</span>
+                <span class="preset-chip-title">{{  preset.shortLabel  }}</span>
               </span>
             </button>
           </div>
@@ -77,8 +77,8 @@
                 <span class="text-[15px]" :class="`i-${preset.icon}`" />
               </span>
               <span class="preset-chip-copy">
-                <span class="preset-chip-cat">{{ preset.category }}</span>
-                <span class="preset-chip-title">{{ preset.shortLabel }}</span>
+                <span class="preset-chip-cat">{{  preset.category  }}</span>
+                <span class="preset-chip-title">{{  preset.shortLabel  }}</span>
               </span>
             </button>
           </div>

@@ -26,31 +26,31 @@
               :class="mode === 'login' ? 'bg-accent text-white' : 'text-ink-300 hover:text-white'"
               @click="mode = 'login'"
             >
-              $t('nav.login')
+              {{  $t('nav.login')  }}
             </button>
             <button
               class="flex-1 py-2 text-sm font-medium rounded-lg transition"
               :class="mode === 'signup' ? 'bg-accent text-white' : 'text-ink-300 hover:text-white'"
               @click="mode = 'signup'"
             >
-              $t('nav.signup')
+              {{  $t('nav.signup')  }}
             </button>
           </div>
 
           <!-- Title -->
           <div class="text-center mb-6">
             <h2 class="font-display text-2xl font-700 text-white">
-              {{ mode === 'login' ? $t('auth.login.title') : $t('auth.signup.title') }}
+              {{  mode === 'login' ? $t('auth.login.title') : $t('auth.signup.title')  }}
             </h2>
             <p class="mt-1 text-sm text-ink-300">
-              {{ mode === 'login' ? $t('auth.login.subtitle') : $t('auth.signup.subtitle') }}
+              {{  mode === 'login' ? $t('auth.login.subtitle') : $t('auth.signup.subtitle')  }}
             </p>
           </div>
 
           <!-- Form -->
           <form class="space-y-4" @submit.prevent="handleSubmit">
             <div>
-              <label class="field-label" for="auth-email">$t('auth.login.email')</label>
+              <label class="field-label" for="auth-email">{{  $t('auth.login.email')  }}</label>
               <input
                 id="auth-email"
                 v-model="email"
@@ -61,7 +61,7 @@
               />
             </div>
             <div>
-              <label class="field-label" for="auth-password">$t('auth.login.password')</label>
+              <label class="field-label" for="auth-password">{{  $t('auth.login.password')  }}</label>
               <input
                 id="auth-password"
                 v-model="password"
@@ -72,19 +72,19 @@
               />
             </div>
             <div v-if="error" class="rounded-xl bg-danger/10 p-3 text-sm text-danger">
-              {{ error }}
+              {{  error  }}
             </div>
             <button type="submit" class="btn-primary w-full" :disabled="loading">
-              {{ loading
+              {{  loading
                 ? (mode === 'login' ? $t('auth.login.loading') : $t('auth.signup.loading'))
                 : (mode === 'login' ? $t('auth.login.submit') : $t('auth.signup.submit'))
-              }}
+               }}
             </button>
           </form>
 
           <!-- Terms (signup only) -->
           <p v-if="mode === 'signup'" class="mt-4 text-center text-xs text-ink-400">
-            $t('auth.signup.agreePrefix')
+            {{  $t('auth.signup.agreePrefix')  }}
             <NuxtLink to="/terms" class="text-accent-soft hover:text-accent" @click="close">Terms</NuxtLink>
             and
             <NuxtLink to="/privacy" class="text-accent-soft hover:text-accent" @click="close">Privacy</NuxtLink>

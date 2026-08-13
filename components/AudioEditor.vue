@@ -41,8 +41,8 @@
         WAV
       </UiButton>
     </div>
-    <p v-if="message" class="text-[13px] text-ink-300">{{ message }}</p>
-    <p v-if="error" class="text-[13px] text-danger">{{ error }}</p>
+    <p v-if="message" class="text-[13px] text-ink-300">{{  message  }}</p>
+    <p v-if="error" class="text-[13px] text-danger">{{  error  }}</p>
   </section>
 </template>
 
