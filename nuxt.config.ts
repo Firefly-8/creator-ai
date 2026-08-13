@@ -3,6 +3,9 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
 
+  // 源目录配置 - Nuxt 在 app/ 下查找 pages, components 等
+  srcDir: 'app/',
+
   modules: [
     '@pinia/nuxt',
     '@unocss/nuxt',
@@ -26,7 +29,7 @@ export default defineNuxtConfig({
     appSecret: process.env.APP_SECRET || '',
     
     public: {
-      appName: 'CraftAI',
+      appName: 'Creator',
       appVersion: '1.0.0',
       firebaseApiKey: process.env.FIREBASE_API_KEY || '',
       firebaseAuthDomain: process.env.FIREBASE_AUTH_DOMAIN || '',

@@ -73,7 +73,7 @@ async function handleSubmit() {
     await signUpWithEmail(email.value, password.value)
     await navigateTo('/dashboard')
   } catch (e: any) {
-    error.value = getFirebaseErrorMessage(e.code))
+    error.value = getFirebaseErrorMessage(e.code)
   } finally {
     loading.value = false
   }
