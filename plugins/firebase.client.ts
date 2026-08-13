@@ -15,13 +15,21 @@ export default defineNuxtPlugin(async (nuxtApp) => {
     measurementId: config.public.firebaseMeasurementId,
   }
 
+  // Only initialize on client side
+  if (!import.meta.client) {
+    return {
+      provide: {
+        auth: null,
+        firebaseApp: null,
+      },
+    }
+  }
+
   const app = initializeApp(firebaseConfig)
   const auth = getAuth(app)
 
   // Initialize Analytics (client-side only)
-  if (import.meta.client) {
-    isSupported().then((yes) => yes && getAnalytics(app))
-  }
+  isSupported().then((yes) => yes && getAnalytics(app))
 
   return {
     provide: {

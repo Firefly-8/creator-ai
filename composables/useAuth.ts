@@ -9,38 +9,55 @@ import {
 } from 'firebase/auth'
 
 export function useAuth() {
-  const { $auth } = useNuxtApp()
+  const nuxtApp = useNuxtApp()
   const user = ref<User | null>(null)
   const loading = ref(true)
 
-  // 监听登录状态
-  onAuthStateChanged($auth, (u) => {
-    user.value = u
+  // Only set up auth listener on client side
+  if (import.meta.client) {
+    const auth = nuxtApp.$auth
+    if (auth) {
+      onAuthStateChanged(auth, (u) => {
+        user.value = u
+        loading.value = false
+      })
+    } else {
+      loading.value = false
+    }
+  } else {
     loading.value = false
-  })
+  }
 
   // 邮箱注册
   async function signUpWithEmail(email: string, password: string) {
-    const credential = await createUserWithEmailAndPassword($auth, email, password)
+    const auth = nuxtApp.$auth
+    if (!auth) throw new Error('Firebase auth not initialized')
+    const credential = await createUserWithEmailAndPassword(auth, email, password)
     return credential.user
   }
 
   // 邮箱登录
   async function signInWithEmail(email: string, password: string) {
-    const credential = await signInWithEmailAndPassword($auth, email, password)
+    const auth = nuxtApp.$auth
+    if (!auth) throw new Error('Firebase auth not initialized')
+    const credential = await signInWithEmailAndPassword(auth, email, password)
     return credential.user
   }
 
   // Google 登录
   async function signInWithGoogle() {
+    const auth = nuxtApp.$auth
+    if (!auth) throw new Error('Firebase auth not initialized')
     const provider = new GoogleAuthProvider()
-    const credential = await signInWithPopup($auth, provider)
+    const credential = await signInWithPopup(auth, provider)
     return credential.user
   }
 
   // 登出
   async function logout() {
-    await signOut($auth)
+    const auth = nuxtApp.$auth
+    if (!auth) return
+    await signOut(auth)
   }
 
   // 获取 ID Token（供服务端验证）
