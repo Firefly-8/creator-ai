@@ -78,31 +78,31 @@
   },
   "auth": {
     "login": {
+      "tab": "로그인",
       "title": "다시 오신 것을 환영합니다",
-      "subtitle": "CraftAI 계정에 로그인하세요",
-      "email": "이메일",
-      "password": "비밀번호",
+      "subtitle": "계정에 로그인하세요",
+      "google": "Google로 계속",
       "submit": "로그인",
-      "loading": "로그인 중...",
-      "orContinue": "또는 계속하기",
-      "noAccount": "계정이 없으신가요?",
-      "signUp": "회원가입",
-      "enterPassword": "Enter your password"
+      "loading": "로그인 중..."
     },
     "signup": {
+      "tab": "회원가입",
       "title": "계정 만들기",
-      "subtitle": "AI로 무료로 창작 시작",
-      "name": "이름",
-      "email": "이메일",
-      "password": "비밀번호",
+      "subtitle": "AI로 무료 창작 시작",
+      "google": "Google로 계속",
       "submit": "계정 만들기",
-      "loading": "생성 중...",
-      "agree": "가입하면 이용약관 및 개인정보처리방침에 동의하게 됩니다",
-      "hasAccount": "이미 계정이 있으신가요?",
-      "signIn": "로그인",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "loading": "생성 중..."
+    },
+    "email": "이메일",
+    "emailPlaceholder": "이메일 입력",
+    "password": "비밀번호",
+    "passwordPlaceholder": "비밀번호 입력",
+    "minChars": "최소 8자",
+    "forgotPassword": "비밀번호를 잊으셨나요?",
+    "forgotPasswordComingSoon": "비밀번호 리셋 곧 출시",
+    "orEmail": "또는 이메일로 계속",
+    "noAccount": "계정이 없으신가요?",
+    "haveAccount": "이미 계정이 있으신가요?"
   },
   "dashboard": {
     "title": "대시보드",

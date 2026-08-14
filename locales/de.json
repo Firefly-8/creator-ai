@@ -78,31 +78,31 @@
   },
   "auth": {
     "login": {
+      "tab": "Anmelden",
       "title": "Willkommen zurück",
-      "subtitle": "Melde dich bei deinem CraftAI-Konto an",
-      "email": "E-Mail",
-      "password": "Passwort",
+      "subtitle": "Bei deinem Konto anmelden",
+      "google": "Mit Google fortfahren",
       "submit": "Anmelden",
-      "loading": "Anmeldung...",
-      "orContinue": "Oder fortfahren mit",
-      "noAccount": "Noch kein Konto?",
-      "signUp": "Registrieren",
-      "enterPassword": "Enter your password"
+      "loading": "Anmeldung läuft..."
     },
     "signup": {
+      "tab": "Registrieren",
       "title": "Konto erstellen",
-      "subtitle": "Starte kostenlos mit KI zu erstellen",
-      "name": "Name",
-      "email": "E-Mail",
-      "password": "Passwort",
+      "subtitle": "Kostenlos mit AI erstellen starten",
+      "google": "Mit Google fortfahren",
       "submit": "Konto erstellen",
-      "loading": "Erstellung...",
-      "agree": "Mit der Registrierung stimmst du unseren Nutzungsbedingungen und Datenschutzrichtlinie zu",
-      "hasAccount": "Bereits ein Konto?",
-      "signIn": "Anmelden",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "loading": "Erstellung läuft..."
+    },
+    "email": "E-Mail",
+    "emailPlaceholder": "E-Mail eingeben",
+    "password": "Passwort",
+    "passwordPlaceholder": "Passwort eingeben",
+    "minChars": "Mind. 8 Zeichen",
+    "forgotPassword": "Passwort vergessen?",
+    "forgotPasswordComingSoon": "Passwort-Zurücksetzung kommt bald",
+    "orEmail": "Oder mit E-Mail fortfahren",
+    "noAccount": "Noch kein Konto?",
+    "haveAccount": "Bereits ein Konto?"
   },
   "dashboard": {
     "title": "Dashboard",

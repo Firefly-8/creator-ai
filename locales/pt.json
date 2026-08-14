@@ -78,31 +78,31 @@
   },
   "auth": {
     "login": {
+      "tab": "Entrar",
       "title": "Bem-vindo de volta",
-      "subtitle": "Entre na sua conta Creator",
-      "email": "E-mail",
-      "password": "Senha",
+      "subtitle": "Entre na sua conta",
+      "google": "Continuar com Google",
       "submit": "Entrar",
-      "loading": "Entrando...",
-      "orContinue": "Ou continuar com",
-      "noAccount": "Não tem conta?",
-      "signUp": "Cadastre-se",
-      "enterPassword": "Enter your password"
+      "loading": "Entrando..."
     },
     "signup": {
-      "title": "Crie sua conta",
-      "subtitle": "Comece a criar com IA gratuitamente",
-      "name": "Nome",
-      "email": "E-mail",
-      "password": "Senha",
-      "submit": "Criar Conta",
-      "loading": "Criando...",
-      "agree": "Ao se cadastrar, você concorda com nossos Termos de Serviço e Política de Privacidade",
-      "hasAccount": "Já tem conta?",
-      "signIn": "Entrar",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "tab": "Cadastrar",
+      "title": "Criar conta",
+      "subtitle": "Comece a criar com IA grátis",
+      "google": "Continuar com Google",
+      "submit": "Criar conta",
+      "loading": "Criando..."
+    },
+    "email": "E-mail",
+    "emailPlaceholder": "Digite seu e-mail",
+    "password": "Senha",
+    "passwordPlaceholder": "Digite sua senha",
+    "minChars": "Mín 8 caracteres",
+    "forgotPassword": "Esqueceu a senha?",
+    "forgotPasswordComingSoon": "Reset em breve",
+    "orEmail": "Ou continuar com e-mail",
+    "noAccount": "Não tem conta?",
+    "haveAccount": "Já tem conta?"
   },
   "dashboard": {
     "title": "Painel",

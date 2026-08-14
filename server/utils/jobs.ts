@@ -1,6 +1,7 @@
 /**
  * 任务管理 — Cloudflare D1 版本
  * 异步 API，兼容 CF Workers
+ * Phase 1: 增加 user_id 数据隔离
  */
 
 import { nanoid } from 'nanoid'
@@ -48,24 +49,33 @@ async function touchSong(id: string) {
   await dbRun('UPDATE songs SET updated_at = ? WHERE id = ?', [nowIso(), id])
 }
 
-export async function getJob(id: string): Promise<JobRow | null> {
+export async function getJob(id: string, userId?: string): Promise<JobRow | null> {
+  if (userId) {
+    return dbGet<JobRow>('SELECT * FROM jobs WHERE id = ? AND user_id = ?', [id, userId])
+  }
   return dbGet<JobRow>('SELECT * FROM jobs WHERE id = ?', [id])
 }
 
-export async function getJobBySongId(songId: string): Promise<JobRow | null> {
+export async function getJobBySongId(songId: string, userId?: string): Promise<JobRow | null> {
+  if (userId) {
+    return dbGet<JobRow>('SELECT * FROM jobs WHERE song_id = ? AND user_id = ? ORDER BY created_at DESC LIMIT 1', [songId, userId])
+  }
   return dbGet<JobRow>('SELECT * FROM jobs WHERE song_id = ? ORDER BY created_at DESC LIMIT 1', [songId])
 }
 
-export async function getSong(id: string): Promise<SongRow | null> {
+export async function getSong(id: string, userId?: string): Promise<SongRow | null> {
+  if (userId) {
+    return dbGet<SongRow>('SELECT * FROM songs WHERE id = ? AND user_id = ?', [id, userId])
+  }
   return dbGet<SongRow>('SELECT * FROM songs WHERE id = ?', [id])
 }
 
-export async function listSongs(limit = 50): Promise<SongRow[]> {
-  return dbAll<SongRow>('SELECT * FROM songs ORDER BY created_at DESC LIMIT ?', [limit])
+export async function listSongs(userId: string, limit = 50): Promise<SongRow[]> {
+  return dbAll<SongRow>('SELECT * FROM songs WHERE user_id = ? ORDER BY created_at DESC LIMIT ?', [userId, limit])
 }
 
-export async function deleteSong(id: string) {
-  const song = await getSong(id)
+export async function deleteSong(id: string, userId?: string) {
+  const song = await getSong(id, userId)
   if (!song) return null
   if (song.audio_path) {
     try { await deleteFile('audio', song.audio_path) } catch { /* ignore */ }
@@ -80,7 +90,7 @@ export async function deleteSong(id: string) {
 
 // ============ 任务操作 ============
 
-export async function createJob(type: string, payload: Record<string, unknown>, songId?: string): Promise<JobRow> {
+export async function createJob(userId: string, type: string, payload: Record<string, unknown>, songId?: string): Promise<JobRow> {
   const id = nanoid(12)
   const ts = nowIso()
   const row: JobRow = {
@@ -96,9 +106,9 @@ export async function createJob(type: string, payload: Record<string, unknown>, 
     updated_at: ts,
   }
   await dbRun(
-    `INSERT INTO jobs (id, type, status, progress, song_id, error_message, payload_json, result_json, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [row.id, row.type, row.status, row.progress, row.song_id, row.error_message, row.payload_json, row.result_json, row.created_at, row.updated_at]
+    `INSERT INTO jobs (id, user_id, type, status, progress, song_id, error_message, payload_json, result_json, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [row.id, userId, row.type, row.status, row.progress, row.song_id, row.error_message, row.payload_json, row.result_json, row.created_at, row.updated_at]
   )
   return row
 }
@@ -136,7 +146,7 @@ export async function updateSong(id: string, patch: Partial<SongRow>): Promise<S
 
 // ============ 歌曲创建 ============
 
-export async function createSongDraft(input: {
+export async function createSongDraft(userId: string, input: {
   title?: string
   prompt?: string
   lyrics?: string
@@ -149,6 +159,7 @@ export async function createSongDraft(input: {
   const ts = nowIso()
   const row: SongRow = {
     id,
+    user_id: userId,
     title: input.title || 'Untitled Track',
     prompt: input.prompt || '',
     lyrics: input.lyrics || '',
@@ -166,9 +177,9 @@ export async function createSongDraft(input: {
     updated_at: ts,
   }
   await dbRun(
-    `INSERT INTO songs (id, title, prompt, lyrics, model, type, status, duration_ms, audio_path, cover_path, cover_color, error_message, parent_id, meta_json, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    [row.id, row.title, row.prompt, row.lyrics, row.model, row.type, row.status,
+    `INSERT INTO songs (id, user_id, title, prompt, lyrics, model, type, status, duration_ms, audio_path, cover_path, cover_color, error_message, parent_id, meta_json, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [row.id, row.user_id, row.title, row.prompt, row.lyrics, row.model, row.type, row.status,
      row.duration_ms, row.audio_path, row.cover_path, row.cover_color,
      row.error_message, row.parent_id, row.meta_json, row.created_at, row.updated_at]
   )
@@ -273,4 +284,13 @@ export function publicJob(job: JobRow) {
 function safeJson(raw: string | null) {
   if (!raw) return null
   try { return JSON.parse(raw) } catch { return null }
+}
+
+// ============ 重新生成 ============
+
+export async function regenerateSong(id: string, userId?: string): Promise<{ ok: true; id: string }> {
+  const song = await getSong(id, userId)
+  if (!song) throw createError({ statusCode: 404, statusMessage: 'Song not found' })
+  // TODO: 重新触发生成（Phase 2 实现）
+  return { ok: true, id }
 }

@@ -78,31 +78,31 @@
   },
   "auth": {
     "login": {
+      "tab": "Connexion",
       "title": "Bon retour",
-      "subtitle": "Connectez-vous à votre compte CraftAI",
-      "email": "E-mail",
-      "password": "Mot de passe",
+      "subtitle": "Connectez-vous à votre compte",
+      "google": "Continuer avec Google",
       "submit": "Se connecter",
-      "loading": "Connexion...",
-      "orContinue": "Ou continuer avec",
-      "noAccount": "Pas encore de compte ?",
-      "signUp": "S'inscrire",
-      "enterPassword": "Enter your password"
+      "loading": "Connexion en cours..."
     },
     "signup": {
+      "tab": "Inscription",
       "title": "Créer un compte",
       "subtitle": "Commencez à créer avec l'IA gratuitement",
-      "name": "Nom",
-      "email": "E-mail",
-      "password": "Mot de passe",
+      "google": "Continuer avec Google",
       "submit": "Créer un compte",
-      "loading": "Création...",
-      "agree": "En vous inscrivant, vous acceptez nos Conditions d'Utilisation et Politique de Confidentialité",
-      "hasAccount": "Déjà un compte ?",
-      "signIn": "Se connecter",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "loading": "Création en cours..."
+    },
+    "email": "E-mail",
+    "emailPlaceholder": "Entrez votre email",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "minChars": "Min 8 caractères",
+    "forgotPassword": "Mot de passe oublié ?",
+    "forgotPasswordComingSoon": "Réinitialisation bientôt disponible",
+    "orEmail": "Ou continuer par e-mail",
+    "noAccount": "Pas encore de compte ?",
+    "haveAccount": "Déjà un compte ?"
   },
   "dashboard": {
     "title": "Tableau de bord",

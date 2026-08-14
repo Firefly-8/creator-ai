@@ -10,6 +10,7 @@
 
 export interface ImageRow {
   id: string
+  user_id: string
   title: string
   prompt: string
   prompt_final: string
@@ -32,6 +33,7 @@ export type JobStatus = 'queued' | 'generating' | 'downloading' | 'done' | 'erro
 
 export interface SongRow {
   id: string
+  user_id: string
   title: string
   prompt: string
   lyrics: string
@@ -44,6 +46,7 @@ export interface SongRow {
   cover_color: string
   error_message: string | null
   parent_id: string | null
+  user_id: string
   meta_json: string
   created_at: string
   updated_at: string
@@ -51,10 +54,12 @@ export interface SongRow {
 
 export interface JobRow {
   id: string
+  user_id: string
   type: string
   status: JobStatus
   progress: string
   song_id: string | null
+  user_id: string
   error_message: string | null
   payload_json: string
   result_json: string | null

@@ -78,31 +78,31 @@
   },
   "auth": {
     "login": {
+      "tab": "サインイン",
       "title": "おかえりなさい",
-      "subtitle": "CraftAIアカウントにサインイン",
-      "email": "メール",
-      "password": "パスワード",
+      "subtitle": "アカウントにサインイン",
+      "google": "Googleで続行",
       "submit": "サインイン",
-      "loading": "サインイン中...",
-      "orContinue": "または続行",
-      "noAccount": "アカウントをお持ちでないですか？",
-      "signUp": "新規登録",
-      "enterPassword": "Enter your password"
+      "loading": "サインイン中..."
     },
     "signup": {
+      "tab": "新規登録",
       "title": "アカウント作成",
       "subtitle": "AIで無料で作成を開始",
-      "name": "名前",
-      "email": "メール",
-      "password": "パスワード",
+      "google": "Googleで続行",
       "submit": "アカウント作成",
-      "loading": "作成中...",
-      "agree": "サインアップにより、利用規約とプライバシーポリシーに同意したものとみなされます",
-      "hasAccount": "すでにアカウントをお持ちですか？",
-      "signIn": "サインイン",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "loading": "作成中..."
+    },
+    "email": "メール",
+    "emailPlaceholder": "メールアドレスを入力",
+    "password": "パスワード",
+    "passwordPlaceholder": "パスワードを入力",
+    "minChars": "8文字以上",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "forgotPasswordComingSoon": "パスワードリセットは近日公開",
+    "orEmail": "またはメールで続行",
+    "noAccount": "アカウントをお持ちでないですか？",
+    "haveAccount": "すでにアカウントをお持ちですか？"
   },
   "dashboard": {
     "title": "ダッシュボード",

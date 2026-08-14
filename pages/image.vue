@@ -11,8 +11,8 @@
       <div class="space-y-4">
         <div v-if="remixFrom" class="ui-ops-banner">
           <div>
-            <p class="ui-ops-banner__title">$t('image.remixedFrom', { title: remixFrom })</p>
-            <p class="ui-ops-banner__hint">$t('image.remixHint')</p>
+            <p class="ui-ops-banner__title">{{ $t('image.remixedFrom', { title: remixFrom }) }}</p>
+            <p class="ui-ops-banner__hint">{{ $t('image.remixHint') }}</p>
           </div>
           <UiIconButton
             icon="i-ph-x"
@@ -24,7 +24,7 @@
         </div>
         <UiSegmented v-model="mode" :options="modes" equal />
         <section class="space-y-2">
-          <p class="field-label">$t('image.scenePresets')</p>
+          <p class="field-label">{{ $t('image.scenePresets') }}</p>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="preset in IMAGE_SCENE_PRESETS"
@@ -42,12 +42,12 @@
         </section>
 
         <label class="block space-y-2">
-          <span class="field-label">$t('image.prompt') · {{ prompt.length }}/1500</span>
+          <span class="field-label">{{ $t('image.prompt') }} · {{ prompt.length }}/1500</span>
           <textarea
             v-model="prompt"
             class="field min-h-32"
             maxlength="1500"
-            placeholder="$t('image.promptPlaceholder')"
+            placeholder="{{ $t('image.promptPlaceholder') }}"
           />
         </label>
 
@@ -68,7 +68,7 @@
           </label>
           <label class="status-pill cursor-pointer select-none">
             <input v-model="deepOptimize" type="checkbox" class="accent-[#8b7cff]" >
-            $t('image.deepOptimize')
+            {{ $t('image.deepOptimize') }}
           </label>
         </div>
         <p v-if="optimizeNotes" class="field-hint">{{ optimizeNotes }}</p>
@@ -76,13 +76,13 @@
           v-if="promptFinal && promptFinal !== prompt"
           class="rounded-2xl border border-accent/20 bg-accent-mute p-3 text-[12.5px] leading-relaxed text-ink-200"
         >
-          <span class="font-semibold text-accent-soft">$t('image.willUse')</span>
+          <span class="font-semibold text-accent-soft">{{ $t('image.willUse') }}</span>
           {{ promptFinal }}
         </p>
 
         <div v-if="mode === 'i2i'" class="space-y-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
-          <span class="field-label">$t('image.referenceImage')</span>
-          <p class="field-hint">$t('image.referenceHint')</p>
+          <span class="field-label">{{ $t('image.referenceImage') }}</span>
+          <p class="field-hint">{{ $t('image.referenceHint') }}</p>
           <input class="field" type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" @change="onRefFile" >
           <p v-if="refName" class="text-[13px] font-medium text-accent-soft">
             <span class="i-ph-check-circle-fill mr-1 text-[14px]" />
@@ -92,26 +92,26 @@
 
         <div class="grid gap-3 sm:grid-cols-2">
           <label class="block space-y-2">
-            <span class="field-label">$t('image.model')</span>
+            <span class="field-label">{{ $t('image.model') }}</span>
             <select v-model="model" class="field">
-              <option value="image-01">image-01 ($t('image.generic'))</option>
-              <option value="image-01-live">image-01-live ($t('image.style'))</option>
+              <option value="image-01">image-01 ({{ $t('image.generic') }})</option>
+              <option value="image-01-live">image-01-live ({{ $t('image.style') }})</option>
             </select>
           </label>
           <label class="block space-y-2">
-            <span class="field-label">$t('image.aspectRatio')</span>
+            <span class="field-label">{{ $t('image.aspectRatio') }}</span>
             <select v-model="aspectRatio" class="field">
               <option v-for="a in IMAGE_ASPECT_RATIOS" :key="a.value" :value="a.value">{{ a.label }}</option>
             </select>
           </label>
           <label class="block space-y-2">
-            <span class="field-label">$t('image.count')</span>
+            <span class="field-label">{{ $t('image.count') }}</span>
             <select v-model.number="count" class="field">
               <option v-for="n in 4" :key="n" :value="n">{{ n }}</option>
             </select>
           </label>
           <label v-if="model === 'image-01-live'" class="block space-y-2">
-            <span class="field-label">$t('image.styleType')</span>
+            <span class="field-label">{{ $t('image.styleType') }}</span>
             <select v-model="styleType" class="field">
               <option v-for="s in IMAGE_LIVE_STYLES" :key="s" :value="s">{{ s }}</option>
             </select>
@@ -126,7 +126,7 @@
             @click="generate"
           >
             <span class="i-ph-image text-[16px]" />
-            {{ generating ? $t('image.generating') : 'Generate image' }}
+{{ generating ? $t('image.generating') : 'Generate image' }}
           </UiButton>
           <span v-if="errorText" class="status-pill !border-danger/30 !text-danger">{{ errorText }}</span>
           <span v-else-if="statusText" class="status-pill">

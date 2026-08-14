@@ -78,31 +78,31 @@
   },
   "auth": {
     "login": {
-      "title": "Bienvenido de nuevo",
-      "subtitle": "Inicia sesión en tu cuenta de Creator",
-      "email": "Correo electrónico",
-      "password": "Contraseña",
+      "tab": "Iniciar sesión",
+      "title": "Bienvenido de vuelta",
+      "subtitle": "Inicia sesión en tu cuenta",
+      "google": "Continuar con Google",
       "submit": "Iniciar sesión",
-      "loading": "Iniciando sesión...",
-      "orContinue": "O continuar con",
-      "noAccount": "¿No tienes cuenta?",
-      "signUp": "Regístrate",
-      "enterPassword": "Enter your password"
+      "loading": "Iniciando sesión..."
     },
     "signup": {
-      "title": "Crea tu cuenta",
+      "tab": "Registrarse",
+      "title": "Crear cuenta",
       "subtitle": "Empieza a crear con IA gratis",
-      "name": "Nombre",
-      "email": "Correo electrónico",
-      "password": "Contraseña",
-      "submit": "Crear Cuenta",
-      "loading": "Creando...",
-      "agree": "Al registrarte, aceptas nuestros Términos de Servicio y Política de Privacidad",
-      "hasAccount": "¿Ya tienes cuenta?",
-      "signIn": "Inicia sesión",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "google": "Continuar con Google",
+      "submit": "Crear cuenta",
+      "loading": "Creando..."
+    },
+    "email": "Correo",
+    "emailPlaceholder": "Ingresa tu correo",
+    "password": "Contraseña",
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "minChars": "Mín 8 caracteres",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "forgotPasswordComingSoon": "Restablecimiento pronto",
+    "orEmail": "O continuar con correo",
+    "noAccount": "¿No tienes cuenta?",
+    "haveAccount": "¿Ya tienes cuenta?"
   },
   "dashboard": {
     "title": "Panel",

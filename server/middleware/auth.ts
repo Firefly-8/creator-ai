@@ -1,70 +1,53 @@
 /**
- * 认证中间件 — 验证请求签名和会话
+ * 认证中间件 — Firebase Token 自动验证
  * 
- * 保护敏感 API 端点，防止：
- * 1. 未授权访问
- * 2. 重放攻击（通过时间戳和签名）
- * 3. CSRF 攻击
+ * 白名单路径不需要认证
+ * 其他路径自动验证 Token 并注入 event.context.auth
  */
 
-import { verifySignature } from '../utils/crypto'
+const PUBLIC_PATHS = [
+  '/api/auth',
+  '/api/subscriptions/plans',
+  '/api/robots',
+  '/api/sitemap',
+  '/api/upload',      // 上传前会单独验证
+  '/_nuxt',
+  '/logo.png',
+  '/favicon.ico',
+]
 
 export default defineEventHandler(async (event) => {
-  // 只对敏感端点进行签名验证
-  const path = event.path
-  const signedPaths = [
-    '/api/music/generate',
-    '/api/image/generate',
-    '/api/cover/generate',
-    '/api/lyrics',
-    '/api/subscriptions/create',
-    '/api/subscriptions/webhook',
-  ]
+  const path = event.path || ''
   
-  const needsSignature = signedPaths.some(p => path.startsWith(p))
-  if (!needsSignature) return
+  // 白名单路径跳过
+  if (PUBLIC_PATHS.some(p => path.startsWith(p))) return
+  // OPTIONS 请求跳过
+  if (event.method === 'OPTIONS') return
   
-  // 获取签名头
-  const timestamp = getHeader(event, 'x-request-timestamp')
-  const signature = getHeader(event, 'x-request-signature')
+  // 只保护 /api/ 路径
+  if (!path.startsWith('/api/')) return
+
+  // 提取 Token
+  const authHeader = getHeader(event, 'authorization')
+  const token = typeof authHeader === 'string' ? authHeader.replace('Bearer ', '') : ''
   
-  if (!timestamp || !signature) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Missing request signature',
-    })
+  if (!token) {
+    throw createError({ statusCode: 401, statusMessage: 'Missing authorization token' })
   }
+
+  // 验证 Token
+  const { verifyFirebaseToken } = await import('../utils/firebase-verify')
+  const payload = await verifyFirebaseToken(token)
   
-  // 检查时间戳是否在 5 分钟内（防重放）
-  const ts = parseInt(timestamp as string)
-  if (isNaN(ts) || Math.abs(Date.now() - ts) > 5 * 60 * 1000) {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Request timestamp expired',
-    })
+  if (!payload) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid or expired token' })
   }
-  
-  // 获取签名密钥 - 必须配置，否则拒绝请求
-  const config = useRuntimeConfig()
-  const secret = config.requestSigningSecret || config.appSecret || ''
-  
-  if (!secret) {
-    // 未配置签名密钥时拒绝所有受保护端点
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Server configuration error: signing secret not set',
-    })
-  }
-  
-  // 验证签名
-  const body = event.node.req.method !== 'GET' ? await readRawBody(event).catch(() => null) : null
-  const payload = `${path}:${timestamp}:${body || ''}`
-  const isValid = await verifySignature(payload, signature as string, secret)
-  
-  if (!isValid) {
-    throw createError({
-      statusCode: 403,
-      statusMessage: 'Invalid request signature',
-    })
+
+  // 注入用户上下文
+  event.context.auth = {
+    uid: payload.sub,
+    email: payload.email,
+    name: payload.name,
+    picture: payload.picture,
   }
 })

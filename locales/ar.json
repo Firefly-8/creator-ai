@@ -78,31 +78,31 @@
   },
   "auth": {
     "login": {
+      "tab": "تسجيل الدخول",
       "title": "مرحبًا بعودتك",
-      "subtitle": "سجّل الدخول إلى حسابك في Creator",
-      "email": "البريد الإلكتروني",
-      "password": "كلمة المرور",
+      "subtitle": "سجل الدخول إلى حسابك",
+      "google": "المتابعة مع Google",
       "submit": "تسجيل الدخول",
-      "loading": "جارٍ تسجيل الدخول...",
-      "orContinue": "أو تابع مع",
-      "noAccount": "ليس لديك حساب؟",
-      "signUp": "سجّل الآن",
-      "enterPassword": "Enter your password"
+      "loading": "جارٍ تسجيل الدخول..."
     },
     "signup": {
-      "title": "أنشئ حسابك",
+      "tab": "إنشاء حساب",
+      "title": "إنشاء حساب",
       "subtitle": "ابدأ الإنشاء بالذكاء الاصطناعي مجانًا",
-      "name": "الاسم",
-      "email": "البريد الإلكتروني",
-      "password": "كلمة المرور",
+      "google": "المتابعة مع Google",
       "submit": "إنشاء حساب",
-      "loading": "جارٍ الإنشاء...",
-      "agree": "بالتسجيل، فإنك توافق على شروط الخدمة وسياسة الخصوصية",
-      "hasAccount": "لديك حساب بالفعل؟",
-      "signIn": "سجّل الدخول",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "loading": "جارٍ الإنشاء..."
+    },
+    "email": "البريد الإلكتروني",
+    "emailPlaceholder": "أدخل بريدك الإلكتروني",
+    "password": "كلمة المرور",
+    "passwordPlaceholder": "أدخل كلمة المرور",
+    "minChars": "8 أحرف على الأقل",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "forgotPasswordComingSoon": "إعادة التعيين قريبًا",
+    "orEmail": "أو المتابعة بالبريد",
+    "noAccount": "ليس لديك حساب؟",
+    "haveAccount": "لديك حساب بالفعل؟"
   },
   "dashboard": {
     "title": "لوحة التحكم",

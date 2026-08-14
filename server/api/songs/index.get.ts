@@ -1,30 +1,21 @@
 /**
- * 歌曲列表 — D1 版本
+ * 获取当前用户的歌曲列表
  */
+import { defineEventHandler, createError } from 'h3'
+import { listSongs, publicSong } from '../../utils/jobs'
+import { decryptSongFields } from '../../utils/db'
 
-import { defineEventHandler } from 'h3'
-import { listSongs, publicSong, ensureSongCover, getJobBySongId } from '../../utils/jobs'
+export default defineEventHandler(async (event) => {
+  const auth = event.context.auth
+  if (!auth?.uid) throw createError({ statusCode: 401 })
 
-export default defineEventHandler(async () => {
-  const songs = await listSongs(100)
+  const songs = await listSongs(auth.uid, 100)
   
+  // 解密敏感字段
   const result = []
   for (const song of songs) {
-    // 检查进行中的任务是否仍然有效
-    if (song.status === 'generating') {
-      const job = await getJobBySongId(song.id)
-      if (!job || !['queued', 'generating', 'downloading'].includes(job.status)) {
-        continue // 跳过无效的进行中状态
-      }
-    }
-    
-    // 确保有封面
-    if (song.status === 'ready' && !song.cover_path) {
-      const updated = await ensureSongCover(song)
-      result.push(publicSong(updated))
-    } else {
-      result.push(publicSong(song))
-    }
+    const decrypted = await decryptSongFields(song)
+    result.push(publicSong(decrypted))
   }
 
   return { songs: result }

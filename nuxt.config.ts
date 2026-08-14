@@ -28,7 +28,7 @@ export default defineNuxtConfig({
     public: {
       appName: 'Creator',
       appVersion: '1.0.0',
-      firebaseApiKey: process.env.FIREBASE_API_KEY || 'AIzaSyAwoUulU3NBq7QsXr_wleNtvoHk534iwtM',
+      firebaseApiKey: process.env.FIREBASE_API_KEY || 'AIzaSyAwoUulU3NBq7QsXr_wleNtvoHk534wtM',
       firebaseAuthDomain: process.env.FIREBASE_AUTH_DOMAIN || 'creator-cab02.firebaseapp.com',
       firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'creator-cab02',
       firebaseStorageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'creator-cab02.firebasestorage.app',
@@ -82,6 +82,13 @@ export default defineNuxtConfig({
     },
     lazy: false,
     langDir: 'locales/',
+    bundle: {
+      compositionOnly: true,
+      runtimeOnly: false,
+      fullInstall: true,
+      dropMessageCompiler: false,
+      optimizeTranslationDirective: false,
+    },
   },
 
   nitro: {

@@ -1,5 +1,9 @@
+/**
+ * 上传图片文件（用于图生图参考）
+ */
+import { defineEventHandler, createError } from 'h3'
+
 export default defineEventHandler(async (event) => {
-  assertAppSecret(event)
   const form = await readMultipartFormData(event)
   if (!form?.length) throw createError({ statusCode: 400, statusMessage: 'No file uploaded' })
 
@@ -14,13 +18,16 @@ export default defineEventHandler(async (event) => {
 
   const lower = file.filename.toLowerCase()
   if (!/\.(jpe?g|png)$/.test(lower)) {
-    throw createError({ statusCode: 400, statusMessage: 'Only JPG/PNG are supported for subject reference' })
+    throw createError({ statusCode: 400, statusMessage: 'Only JPG/PNG are supported' })
   }
 
   const { nanoid } = await import('nanoid')
   const ext = lower.endsWith('.png') ? '.png' : '.jpg'
   const uploadId = `${nanoid(12)}${ext}`
-  writeUploadBuffer(uploadId, Buffer.from(file.data))
+
+  // file.data is already Uint8Array in Nitro/CF Workers
+  const { writeFile } = await import('../../utils/storage')
+  await writeFile('upload', uploadId, file.data as Uint8Array, ext === '.png' ? 'image/png' : 'image/jpeg')
 
   return {
     uploadId,

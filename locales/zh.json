@@ -16,7 +16,8 @@
     "logout": "Sign Out",
     "tagline": "AI Music & Image Studio",
     "musicGroup": "Music",
-    "imageGroup": "Image"
+    "imageGroup": "Image",
+    "admin": "管理"
   },
   "hero": {
     "title": "AI 音乐与图像创作",
@@ -78,31 +79,31 @@
   },
   "auth": {
     "login": {
+      "tab": "登录",
       "title": "欢迎回来",
-      "subtitle": "登录你的 Creator 账号",
-      "email": "邮箱",
-      "password": "密码",
+      "subtitle": "登录你的账号",
+      "google": "使用 Google 继续",
       "submit": "登录",
-      "loading": "登录中...",
-      "orContinue": "或者使用",
-      "noAccount": "还没有账号？",
-      "signUp": "立即注册",
-      "enterPassword": "Enter your password"
+      "loading": "登录中..."
     },
     "signup": {
+      "tab": "注册",
       "title": "创建账号",
       "subtitle": "免费开始使用 AI 创作",
-      "name": "姓名",
-      "email": "邮箱",
-      "password": "密码",
+      "google": "使用 Google 继续",
       "submit": "创建账号",
-      "loading": "创建中...",
-      "agree": "注册即表示你同意我们的服务条款和隐私政策",
-      "hasAccount": "已有账号？",
-      "signIn": "去登录",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "loading": "创建中..."
+    },
+    "email": "邮箱",
+    "emailPlaceholder": "请输入邮箱",
+    "password": "密码",
+    "passwordPlaceholder": "输入密码",
+    "minChars": "至少 8 个字符",
+    "forgotPassword": "忘记密码？",
+    "forgotPasswordComingSoon": "密码重置功能即将推出",
+    "orEmail": "或使用邮箱继续",
+    "noAccount": "还没有账号？",
+    "haveAccount": "已有账号？"
   },
   "dashboard": {
     "title": "控制台",
@@ -207,5 +208,20 @@
     "deleteFailed": "删除失败",
     "regenerateFailed": "重新生成失败",
     "subtitle": "All generated tracks and covers"
+  },
+  "feedback": {
+    "title": "发送反馈",
+    "typeBug": "问题",
+    "typeFeature": "建议",
+    "typeContent": "内容",
+    "typeOther": "其他",
+    "subject": "主题",
+    "subjectPlaceholder": "简要描述",
+    "message": "详情",
+    "messagePlaceholder": "告诉我们你的想法或报告问题...",
+    "submit": "提交反馈",
+    "sending": "发送中...",
+    "thanks": "感谢你的反馈！",
+    "done": "完成"
   }
 }

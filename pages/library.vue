@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Library</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">{{  $t('library.subtitle')  }}</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">{{ $t('library.subtitle') }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
         <UiSegmented
@@ -18,7 +18,7 @@
     <template #results-header>
       <div>
         <h2 class="font-display text-[16px] font-650 text-white">Tracks</h2>
-        <p class="text-[12px] text-ink-400">{{ filtered.length }} $t('library.items')</p>
+        <p class="text-[12px] text-ink-400">{{ filtered.length }} {{ $t('library.items') }}</p>
       </div>
       <div class="flex items-center gap-2">
         <p v-if="actionError" class="max-w-[14rem] truncate text-[12px] text-danger">{{ actionError }}</p>
@@ -31,8 +31,8 @@
         :songs="filtered"
         :pending="pending"
         :busy-id="busyId"
-        empty-title="$t('library.emptyTitle')"
-        empty-hint="$t('library.emptyHint')"
+        empty-title="{{ $t('library.emptyTitle') }}"
+        empty-hint="{{ $t('library.emptyHint') }}"
         @remix="remixSong"
         @regenerate="regenerate"
         @download="downloadSong"
@@ -60,6 +60,9 @@ const filters = [
 const busyId = ref<string | null>(null)
 const actionError = ref('')
 
+// 使用带认证的 API
+const { get, del } = useApi()
+
 const { data, pending, refresh } = await useFetch<{ songs: SongPublic[] }>('/api/songs', {
   key: 'library-songs',
 })
@@ -79,7 +82,7 @@ async function regenerate(song: SongPublic) {
   busyId.value = song.id
   actionError.value = ''
   try {
-    await $fetch(`/api/songs/${song.id}/regenerate`, { method: 'POST' })
+    await get(`/api/songs/${song.id}/regenerate`)
     await refresh()
   } catch (e: any) {
     actionError.value = e?.data?.statusMessage || e?.message || t('library.regenerateFailed')
@@ -106,7 +109,7 @@ async function removeSong(song: SongPublic) {
   busyId.value = song.id
   actionError.value = ''
   try {
-    await $fetch(`/api/songs/${song.id}`, { method: 'DELETE' })
+    await del(`/api/songs/${song.id}`)
     await refresh()
   } catch (e: any) {
     actionError.value = e?.data?.statusMessage || e?.message || t('library.deleteFailed')

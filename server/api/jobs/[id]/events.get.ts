@@ -1,10 +1,14 @@
+/**
+ * SSE 任务事件流
+ */
+import { defineEventHandler, setHeader, createError } from 'h3'
+import { getJob, publicJob, onJobUpdate } from '../../../utils/jobs'
 
 export default defineEventHandler(async (event) => {
-  assertAppSecret(event)
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'Missing job id' })
 
-  const job = getJob(id)
+  const job = await getJob(id)
   if (!job) throw createError({ statusCode: 404, statusMessage: 'Job not found' })
 
   setHeader(event, 'Content-Type', 'text/event-stream')
@@ -29,32 +33,19 @@ export default defineEventHandler(async (event) => {
         send({ job: publicJob(updated) })
         if (updated.status === 'done' || updated.status === 'error') {
           off()
-          try {
-            controller.close()
-          } catch {
-            // closed
-          }
+          try { controller.close() } catch { /* closed */ }
         }
       })
 
-      // heartbeat
       const timer = setInterval(() => {
-        try {
-          controller.enqueue(encoder.encode(`: ping\n\n`))
-        } catch {
-          clearInterval(timer)
-          off()
-        }
+        try { controller.enqueue(encoder.encode(`: ping\n\n`)) }
+        catch { clearInterval(timer); off() }
       }, 15000)
 
       event.node.req.on('close', () => {
         clearInterval(timer)
         off()
-        try {
-          controller.close()
-        } catch {
-          // ignore
-        }
+        try { controller.close() } catch { /* ignore */ }
       })
     },
   })

@@ -38,7 +38,21 @@
             <span class="text-xs text-ink-300 truncate">{{ user.email }}</span>
           </div>
           <button class="btn-secondary w-full text-sm" @click="handleLogout">{{ $t('nav.logout') }}</button>
+          <!-- Admin Link -->
+          <NuxtLink
+            v-if="isAdmin"
+            to="/admin"
+            class="btn-secondary w-full text-sm mt-2 !inline-flex !items-center !justify-center gap-1.5"
+            @click="mobileNavOpen = false"
+          >
+            <span class="i-ph-shield-star text-[14px]" />
+            {{ $t('nav.admin', 'Admin') }}
+          </NuxtLink>
         </template>
+        <button class="sidebar-feedback-btn" @click="openFeedback()">
+          <span class="i ph-chat-circle-text text-[14px]" />
+          {{ $t('feedback.title', 'Send Feedback') }}
+        </button>
         <p class="text-[11px] leading-relaxed text-ink-500 mt-3">{{ $t('nav.tagline') }}</p>
       </div>
     </aside>
@@ -68,20 +82,40 @@
     </div>
   </div>
   <AuthModal v-model="authModalOpen" :initial-mode="authModalMode" />
+  <FeedbackModal v-model="feedbackOpen" source="creator" />
 </template>
 
 <script setup lang="ts">
 const { $t } = useNuxtApp()
 const route = useRoute()
 const mobileNavOpen = ref(false)
-const { user, loading: authLoading, authReady, logout } = useAuth()
+const { user, authReady, logout } = useAuth()
 const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
+const { isOpen: feedbackOpen, openFeedback } = useFeedback()
 useRobots()
 
 async function handleLogout() {
   await logout()
   await navigateTo('/')
 }
+
+// 检查管理员权限
+const isAdmin = ref(false)
+watch([user, authReady], async () => {
+  if (!authReady.value || !user.value) {
+    isAdmin.value = false
+    return
+  }
+  try {
+    const token = await user.value.getIdToken()
+    const res = await $fetch<{ role: string }>('/api/user/role', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    isAdmin.value = res.role === 'admin'
+  } catch {
+    isAdmin.value = false
+  }
+}, { immediate: true })
 
 // 使用 computed 确保 i18n 切换时导航标签同步更新
 const groups = computed(() => [
@@ -116,3 +150,27 @@ watch(() => route.fullPath, () => {
   mobileNavOpen.value = false
 })
 </script>
+
+<style scoped>
+.sidebar-feedback-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sidebar-feedback-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--ink);
+  background: var(--fill-soft);
+}
+</style>

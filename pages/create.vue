@@ -11,8 +11,8 @@
       <div class="space-y-4">
         <div v-if="remixFrom" class="ui-ops-banner">
           <div>
-            <p class="ui-ops-banner__title">$t('create.remixedFrom', { title: remixFrom })</p>
-            <p class="ui-ops-banner__hint">$t('create.remixHint')</p>
+            <p class="ui-ops-banner__title">{{ $t('create.remixedFrom', { title: remixFrom }) }}</p>
+            <p class="ui-ops-banner__hint">{{ $t('create.remixHint') }}</p>
           </div>
           <UiIconButton
             icon="i-ph-x"
@@ -53,7 +53,7 @@
               @click="genLyrics"
             >
               <span class="i-ph-magic-wand text-[14px]" />
-              {{ lyricsLoading ? $t('create.lyricsGenerating') : $t('create.generateLyrics') }}
+{{ lyricsLoading ? $t('create.lyricsGenerating') : $t('create.generateLyrics') }}
             </UiButton>
           </div>
           <div class="flex flex-wrap gap-1.5">
@@ -85,13 +85,8 @@
             @click="submit"
           >
             <span class="i-ph-waveform text-[16px]" />
-            {{
-              lyricsLoading
-                ? $t('create.lyricsGenerating')
-                : isGenerating
-                  ? 'Generating…'
-                  : 'Generate song'
-            }}
+            {{ lyricsLoading ? $t('create.lyricsGenerating') : (isGenerating ? 'Generating\u2026' : 'Generate song') }}
+
           </UiButton>
           <span v-if="errorText" class="status-pill !border-danger/30 !text-danger">{{ errorText }}</span>
           <span v-else-if="lyricsLoading" class="status-pill">
@@ -109,7 +104,7 @@
     <template #results-header>
       <div>
         <h2 class="font-display text-[16px] font-650 text-white">Results</h2>
-        <p class="text-[12px] text-ink-400">$t('create.resultsHint')</p>
+        <p class="text-[12px] text-ink-400">{{ $t('create.resultsHint') }}</p>
       </div>
       <UiRefreshButton :loading="songsPending" @click="refreshSongs" />
     </template>
@@ -127,8 +122,8 @@
           :pending="songsPending"
           :active-id="activeSong?.id"
           :busy-id="busyId"
-          empty-title="$t('create.noSongs')"
-          empty-hint="$t('create.noSongsHint')"
+          empty-title="{{ $t('create.noSongs') }}"
+          empty-hint="{{ $t('create.noSongsHint') }}"
           @remix="loadFromSong"
           @regenerate="regenerate"
           @download="downloadSong"

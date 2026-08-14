@@ -78,31 +78,31 @@
   },
   "auth": {
     "login": {
+      "tab": "Accedi",
       "title": "Bentornato",
-      "subtitle": "Accedi al tuo account Creator",
-      "email": "Email",
-      "password": "Password",
+      "subtitle": "Accedi al tuo account",
+      "google": "Continua con Google",
       "submit": "Accedi",
-      "loading": "Accesso in corso...",
-      "orContinue": "Oppure continua con",
-      "noAccount": "Non hai un account?",
-      "signUp": "Registrati",
-      "enterPassword": "Enter your password"
+      "loading": "Accesso in corso..."
     },
     "signup": {
-      "title": "Crea il tuo account",
-      "subtitle": "Inizia a creare con l'AI gratis",
-      "name": "Nome",
-      "email": "Email",
-      "password": "Password",
-      "submit": "Crea Account",
-      "loading": "Creazione...",
-      "agree": "Registrandoti, accetti i nostri Termini di Servizio e Informativa sulla Privacy",
-      "hasAccount": "Hai già un account?",
-      "signIn": "Accedi",
-      "minChars": "Min 8 characters",
-      "agreePrefix": "By signing up, you agree to our"
-    }
+      "tab": "Registrati",
+      "title": "Crea account",
+      "subtitle": "Inizia a creare con l'IA gratis",
+      "google": "Continua con Google",
+      "submit": "Crea account",
+      "loading": "Creazione in corso..."
+    },
+    "email": "Email",
+    "emailPlaceholder": "Inserisci la tua email",
+    "password": "Password",
+    "passwordPlaceholder": "Inserisci la password",
+    "minChars": "Min 8 caratteri",
+    "forgotPassword": "Password dimenticata?",
+    "forgotPasswordComingSoon": "Reset disponibile a breve",
+    "orEmail": "Oppure continua con email",
+    "noAccount": "Non hai un account?",
+    "haveAccount": "Hai già un account?"
   },
   "dashboard": {
     "title": "Dashboard",
