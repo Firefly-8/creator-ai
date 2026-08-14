@@ -1,5 +1,6 @@
 <template>
   <div class="page-shell studio-shell">
+    <EmailVerificationGuard />
     <aside class="studio-sidebar" :class="{ 'is-open': mobileNavOpen }">
       <div class="studio-sidebar__brand">
         <NuxtLink to="/create" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
@@ -10,7 +11,7 @@
 
       <nav class="studio-sidebar__nav">
         <div v-for="group in groups" :key="group.label" class="studio-nav-group">
-          <p class="studio-nav-group__label">{{  group.label  }}</p>
+          <p class="studio-nav-group__label">{{ group.label }}</p>
           <NuxtLink
             v-for="item in group.items"
             :key="item.to"
@@ -19,26 +20,26 @@
             @click="mobileNavOpen = false"
           >
             <span class="text-[16px]" :class="item.icon" />
-            <span>{{  item.label  }}</span>
+            <span>{{ item.label }}</span>
           </NuxtLink>
         </div>
       </nav>
 
       <div class="studio-sidebar__foot">
-        <template v-if="!authLoading && !user">
-          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">{{  $t('nav.login')  }}</button>
-          <button class="btn-primary w-full text-sm" @click="openSignup">{{  $t('nav.signup')  }}</button>
+        <template v-if="authReady && !user">
+          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">{{ $t('nav.login') }}</button>
+          <button class="btn-primary w-full text-sm" @click="openSignup">{{ $t('nav.signup') }}</button>
         </template>
-        <template v-else-if="user">
+        <template v-else-if="authReady && user">
           <div class="flex items-center gap-2 mb-2">
             <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">
               {{ user.email?.charAt(0).toUpperCase() || 'U' }}
             </div>
             <span class="text-xs text-ink-300 truncate">{{ user.email }}</span>
           </div>
-          <button class="btn-secondary w-full text-sm" @click="handleLogout">$t('nav.logout')</button>
+          <button class="btn-secondary w-full text-sm" @click="handleLogout">{{ $t('nav.logout') }}</button>
         </template>
-        <p class="text-[11px] leading-relaxed text-ink-500 mt-3">$t('nav.tagline')</p>
+        <p class="text-[11px] leading-relaxed text-ink-500 mt-3">{{ $t('nav.tagline') }}</p>
       </div>
     </aside>
 
@@ -55,8 +56,8 @@
         </button>
         <span class="font-display text-[15px] font-650 text-white">{{ pageTitle }}</span>
         <div class="flex items-center gap-2 w-9 justify-end">
-          <template v-if="!authLoading && !user">
-            <button class="text-xs text-ink-300 hover:text-white" @click="openLogin">$t('nav.login')</button>
+          <template v-if="authReady && !user">
+            <button class="text-xs text-ink-300 hover:text-white" @click="openLogin">{{ $t('nav.login') }}</button>
           </template>
         </div>
       </header>
@@ -70,9 +71,10 @@
 </template>
 
 <script setup lang="ts">
+const { $t } = useNuxtApp()
 const route = useRoute()
 const mobileNavOpen = ref(false)
-const { user, loading: authLoading, logout } = useAuth()
+const { user, loading: authLoading, authReady, logout } = useAuth()
 const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
 useRobots()
 
@@ -81,7 +83,8 @@ async function handleLogout() {
   await navigateTo('/')
 }
 
-const groups = [
+// 使用 computed 确保 i18n 切换时导航标签同步更新
+const groups = computed(() => [
   {
     label: $t('nav.musicGroup'),
     items: [
@@ -96,7 +99,7 @@ const groups = [
       { to: '/image', label: $t('nav.image'), icon: 'i-ph-image' },
     ],
   },
-]
+])
 
 const pageTitle = computed(() => {
   const map: Record<string, string> = {
