@@ -7,7 +7,7 @@
     "build": "nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "node -e \"const fs=require(\"fs\");const p=\"node_modules/@nuxtjs/i18n/dist/runtime/composables/index.js\";if(fs.existsSync(p)){let c=fs.readFileSync(p,\"utf8\");if(c.includes(\"from \\\"unhead\\\"\")){c=c.replace(/from \\\"unhead\\\"/g,\"from \\\"unhead/legacy\\\");fs.writeFileSync(p,c);console.log(\"Patched unhead import\")}}\"",
+    "postinstall": "node scripts/patch-unhead.mjs",
     "cf:dev": "nuxt dev --port 3000",
     "cf:build": "nuxt build --preset cloudflare_pages",
     "cf:preview": "npx wrangler pages dev .output/public --compatibility-date=2025-01-01",
