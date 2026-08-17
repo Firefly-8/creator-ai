@@ -128,7 +128,7 @@
     "copyright": "© 2026 Creator. Tutti i diritti riservati."
   },
   "create": {
-    "remixedFrom": "Caricato \"{{ title }}\"",
+    "remixedFrom": "Caricato \"{ title }\"",
     "remixHint": "Modifica stile/testi, poi genera una nuova versione (originale preservato).",
     "lyricsGenerating": "Generazione testi…",
     "generateLyrics": "Genera testi",
@@ -142,11 +142,11 @@
     "regenerateFailed": "Rigenerazione fallita",
     "unnamed": "Senza titolo",
     "loadedParams": "Parametri caricati, regola e genera",
-    "deleteConfirm": "Eliminare \"{{ title }}\"? Non si può annullare.",
+    "deleteConfirm": "Eliminare \"{ title }\"? Non si può annullare.",
     "deleteFailed": "Eliminazione fallita"
   },
   "image": {
-    "remixedFrom": "Caricato \"{{ title }}\"",
+    "remixedFrom": "Caricato \"{ title }\"",
     "remixHint": "Modifica prompt/proporzione/scena per generare nuova immagine.",
     "scenePresets": "Preimpostazioni scena",
     "prompt": "Prompt",
@@ -165,7 +165,7 @@
     "generateFailed": "Generazione immagine fallita",
     "noImages": "Nessuna immagine ancora",
     "noImagesHint": "Genera a sinistra, le immagini appariranno qui",
-    "deleteConfirm": "Eliminare \"{{ title }}\"? Non si può annullare.",
+    "deleteConfirm": "Eliminare \"{ title }\"? Non si può annullare.",
     "deleteFailed": "Eliminazione fallita",
     "download": "Scarica",
     "fullscreen": "Schermo intero",
@@ -180,7 +180,7 @@
     "style": "style"
   },
   "cover": {
-    "remixedFrom": "Caricato \"{{ title }}\"",
+    "remixedFrom": "Caricato \"{ title }\"",
     "remixHint": "Modifica stile/testi. Audio di rificimento va ricaricato.",
     "referenceAudio": "Audio di riferimento",
     "referenceHint": "6 secondi – 6 minuti · max 50MB",
@@ -203,7 +203,7 @@
     "items": "elementi",
     "emptyTitle": "Libreria vuota",
     "emptyHint": "Vai a Creare per generare la tua prima traccia",
-    "deleteConfirm": "Eliminare \"{{ title }}\"? Non si può annullare.",
+    "deleteConfirm": "Eliminare \"{ title }\"? Non si può annullare.",
     "deleteFailed": "Eliminazione fallita",
     "regenerateFailed": "Rigenerazione fallita",
     "subtitle": "All generated tracks and covers"

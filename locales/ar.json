@@ -128,7 +128,7 @@
     "copyright": "© 2026 Creator. جميع الحقوق محفوظة."
   },
   "create": {
-    "remixedFrom": "تم تحميل \"{{ title }}\"",
+    "remixedFrom": "تم تحميل \"{ title }\"",
     "remixHint": "عدّل الأسلوب/الكلمات، ثم ولّد نسخة جديدة (الأصل محفوظ).",
     "lyricsGenerating": "جارٍ توليد الكلمات…",
     "generateLyrics": "توليد الكلمات",
@@ -142,11 +142,11 @@
     "regenerateFailed": "فشل إعادة التوليد",
     "unnamed": "بدون عنوان",
     "loadedParams": "تم تحميل المعلمات، اضبط ولولّد",
-    "deleteConfirm": "حذف \"{{ title }}\"؟ لا يمكن التراجع.",
+    "deleteConfirm": "حذف \"{ title }\"؟ لا يمكن التراجع.",
     "deleteFailed": "فشل الحذف"
   },
   "image": {
-    "remixedFrom": "تم تحميل \"{{ title }}\"",
+    "remixedFrom": "تم تحميل \"{ title }\"",
     "remixHint": "عدّل المطالبة/النسبة/المشهد لتوليد صورة جديدة.",
     "scenePresets": "إعدادات المشهد المسبقة",
     "prompt": "المطالبة",
@@ -165,7 +165,7 @@
     "generateFailed": "فشل توليد الصورة",
     "noImages": "لا توجد صور بعد",
     "noImagesHint": "ولّد على اليسار، وستظهر الصور هنا",
-    "deleteConfirm": "حذف \"{{ title }}\"؟ لا يمكن التراجع.",
+    "deleteConfirm": "حذف \"{ title }\"؟ لا يمكن التراجع.",
     "deleteFailed": "فشل الحذف",
     "download": "تحميل",
     "fullscreen": "ملء الشاشة",
@@ -180,7 +180,7 @@
     "style": "style"
   },
   "cover": {
-    "remixedFrom": "تم تحميل \"{{ title }}\"",
+    "remixedFrom": "تم تحميل \"{ title }\"",
     "remixHint": "عدّل الأسلوب/الكلمات. يجب إعادة رفع الصوت المرجعي.",
     "referenceAudio": "الصوت المرجعي",
     "referenceHint": "6 ثوانٍ – 6 دقائق · الحد الأقصى 50 ميغابايت",
@@ -203,7 +203,7 @@
     "items": "عناصر",
     "emptyTitle": "المكتبة فارغة",
     "emptyHint": "اذهب إلى إنشاء لتوليد أول مسار",
-    "deleteConfirm": "حذف \"{{ title }}\"؟ لا يمكن التراجع.",
+    "deleteConfirm": "حذف \"{ title }\"؟ لا يمكن التراجع.",
     "deleteFailed": "فشل الحذف",
     "regenerateFailed": "فشل إعادة التوليد",
     "subtitle": "All generated tracks and covers"

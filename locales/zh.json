@@ -129,7 +129,7 @@
     "copyright": "© 2026 Creator. 保留所有权利。"
   },
   "create": {
-    "remixedFrom": "已载入「{{ title }}」",
+    "remixedFrom": "已载入「{ title }」",
     "remixHint": "修改风格/歌词后生成新版本（原作保留）。",
     "lyricsGenerating": "歌词生成中…",
     "generateLyrics": "生成歌词",
@@ -143,11 +143,11 @@
     "regenerateFailed": "重新生成失败",
     "unnamed": "未命名",
     "loadedParams": "参数已载入，可调整后生成",
-    "deleteConfirm": "删除「{{ title }}」？此操作不可恢复。",
+    "deleteConfirm": "删除「{ title }」？此操作不可恢复。",
     "deleteFailed": "删除失败"
   },
   "image": {
-    "remixedFrom": "已载入「{{ title }}」",
+    "remixedFrom": "已载入「{ title }」",
     "remixHint": "修改提示词/比例/场景后生成新图（原图保留）。",
     "scenePresets": "场景预设",
     "prompt": "提示词",
@@ -166,7 +166,7 @@
     "generateFailed": "图片生成失败",
     "noImages": "还没有图片",
     "noImagesHint": "在左侧生成后，图片会出现在这里",
-    "deleteConfirm": "删除「{{ title }}」？此操作不可恢复。",
+    "deleteConfirm": "删除「{ title }」？此操作不可恢复。",
     "deleteFailed": "删除失败",
     "download": "下载",
     "fullscreen": "全屏查看",
@@ -181,7 +181,7 @@
     "style": "style"
   },
   "cover": {
-    "remixedFrom": "已载入「{{ title }}」",
+    "remixedFrom": "已载入「{ title }」",
     "remixHint": "修改风格/歌词。参考音频需重新上传。",
     "referenceAudio": "参考音频",
     "referenceHint": "6 秒 – 6 分钟 · 最大 50MB",
@@ -204,7 +204,7 @@
     "items": "个项目",
     "emptyTitle": "曲库还是空的",
     "emptyHint": "去创作生成第一首歌",
-    "deleteConfirm": "删除「{{ title }}」？此操作不可恢复。",
+    "deleteConfirm": "删除「{ title }」？此操作不可恢复。",
     "deleteFailed": "删除失败",
     "regenerateFailed": "重新生成失败",
     "subtitle": "All generated tracks and covers"

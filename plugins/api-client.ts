@@ -3,18 +3,18 @@
  * 
  * 此插件修改全局 $fetch 实例，使所有通过 $fetch / useFetch 发出的请求
  * 都自动携带 Firebase Authorization Header。
- * 
- * 这样不需要修改每个页面的代码。
  */
 
 export default defineNuxtPlugin((nuxtApp) => {
+  // 仅在客户端运行
+  if (!import.meta.client) return
+
   // 劫持 $fetch 的全局实例
   const originalFetch = globalThis.$fetch
 
   // 创建带 auth 的 fetch 实例
   const authFetch = originalFetch.create({
     async onRequest({ options }) {
-      if (!import.meta.client) return
       if (options.headers?.['Authorization']) return // 已有认证头
       
       try {
@@ -45,7 +45,6 @@ export default defineNuxtPlugin((nuxtApp) => {
   })
 
   // 替换全局 $fetch
-  // 注意：这会影响所有 $fetch 调用，包括第三方请求
   // 只在请求 /api/* 路径时使用 authFetch
   const wrappedFetch: typeof originalFetch = ((url: string, options?: any) => {
     const urlStr = typeof url === 'string' ? url : url.toString()

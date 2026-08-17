@@ -1,4 +1,3 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
@@ -51,16 +50,12 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/png', href: '/logo.png' },
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
-        {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500+600+700&family=Sora:wght@500;600+700+800&display=swap',
-        },
+        { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Manrope:wght@400;500+600+700&family=Sora:wght@500;600+700+800&display=swap' },
       ],
     },
   },
 
   i18n: {
-    restructureDir: '',
     locales: [
       { code: 'en', name: 'English', iso: 'en-US', file: 'en.json' },
       { code: 'ja', name: '日本語', iso: 'ja-JP', file: 'ja.json' },
@@ -82,18 +77,12 @@ export default defineNuxtConfig({
     },
     lazy: false,
     langDir: 'locales/',
-    bundle: {
-      compositionOnly: true,
-      runtimeOnly: false,
-      fullInstall: true,
-      dropMessageCompiler: false,
-      optimizeTranslationDirective: false,
-    },
   },
 
   nitro: {
     preset: 'cloudflare-pages',
     compressPublicAssets: true,
+    minify: false,
   },
 
   vite: {

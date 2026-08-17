@@ -128,7 +128,7 @@
     "copyright": "© 2026 Creator. Todos os direitos reservados."
   },
   "create": {
-    "remixedFrom": "Carregado \"{{ title }}\"",
+    "remixedFrom": "Carregado \"{ title }\"",
     "remixHint": "Modifique estilo/letras, depois gere uma nova versão (original preservado).",
     "lyricsGenerating": "Gerando letras…",
     "generateLyrics": "Gerar letras",
@@ -142,11 +142,11 @@
     "regenerateFailed": "Falha ao regenerar",
     "unnamed": "Sem título",
     "loadedParams": "Parâmetros carregados, ajuste e gere",
-    "deleteConfirm": "Excluir \"{{ title }}\"? Isso não pode ser desfeito.",
+    "deleteConfirm": "Excluir \"{ title }\"? Isso não pode ser desfeito.",
     "deleteFailed": "Falha ao excluir"
   },
   "image": {
-    "remixedFrom": "Carregado \"{{ title }}\"",
+    "remixedFrom": "Carregado \"{ title }\"",
     "remixHint": "Modifique prompt/proporção/cena para gerar nova imagem.",
     "scenePresets": "Predefinições de cena",
     "prompt": "Prompt",
@@ -165,7 +165,7 @@
     "generateFailed": "Falha ao gerar imagem",
     "noImages": "Sem imagens ainda",
     "noImagesHint": "Gere à esquerda, as imagens aparecerão aqui",
-    "deleteConfirm": "Excluir \"{{ title }}\"? Isso não pode ser desfeito.",
+    "deleteConfirm": "Excluir \"{ title }\"? Isso não pode ser desfeito.",
     "deleteFailed": "Falha ao excluir",
     "download": "Baixar",
     "fullscreen": "Tela cheia",
@@ -180,7 +180,7 @@
     "style": "style"
   },
   "cover": {
-    "remixedFrom": "Carregado \"{{ title }}\"",
+    "remixedFrom": "Carregado \"{ title }\"",
     "remixHint": "Modifique estilo/letras. Áudio de referência precisa ser reenviado.",
     "referenceAudio": "Áudio de referência",
     "referenceHint": "6 segundos – 6 minutos · máx 50MB",
@@ -203,7 +203,7 @@
     "items": "itens",
     "emptyTitle": "Biblioteca vazia",
     "emptyHint": "Vá para Criar para gerar sua primeira faixa",
-    "deleteConfirm": "Excluir \"{{ title }}\"? Isso não pode ser desfeito.",
+    "deleteConfirm": "Excluir \"{ title }\"? Isso não pode ser desfeito.",
     "deleteFailed": "Falha ao excluir",
     "regenerateFailed": "Falha ao regenerar",
     "subtitle": "All generated tracks and covers"

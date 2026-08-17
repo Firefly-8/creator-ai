@@ -128,7 +128,7 @@
     "copyright": "© 2026 Creator. Todos los derechos reservados."
   },
   "create": {
-    "remixedFrom": "Cargado \"{{ title }}\"",
+    "remixedFrom": "Cargado \"{ title }\"",
     "remixHint": "Modifica estilo/letras, luego genera una nueva versión (original preservado).",
     "lyricsGenerating": "Generando letras…",
     "generateLyrics": "Generar letras",
@@ -142,11 +142,11 @@
     "regenerateFailed": "Error al regenerar",
     "unnamed": "Sin título",
     "loadedParams": "Parámetros cargados, ajusta y genera",
-    "deleteConfirm": "¿Eliminar \"{{ title }}\"? No se puede deshacer.",
+    "deleteConfirm": "¿Eliminar \"{ title }\"? No se puede deshacer.",
     "deleteFailed": "Error al eliminar"
   },
   "image": {
-    "remixedFrom": "Cargado \"{{ title }}\"",
+    "remixedFrom": "Cargado \"{ title }\"",
     "remixHint": "Modifica prompt/relación/escena para generar nueva imagen.",
     "scenePresets": "Preajustes de escena",
     "prompt": "Prompt",
@@ -165,7 +165,7 @@
     "generateFailed": "Error al generar imagen",
     "noImages": "Sin imágenes aún",
     "noImagesHint": "Genera a la izquierda, las imágenes aparecerán aquí",
-    "deleteConfirm": "¿Eliminar \"{{ title }}\"? No se puede deshacer.",
+    "deleteConfirm": "¿Eliminar \"{ title }\"? No se puede deshacer.",
     "deleteFailed": "Error al eliminar",
     "download": "Descargar",
     "fullscreen": "Pantalla completa",
@@ -180,7 +180,7 @@
     "style": "style"
   },
   "cover": {
-    "remixedFrom": "Cargado \"{{ title }}\"",
+    "remixedFrom": "Cargado \"{ title }\"",
     "remixHint": "Modifica estilo/letras. Audio de referencia necesita re-subida.",
     "referenceAudio": "Audio de referencia",
     "referenceHint": "6 segundos – 6 minutos · máx 50MB",
@@ -203,7 +203,7 @@
     "items": "elementos",
     "emptyTitle": "Biblioteca vacía",
     "emptyHint": "Ve a Crear para generar tu primera pista",
-    "deleteConfirm": "¿Eliminar \"{{ title }}\"? No se puede deshacer.",
+    "deleteConfirm": "¿Eliminar \"{ title }\"? No se puede deshacer.",
     "deleteFailed": "Error al eliminar",
     "regenerateFailed": "Error al regenerar",
     "subtitle": "All generated tracks and covers"

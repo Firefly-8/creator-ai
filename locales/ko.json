@@ -128,7 +128,7 @@
     "copyright": "© 2026 CraftAI. All rights reserved."
   },
   "create": {
-    "remixedFrom": "Loaded \"{{ title }}\"",
+    "remixedFrom": "Loaded \"{ title }\"",
     "remixHint": "Modify style/lyrics, then generate a new version (original preserved).",
     "lyricsGenerating": "Generating lyrics…",
     "generateLyrics": "Generate lyrics",
@@ -142,11 +142,11 @@
     "regenerateFailed": "Regeneration failed",
     "unnamed": "Untitled",
     "loadedParams": "Parameters loaded, adjust and generate",
-    "deleteConfirm": "Delete \"{{ title }}\"? This cannot be undone.",
+    "deleteConfirm": "Delete \"{ title }\"? This cannot be undone.",
     "deleteFailed": "Delete failed"
   },
   "image": {
-    "remixedFrom": "Loaded \"{{ title }}\"",
+    "remixedFrom": "Loaded \"{ title }\"",
     "remixHint": "Modify prompt/ratio/scene to generate a new image (original preserved).",
     "scenePresets": "Scene presets",
     "prompt": "Prompt",
@@ -165,7 +165,7 @@
     "generateFailed": "Failed to generate image",
     "noImages": "No images yet",
     "noImagesHint": "Generate on the left, and images will appear here",
-    "deleteConfirm": "Delete \"{{ title }}\"? This cannot be undone.",
+    "deleteConfirm": "Delete \"{ title }\"? This cannot be undone.",
     "deleteFailed": "Delete failed",
     "download": "Download",
     "fullscreen": "Fullscreen",
@@ -180,7 +180,7 @@
     "style": "style"
   },
   "cover": {
-    "remixedFrom": "Loaded \"{{ title }}\"",
+    "remixedFrom": "Loaded \"{ title }\"",
     "remixHint": "Modify style/lyrics. Reference audio needs re-upload.",
     "referenceAudio": "Reference audio",
     "referenceHint": "6 seconds – 6 minutes · max 50MB",
@@ -203,7 +203,7 @@
     "items": "items",
     "emptyTitle": "Library is empty",
     "emptyHint": "Go to Create to generate your first track",
-    "deleteConfirm": "Delete \"{{ title }}\"? This cannot be undone.",
+    "deleteConfirm": "Delete \"{ title }\"? This cannot be undone.",
     "deleteFailed": "Delete failed",
     "regenerateFailed": "Regeneration failed",
     "subtitle": "All generated tracks and covers"

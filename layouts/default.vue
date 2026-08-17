@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-const { $t } = useNuxtApp()
+const { t: $t } = useI18n()
 const route = useRoute()
 const mobileNavOpen = ref(false)
 const { user, authReady, logout } = useAuth()
