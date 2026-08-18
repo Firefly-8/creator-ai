@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   '/api/robots',
   '/api/sitemap',
   '/api/upload',      // 上传前会单独验证
+  '/api/admin/auth/login',  // 管理员登录接口
   '/_nuxt',
   '/logo.png',
   '/favicon.ico',
