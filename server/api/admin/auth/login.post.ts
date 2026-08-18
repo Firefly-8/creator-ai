@@ -13,7 +13,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Username and password required' })
   }
 
-  const d1 = (globalThis as any).DB as D1Database
+  const { getDB } = await import('../../utils/db-runtime')
+  const d1 = getDB(event)
   if (!d1) throw createError({ statusCode: 500, statusMessage: 'DB not available' })
 
   // 查找管理员
