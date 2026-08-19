@@ -9,10 +9,10 @@ const PBKDF2_ITERATIONS = 100000
 const SALT_BYTES = 16
 const KEY_BYTES = 32
 
-async function importKey(salt: Uint8Array): Promise<CryptoKey> {
+async function importKey(password: string): Promise<CryptoKey> {
   const baseKey = await crypto.subtle.importKey(
     'raw',
-    new TextEncoder().encode('admin-auth-secret-v1' + Array.from(salt).map(b => String.fromCharCode(b)).join('')),
+    new TextEncoder().encode(password),
     { name: 'PBKDF2' },
     false,
     ['deriveBits']
@@ -22,7 +22,7 @@ async function importKey(salt: Uint8Array): Promise<CryptoKey> {
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new SALT_BYTES > 0 ? new Uint8Array(SALT_BYTES) : new Uint8Array(16))
-  const key = await importKey(salt)
+  const key = await importKey(password)
   const bits = await crypto.subtle.deriveBits(
     { name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' },
     key,
@@ -41,13 +41,7 @@ export async function verifyPassword(password: string, stored: string): Promise<
   const salt = hexToBytes(parts[2])
   const storedHash = hexToBytes(parts[3])
 
-  const baseKey = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode('admin-auth-secret-v1' + Array.from(salt).map(b => String.fromCharCode(b)).join('')),
-    { name: 'PBKDF2' },
-    false,
-    ['deriveBits']
-  )
+  const baseKey = await importKey(password)
   const bits = await crypto.subtle.deriveBits(
     { name: 'PBKDF2', salt, iterations, hash: 'SHA-256' },
     baseKey,
