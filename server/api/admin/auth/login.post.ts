@@ -24,17 +24,8 @@ export default defineEventHandler(async (event) => {
 
   // 用户不存在也执行一次 verify 防止时序攻击
   if (!admin) {
-    // Dummy hash to prevent timing attacks
     await verifyPassword('dummy', 'pbkdf2$100000$6162636465666768$00000000000000000000000000000000')
     throw createError({ statusCode: 401, statusMessage: 'Invalid credentials' })
-  }
-
-  // 检查是否被锁定
-  if (admin.locked_until) {
-    const lockedUntil = new Date(admin.locked_until)
-    if (lockedUntil > new Date()) {
-      throw createError({ statusCode: 423, statusMessage: 'Account temporarily locked. Try again later.' })
-    }
   }
 
   // 验证密码
@@ -42,22 +33,12 @@ export default defineEventHandler(async (event) => {
   const valid = await verifyPassword(password, admin.password_hash)
 
   if (!valid) {
-    // 增加失败次数
-    const attempts = (admin.login_attempts || 0) + 1
-    const lockedUntil = attempts >= 3
-      ? new Date(Date.now() + 5 * 60 * 1000).toISOString()
-      : null
-
-    await d1.prepare(
-      'UPDATE admins SET login_attempts = ?, locked_until = ?, updated_at = datetime("now") WHERE id = ?'
-    ).bind(attempts, lockedUntil, admin.id).run()
-
     throw createError({ statusCode: 401, statusMessage: 'Invalid credentials' })
   }
 
-  // 登录成功：重置失败次数，更新登录时间
+  // 登录成功：更新登录时间
   await d1.prepare(
-    'UPDATE admins SET login_attempts = 0, locked_until = NULL, last_login_at = datetime("now"), updated_at = datetime("now") WHERE id = ?'
+    'UPDATE admins SET last_login_at = datetime("now"), updated_at = datetime("now") WHERE id = ?'
   ).bind(admin.id).run()
 
   // 创建 session
