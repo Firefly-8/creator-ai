@@ -45,9 +45,12 @@ export default defineNuxtPlugin((nuxtApp) => {
   })
 
   // 替换全局 $fetch
-  // 只在请求 /api/* 路径时使用 authFetch
+  // 只在请求 /api/* 路径时使用 authFetch，排除 admin API（使用 cookie 认证）
   const wrappedFetch: typeof originalFetch = ((url: string, options?: any) => {
     const urlStr = typeof url === 'string' ? url : url.toString()
+    if (urlStr.startsWith('/api/admin/')) {
+      return originalFetch(url, options)
+    }
     if (urlStr.startsWith('/api/')) {
       return authFetch(url, options)
     }
