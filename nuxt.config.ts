@@ -13,7 +13,7 @@ export default defineNuxtConfig({
     '~/components',
   ],
 
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/tokens.css', '~/assets/css/main.css'],
 
   runtimeConfig: {
     encryptionMasterKey: process.env.ENCRYPTION_MASTER_KEY || '',
