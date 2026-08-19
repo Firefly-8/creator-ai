@@ -11,7 +11,7 @@ const PUBLIC_PATHS = [
   '/api/robots',
   '/api/sitemap',
   '/api/upload',      // 上传前会单独验证
-  '/api/admin/auth/login',  // 管理员登录接口
+  '/api/admin',       // 管理后台使用 cookie 认证，由 admin-auth 中间件处理
   '/_nuxt',
   '/logo.png',
   '/favicon.ico',
