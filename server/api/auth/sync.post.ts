@@ -28,7 +28,8 @@ export default defineEventHandler(async (event) => {
   const emailVerified = payload.email_verified || false
 
   // 获取 D1 binding
-  const d1 = (globalThis as any).DB as D1Database
+  const { getDB } = await import('../../utils/db-runtime')
+  const d1 = getDB(event)
   if (!d1) throw createError({ statusCode: 500, statusMessage: 'DB not available' })
 
   const now = new Date().toISOString()

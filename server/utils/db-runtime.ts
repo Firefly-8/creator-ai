@@ -9,7 +9,7 @@
 
 import type { H3Event } from 'h3'
 
-export function getDB(event?: H3Database {
+export function getDB(event?: H3Event): D1Database | undefined {
   // 方式 1: 已设置的 globalThis.DB
   if ((globalThis as any).DB) {
     return (globalThis as any).DB as D1Database

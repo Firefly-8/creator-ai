@@ -7,7 +7,8 @@ export default defineEventHandler(async (event) => {
   const token = getCookie(event, 'admin_session')
 
   if (token) {
-    const d1 = (globalThis as any).DB as D1Database
+    const { getDB } = await import('../../../utils/db-runtime')
+  const d1 = getDB(event)
     if (d1) {
       await d1.prepare('DELETE FROM admin_sessions WHERE token = ?').bind(token).run()
     }

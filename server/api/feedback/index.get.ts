@@ -17,7 +17,8 @@ export default defineEventHandler(async (event) => {
   const query = getQuery(event)
   const status = query.status as string | undefined
 
-  const d1 = (globalThis as any).DB as D1Database
+  const { getDB } = await import('../../utils/db-runtime')
+  const d1 = getDB(event)
   if (!d1) throw createError({ statusCode: 500, statusMessage: 'DB not available' })
 
   let sql = 'SELECT * FROM feedback WHERE user_id = ?'

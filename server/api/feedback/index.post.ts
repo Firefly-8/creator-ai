@@ -13,34 +13,34 @@ export default defineEventHandler(async (event) => {
 
   const { verifyFirebaseToken } = await import('../../utils/firebase-verify')
   const payload = await verifyFirebaseToken(token)
-  if (!payload) throw createError({ statusCode: 401, statusMessage: 'Invalid token' })
+  
+  if (!payload) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid or expired token' })
+  }
 
-  const uid = payload.sub
   const body = await readBody(event)
+  const { type, message, contentId, source } = body || {}
 
-  const {
-    source = 'creator',
-    type = 'other',
-    contentId,
-    title = '',
-    message = '',
-  } = body || {}
+  if (!type || !message) {
+    throw createError({ statusCode: 400, statusMessage: 'Type and message are required' })
+  }
 
-  // 校验
-  if (!message.trim()) throw createError({ statusCode: 400, statusMessage: 'Message is required' })
-  if (!['creator', 'pdf'].includes(source)) throw createError({ statusCode: 400, statusMessage: 'Invalid source' })
-  if (!['bug', 'feature', 'content', 'other'].includes(type)) throw createError({ statusCode: 400, statusMessage: 'Invalid type' })
-
-  const d1 = (globalThis as any).DB as D1Database
+  const { getDB } = await import('../../utils/db-runtime')
+  const d1 = getDB(event)
   if (!d1) throw createError({ statusCode: 500, statusMessage: 'DB not available' })
 
   const id = nanoid(12)
-  const now = new Date().toISOString()
-
   await d1.prepare(`
-    INSERT INTO feedback (id, user_id, source, type, content_id, title, message, status, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?, ?)
-  `).bind(id, uid, source, type, contentId || null, title.slice(0, 200), message.slice(0, 5000), now, now).run()
+    INSERT INTO feedback (id, user_id, type, message, content_id, source, status, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'open', datetime('now'), datetime('now'))
+  `).bind(
+    id,
+    payload.uid,
+    type,
+    message,
+    contentId || null,
+    source || 'creator'
+  ).run()
 
   return { success: true, id }
 })
