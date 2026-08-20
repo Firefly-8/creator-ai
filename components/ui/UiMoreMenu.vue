@@ -51,7 +51,7 @@ const props = withDefaults(
     placement?: 'bottom' | 'top'
   }>(),
   {
-    ariaLabel: '更多操作',
+    ariaLabel: 'More actions',
     disabled: false,
     placement: 'bottom',
   },

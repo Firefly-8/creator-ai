@@ -103,7 +103,17 @@
     "forgotPasswordComingSoon": "Password reset coming soon",
     "orEmail": "Or continue with email",
     "noAccount": "Don't have an account?",
-    "haveAccount": "Already have an account?"
+    "haveAccount": "Already have an account?",
+    "verifyTitle": "Verify your email",
+    "verifyDesc": "We sent a verification email to",
+    "verifyDesc2": "Please check your inbox and click the verification link to complete registration.",
+    "sending": "Sending...",
+    "resendIn": "Resend",
+    "resendEmail": "Resend verification email",
+    "checking": "Checking...",
+    "verified": "I have verified, refresh status",
+    "logout": "Sign out",
+    "verifySent": "Verification email sent, please check your inbox"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -144,7 +154,14 @@
     "unnamed": "Untitled",
     "loadedParams": "Parameters loaded, adjust and generate",
     "deleteConfirm": "Delete \"{ title }\"? This cannot be undone.",
-    "deleteFailed": "Delete failed"
+    "deleteFailed": "Delete failed",
+    "songsPlaceholder": "e.g. Melancholy indie pop, soft piano with distant electric guitar sustain, intimate vocals, around 72 BPM…",
+    "presetApplied": "Preset applied: {label}",
+    "presetApplying": "Preset applied: {label}, generating lyrics…",
+    "presetReady": "Preset ready: {label}, lyrics generated, ready to Generate",
+    "presetLyricsFailed": "Preset lyrics generation failed",
+    "presetReadyNoLyrics": "Arrangement applied: {label} (lyrics not generated, click Generate lyrics manually)",
+    "defaultLyricsHint": "A modern pop song with vivid imagery"
   },
   "image": {
     "remixedFrom": "Loaded \"{ title }\"",
@@ -166,7 +183,7 @@
     "generateFailed": "Failed to generate image",
     "noImages": "No images yet",
     "noImagesHint": "Generate on the left, and images will appear here",
-    "deleteConfirm": "Delete \"{ title }\"? This cannot be undone.",
+    "deleteConfirm": "Delete this image? This cannot be undone.",
     "deleteFailed": "Delete failed",
     "download": "Download",
     "fullscreen": "Fullscreen",
@@ -178,7 +195,19 @@
     "generating": "Generating…",
     "restoredRef": "Reference restored (from last generation)",
     "generic": "general",
-    "style": "style"
+    "style": "style",
+    "emptyHint": "No images yet. Configure on the left and click Generate.",
+    "collapse": "Collapse",
+    "details": "Details",
+    "styleComic": "Comic",
+    "sceneApplied": "Scene applied: {label}",
+    "promptOptimized": "Prompt optimized",
+    "promptReady": "Prompt optimized, ready to generate",
+    "generatedCount": "Generated {count} images",
+    "regenerating": "Regenerating…",
+    "regeneratedCount": "Regenerated {count} images",
+    "regenerateFailed": "Regeneration failed",
+    "unnamed": "Untitled"
   },
   "cover": {
     "remixedFrom": "Loaded \"{ title }\"",
@@ -194,7 +223,20 @@
     "generateFailed": "Failed to generate cover",
     "preprocessFailed": "Preprocessing failed",
     "stylePlaceholder": "Jazz, smooth, late night lounge, saxophone…",
-    "runExtractFirst": "Run extract first…"
+    "runExtractFirst": "Run extract first…",
+    "description": "Upload reference audio, quickly cover or advanced lyric rewrite.",
+    "progressTitle": "Cover Progress & Library",
+    "emptyTitle": [
+      "No covers yet"
+    ],
+    "emptyHint": "Generated covers will appear here",
+    "regenerating": "Regenerating…",
+    "regenerateFailed": "Regeneration failed",
+    "restoredRef": "Reference audio restored (from last generation)",
+    "unnamed": "Untitled",
+    "loadedParams": "Parameters loaded, adjust and generate",
+    "deleteConfirm": "Delete \"{title}\"? This cannot be undone.",
+    "deleteFailed": "Delete failed"
   },
   "library": {
     "all": "All",
@@ -223,5 +265,24 @@
     "sending": "Sending...",
     "thanks": "Thank you for your feedback!",
     "done": "Done"
+  },
+  "presets": {
+    "title": "Inspiration Presets",
+    "hint": "Click to fill · Hover to pause scroll"
+  },
+  "songResultRail": {
+    "emptyTitle": "No works yet",
+    "emptyHint": "Generated tracks will appear here",
+    "adjustParams": "Adjust Parameters",
+    "regenerate": "Regenerate",
+    "download": "Download",
+    "viewDetails": "View Details",
+    "delete": "Delete",
+    "making": "In Progress"
+  },
+  "ui": {
+    "refresh": "Refresh",
+    "refreshList": "Refresh list",
+    "moreActions": "More actions"
   }
 }

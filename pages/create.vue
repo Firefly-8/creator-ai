@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Create</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">描述风格、写好歌词，生成完整歌曲。</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">Describe the style, write lyrics, and generate a complete song.</p>
       </div>
     </template>
 
@@ -35,7 +35,7 @@
           <textarea
             v-model="prompt"
             class="field min-h-24"
-            placeholder="例：忧郁独立流行，柔和钢琴与远处电吉他延音，亲密人声，约 72 BPM…"
+            placeholder="e.g. melancholic indie pop, soft piano with distant electric guitar reverb, intimate vocals, around 72 BPM…"
           />
         </label>
 
@@ -91,7 +91,7 @@
           <span v-if="errorText" class="status-pill !border-danger/30 !text-danger">{{ errorText }}</span>
           <span v-else-if="lyricsLoading" class="status-pill">
             <span class="i-ph-circle-fill text-[8px] text-accent-soft animate-pulse" />
-            歌词生成中…
+            Generating lyrics…
           </span>
           <span v-else-if="statusText && !isGenerating" class="status-pill">
             <span class="i-ph-circle-fill text-[8px] text-accent-soft" />
@@ -214,13 +214,13 @@ function applyPreset(preset: SongPreset) {
   if (preset.mode === 'instrumental') {
     mode.value = 'instrumental'
     lyrics.value = ''
-    statusText.value = `已套用预设：${preset.label}`
+    statusText.value = `Preset applied: ${preset.label}`
     return
   }
 
   mode.value = 'custom'
   lyrics.value = ''
-  statusText.value = `已套用预设：${preset.label}，正在按官方流程生成歌词…`
+  statusText.value = `Preset applied: ${preset.label}, generating lyrics…`
   void preparePresetLyrics(preset)
 }
 
@@ -240,11 +240,11 @@ async function preparePresetLyrics(preset: SongPreset) {
     if (res.title) title.value = res.title
     lyrics.value = res.lyrics
     mode.value = 'custom'
-    statusText.value = `预设就绪：${preset.label}，歌词已生成，可直接 Generate`
+    statusText.value = `Preset ready: ${preset.label}, lyrics generated, ready to Generate`
   } catch (e: any) {
     if (reqId !== presetRequestId) return
-    errorText.value = e?.data?.statusMessage || e?.message || '预设歌词生成失败'
-    statusText.value = `已套用编曲描述：${preset.label}（歌词未生成，可手动点 Generate lyrics）`
+    errorText.value = e?.data?.statusMessage || e?.message || 'Failed to generate preset lyrics'
+    statusText.value = `Style applied: ${preset.label}(lyrics not generated, you can manually click Generate lyrics)`
   } finally {
     if (reqId === presetRequestId) lyricsLoading.value = false
   }
@@ -282,7 +282,7 @@ async function genLyrics() {
       method: 'POST',
       body: {
         mode: lyrics.value.trim() ? 'edit' : 'write_full_song',
-        prompt: lyricsHint.value || prompt.value || '一首有画面感的现代中文流行歌',
+        prompt: lyricsHint.value || prompt.value || 'a vivid modern pop song',
         lyrics: lyrics.value || undefined,
         title: title.value || undefined,
       },

@@ -244,7 +244,7 @@ ${sceneHint}`,
   const cleaned = text.replace(/^```[\s\S]*?\n|```$/g, '').trim()
   return {
     optimized: cleaned.slice(0, 1500) || input.prompt,
-    notes: '已用对话模型润色提示词',
+    notes: 'Prompt polished with chat model',
   }
 }
 
@@ -305,7 +305,7 @@ function parseOptimizeJson(text: string): { optimized: string; notes: string } |
     if (typeof obj.optimized === 'string' && obj.optimized.trim()) {
       return {
         optimized: String(obj.optimized).trim().slice(0, 1500),
-        notes: String(obj.notes || '提示词已优化').trim(),
+        notes: String(obj.notes || 'Prompt optimized').trim(),
       }
     }
   } catch {
@@ -336,15 +336,15 @@ export function extractAudioPayload(result: MusicResult): { url?: string; hex?: 
 
 export function mapMiniMaxErrorMessage(code: number, msg: string): string {
   const map: Record<number, string> = {
-    1002: '请求过于频繁，请约 1 分钟后再试',
-    1004: 'API 鉴权失败，请检查 Key 是否正确',
-    1008: 'MiniMax 账户余额不足，请充值或切换按量付费 Key',
-    1026: '内容触发安全审核，请修改提示词后重试',
-    2013: '请求参数无效',
-    2049: 'API Key 无效或与区域不匹配',
-    2056: 'Token Plan 额度已用尽',
+    1002: 'Too many requests, please try again in about 1 minute',
+    1004: 'API authentication failed, please check your API key',
+    1008: 'MiniMax account balance insufficient, please top up or switch to pay-as-you-go key',
+    1026: 'Content triggered safety review, please modify your prompt and try again',
+    2013: 'Invalid request parameters',
+    2049: 'API key invalid or does not match region',
+    2056: 'Token plan quota exhausted',
   }
-  return map[code] || msg || `MiniMax 错误 ${code}`
+  return map[code] || msg || `MiniMax error ${code}`
 }
 
 export async function resolveMiniMaxUserMessage(code: number, msg: string): Promise<string> {

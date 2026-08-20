@@ -1,6 +1,6 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
-  devtools: { enabled: true },
+  devtools: { enabled: false },
 
   modules: [
     '@pinia/nuxt',
@@ -91,14 +91,13 @@ export default defineNuxtConfig({
   i18n: {
     locales: [
       { code: 'en', name: 'English', iso: 'en-US', file: 'en.json' },
-      { code: 'ja', name: '日本語', iso: 'ja-JP', file: 'ja.json' },
+      { code: 'ja', name: 'Japanese', iso: 'ja-JP', file: 'ja.json' },
       { code: 'de', name: 'Deutsch', iso: 'de-DE', file: 'de.json' },
       { code: 'fr', name: 'Français', iso: 'fr-FR', file: 'fr.json' },
       { code: 'ko', name: '한국어', iso: 'ko-KR', file: 'ko.json' },
       { code: 'es', name: 'Español', iso: 'es-ES', file: 'es.json' },
       { code: 'pt', name: 'Português', iso: 'pt-BR', file: 'pt.json' },
       { code: 'it', name: 'Italiano', iso: 'it-IT', file: 'it.json' },
-      { code: 'zh', name: '中文', iso: 'zh-CN', file: 'zh.json' },
       { code: 'ar', name: 'العربية', iso: 'ar-SA', file: 'ar.json' },
     ],
     defaultLocale: 'en',
@@ -123,6 +122,21 @@ export default defineNuxtConfig({
     optimizeDeps: {
       exclude: ['better-sqlite3'],
     },
+    plugins: [
+      {
+        name: 'fix-app-manifest',
+        resolveId(id) {
+          if (id === '#app-manifest') {
+            return { id: 'virtual:app-manifest', external: false }
+          }
+        },
+        load(id) {
+          if (id === 'virtual:app-manifest') {
+            return 'export default {}'
+          }
+        },
+      },
+    ],
   },
 
   experimental: {

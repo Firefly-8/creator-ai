@@ -23,8 +23,8 @@ withDefaults(
     type?: 'button' | 'submit'
   }>(),
   {
-    label: '刷新',
-    ariaLabel: '刷新列表',
+    label: 'Refresh',
+    ariaLabel: 'Refresh list',
     variant: 'soft',
     size: 'sm',
     loading: false,

@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Cover</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">上传参考音频，快速翻唱或进阶改词。</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">Upload a reference track to create a cover or rewrite lyrics.</p>
       </div>
     </template>
 
@@ -13,7 +13,7 @@
           <div>
             <p class="ui-ops-banner__title">{{ $t('cover.remixedFrom', { title: remixFrom }) }}</p>
             <p class="ui-ops-banner__hint">
-              可改风格 / 歌词。参考音频需重新上传（若本地上传仍可用会自动带上）。
+              You can change style/lyrics. Reference audio must be re-uploaded (previously uploaded files will be auto-attached if still available).
             </p>
           </div>
           <UiIconButton
@@ -109,7 +109,7 @@
     <template #results-header>
       <div>
         <h2 class="font-display text-[16px] font-650 text-white">Results</h2>
-        <p class="text-[12px] text-ink-400">翻唱进度与曲库</p>
+        <p class="text-[12px] text-ink-400">Cover Progress & Library</p>
       </div>
       <UiRefreshButton :loading="songsPending" @click="refreshSongs" />
     </template>
@@ -127,8 +127,8 @@
           :pending="songsPending"
           :active-id="activeSong?.id"
           :busy-id="busyId"
-          empty-title="还没有翻唱作品"
-          empty-hint="生成 cover 后会出现在这里"
+          empty-title="No covers yet"
+          empty-hint="Generated covers will appear here"
           @remix="loadFromSong"
           @regenerate="regenerate"
           @download="downloadSong"
@@ -305,7 +305,7 @@ async function submit() {
 async function regenerate(song: SongPublic) {
   busyId.value = song.id
   errorText.value = ''
-  statusText.value = '重新生成中…'
+  statusText.value = 'Regenerating…'
   activeSong.value = null
   try {
     const res = await $fetch<{ job: any }>(`/api/songs/${song.id}/regenerate`, {
@@ -315,7 +315,7 @@ async function regenerate(song: SongPublic) {
     statusText.value = res.job.progress
     refreshSongs().catch(() => {})
   } catch (err: any) {
-    errorText.value = err?.data?.statusMessage || err?.message || '重新生成失败'
+    errorText.value = err?.data?.statusMessage || err?.message || 'Regeneration failed'
     statusText.value = ''
   } finally {
     busyId.value = null
@@ -336,10 +336,10 @@ function loadFromSong(song: SongPublic) {
   }
   if (payload.audio_upload_id) {
     uploadId.value = String(payload.audio_upload_id)
-    uploadName.value = '已恢复参考音频（来自上次生成）'
+    uploadName.value = 'Reference audio restored (from last generation)'
   }
-  remixFrom.value = song.title || '未命名'
-  statusText.value = '已载入参数，可调整后生成'
+  remixFrom.value = song.title || 'Untitled'
+  statusText.value = 'Parameters loaded, adjust and generate'
   errorText.value = ''
 }
 
@@ -361,14 +361,14 @@ function openSong(song: SongPublic) {
 }
 
 async function removeSong(song: SongPublic) {
-  if (!confirm(`删除「${song.title}」？此操作不可恢复。`)) return
+  if (!confirm(`Delete "${song.title}"? This action cannot be undone.`)) return
   busyId.value = song.id
   try {
     await $fetch(`/api/songs/${song.id}`, { method: 'DELETE' })
     if (activeSong.value?.id === song.id) activeSong.value = null
     await refreshSongs()
   } catch (err: any) {
-    errorText.value = err?.data?.statusMessage || err?.message || '删除失败'
+    errorText.value = err?.data?.statusMessage || err?.message || 'Delete failed'
   } finally {
     busyId.value = null
   }

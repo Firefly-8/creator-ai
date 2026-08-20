@@ -153,7 +153,7 @@
       </div>
 
       <div v-else-if="!images.length" class="px-2 py-12 text-center text-ink-400">
-        还没有生成图片。左侧配置后点击 Generate。
+        No images generated yet. Configure on the left and click Generate.
       </div>
 
       <div v-else class="grid items-start gap-3 sm:grid-cols-2">
@@ -166,7 +166,7 @@
           <button
             type="button"
             class="gallery-card__media"
-            :aria-label="`查看 ${img.title}`"
+            :aria-label="`View ${img.title}`"
             @click="openLightbox(img)"
           >
             <img
@@ -192,7 +192,7 @@
                 </span>
                 <span class="gallery-card__toggle-right">
                   <span class="gallery-card__hint">
-                    {{ expandedId === img.id ? '收起' : '详情' }}
+                    {{ expandedId === img.id ? 'Collapse' : 'Details' }}
                   </span>
                   <span
                     class="gallery-card__caret"
@@ -292,7 +292,7 @@ const deepOptimize = ref(false)
 const model = ref<'image-01' | 'image-01-live'>('image-01')
 const aspectRatio = ref('1:1')
 const count = ref(1)
-const styleType = ref<(typeof IMAGE_LIVE_STYLES)[number]>('漫画')
+const styleType = ref<(typeof IMAGE_LIVE_STYLES)[number]>('Comic')
 const uploadId = ref<string | null>(null)
 const refName = ref('')
 const generating = ref(false)
@@ -346,7 +346,7 @@ function applyScene(preset: ImageScenePreset) {
   }
   promptFinal.value = ''
   optimizeNotes.value = ''
-  statusText.value = `已套用场景：${preset.label}`
+  statusText.value = `Scene applied: ${preset.label}`
   errorText.value = ''
   if (preset.id === 'portrait') mode.value = 'i2i'
 }
@@ -390,8 +390,8 @@ async function optimizePrompt() {
     })
     prompt.value = res.optimized
     promptFinal.value = res.optimized
-    optimizeNotes.value = res.notes || '提示词已优化'
-    statusText.value = '提示词已优化，可直接生成'
+    optimizeNotes.value = res.notes || 'Prompt optimized'
+    statusText.value = 'Prompt optimized, ready to generate'
   } catch (err: any) {
     errorText.value = err?.data?.statusMessage || err?.message || 'Optimize failed'
   } finally {
@@ -423,7 +423,7 @@ async function generate() {
       },
     })
     promptFinal.value = res.promptFinal
-    statusText.value = `已生成 ${res.images.length} 张`
+    statusText.value = `Generated ${res.images.length} images`
     await refresh()
   } catch (err: any) {
     errorText.value = err?.data?.statusMessage || err?.message || 'Generate failed'
@@ -434,7 +434,7 @@ async function generate() {
 }
 
 async function remove(id: string) {
-  if (!confirm('删除这张图片？此操作不可恢复。')) return
+  if (!confirm('Delete this image? This action cannot be undone.')) return
   if (expandedId.value === id) expandedId.value = null
   if (lightbox.value?.id === id) lightbox.value = null
   busyId.value = id
@@ -449,15 +449,15 @@ async function remove(id: string) {
 async function regenerate(img: ImagePublic) {
   busyId.value = img.id
   errorText.value = ''
-  statusText.value = '重新生成中…'
+  statusText.value = 'Regenerating…'
   try {
     const res = await $fetch<{ images: ImagePublic[] }>(`/api/images/${img.id}/regenerate`, {
       method: 'POST',
     })
-    statusText.value = `已重新生成 ${res.images.length} 张`
+    statusText.value = `Regenerated ${res.images.length} images`
     await refresh()
   } catch (err: any) {
-    errorText.value = err?.data?.statusMessage || err?.message || '重新生成失败'
+    errorText.value = err?.data?.statusMessage || err?.message || 'Regeneration failed'
     statusText.value = ''
   } finally {
     busyId.value = null
@@ -484,7 +484,7 @@ function loadFromImage(img: ImagePublic) {
     uploadId.value = null
     refName.value = ''
   }
-  remixFrom.value = img.title || '未命名'
+  remixFrom.value = img.title || 'Untitled'
   statusText.value = $t('image.loadedParams')
   errorText.value = ''
   document.querySelector('.workspace__ops')?.scrollTo?.({ top: 0, behavior: 'smooth' })
@@ -522,7 +522,7 @@ function imageMenuItems(img: ImagePublic) {
     { id: 'open', label: t('image.fullscreen'), icon: 'i-ph-eye' },
     {
       id: 'delete',
-      label: '删除',
+      label: 'Delete',
       icon: 'i-ph-trash',
       danger: true,
       dividerBefore: true,

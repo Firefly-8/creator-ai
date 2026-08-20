@@ -101,8 +101,8 @@ const props = withDefaults(
     activeId: null,
     busyId: null,
     allowRemix: true,
-    emptyTitle: '暂无作品',
-    emptyHint: '生成后会显示在这里',
+    emptyTitle: 'No works yet',
+    emptyHint: 'Generated works will appear here',
   },
 )
 

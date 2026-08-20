@@ -12,12 +12,12 @@
             </svg>
           </div>
 
-          <h2 class="email-guard__title">{{ $t('auth.verifyTitle', '验证您的邮箱') }}</h2>
+          <h2 class="email-guard__title">{{ $t('auth.verifyTitle', 'Verify your email') }}</h2>
           
           <p class="email-guard__desc">
-            {{ $t('auth.verifyDesc', '我们已向') }} 
+            {{ $t('auth.verifyDesc', 'We sent a verification email to') }} 
             <strong>{{ user?.email }}</strong> 
-            {{ $t('auth.verifyDesc2', '发送了验证邮件。请查收并点击验证链接完成注册。') }}
+            {{ $t('auth.verifyDesc2', 'Please check your inbox and click the verification link to complete registration.') }}
           </p>
 
           <div class="email-guard__actions">
@@ -26,9 +26,9 @@
               :disabled="cooldown > 0 || sending"
               @click="handleResend"
             >
-              <span v-if="sending">{{ $t('auth.sending', '发送中...') }}</span>
-              <span v-else-if="cooldown > 0">{{ $t('auth.resendIn', '重新发送') }} ({{ cooldown }}s)</span>
-              <span v-else>{{ $t('auth.resendEmail', '重新发送验证邮件') }}</span>
+              <span v-if="sending">{{ $t('auth.sending', 'Sending...') }}</span>
+              <span v-else-if="cooldown > 0">{{ $t('auth.resendIn', 'Resend') }} ({{ cooldown }}s)</span>
+              <span v-else>{{ $t('auth.resendEmail', 'Resend verification email') }}</span>
             </button>
 
             <button
@@ -36,13 +36,13 @@
               :disabled="checking"
               @click="handleCheck"
             >
-              <span v-if="checking">{{ $t('auth.checking', '检查中...') }}</span>
-              <span v-else>{{ $t('auth.verified', '我已验证，刷新状态') }}</span>
+              <span v-if="checking">{{ $t('auth.checking', 'Checking...') }}</span>
+              <span v-else>{{ $t('auth.verified', 'I have verified, refresh status') }}</span>
             </button>
           </div>
 
           <button class="email-guard__logout" @click="handleLogout">
-            {{ $t('auth.logout', '退出登录') }}
+            {{ $t('auth.logout', 'Sign out') }}
           </button>
 
           <p v-if="message" class="email-guard__message" :class="{ 'is-error': isError }">
@@ -89,11 +89,11 @@ async function handleResend() {
   const result = await resendVerificationEmail()
   
   if (result.success) {
-    message.value = $t?.('auth.verifySent', '验证邮件已发送，请查收') || '验证邮件已发送，请查收'
+    message.value = $t?.('auth.verifySent', 'Verification email sent, please check your inbox') || 'Verification email sent, please check your inbox'
     isError.value = false
     startCooldown()
   } else {
-    message.value = result.message || '发送失败'
+    message.value = result.message || 'Failed to send'
     isError.value = true
   }
   

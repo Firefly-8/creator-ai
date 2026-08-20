@@ -2,8 +2,8 @@
   <section class="preset-rail">
     <div class="mb-3 flex items-end justify-between gap-3 px-0.5">
       <div>
-        <p class="text-[13px] font-semibold text-white">灵感预设</p>
-        <p class="mt-0.5 text-[12px] text-ink-400">点选即填入 · 悬停暂停滚动</p>
+        <p class="text-[13px] font-semibold text-white">{{ $t('presets.title') }}</p>
+        <p class="mt-0.5 text-[12px] text-ink-400">{{ $t('presets.hint') }}</p>
       </div>
       <span class="hidden items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.03] px-2.5 py-1 text-[11px] font-medium text-ink-300 sm:inline-flex">
         <span class="i-ph-sparkle text-[12px] text-accent-soft" />

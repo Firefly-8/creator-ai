@@ -11,7 +11,7 @@ export type SongPreset = {
   mode?: 'custom' | 'simple' | 'instrumental'
   /**
    * Music-generation `prompt` — follow MiniMax Music 3.0 guidance:
-   * Chinese, concrete instruments / techniques / arrangement / mood.
+   * Chinese prompts for MiniMax Music 3.0 — concrete instruments, techniques, arrangement, mood.
    * Official examples prefer descriptive prose over English marketing blurbs.
    */
   prompt: string
@@ -21,17 +21,17 @@ export type SongPreset = {
 
 /**
  * Curated presets tuned for MiniMax music-3.0 + lyrics_generation.
- * Vocal presets → custom mode + auto lyrics (官方推荐：先写词再编曲)
+ * Vocal presets → custom mode + auto lyrics (official recommendation: write lyrics first, then arrange)
  * Instrumental → is_instrumental + required Chinese prompt
  */
 export const SONG_PRESETS: SongPreset[] = [
   {
     id: 'rainy-day',
-    label: '写一首适合雨天听的歌',
-    shortLabel: '雨天听的歌',
+    label: 'Rainy Day Song',
+    shortLabel: 'Rainy Day',
     category: 'Scene',
     icon: 'ph-cloud-rain',
-    title: '雨夜未眠',
+    title: 'Sleepless Rainy Night',
     mode: 'custom',
     prompt:
       '忧郁独立流行（Indie Pop），适合下雨的夜晚独自听。柔和直立钢琴铺底，远处潮湿的电吉他延音与轻微反馈，极轻的刷片与心跳般的底鼓。人声亲密靠前、气声明显，咬字温柔，副歌叠一层细薄和声。速度约 72 BPM，温暖 Lo-fi 混音，空间感像雨打窗玻璃，怀旧而克制，不要嘈杂电子音。',
@@ -40,8 +40,8 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'running',
-    label: '适合跑步时听的歌',
-    shortLabel: '跑步燃脂',
+    label: 'Running Beat',
+    shortLabel: 'Running',
     category: 'Energy',
     icon: 'ph-person-simple-run',
     title: 'Keep Moving',
@@ -53,11 +53,11 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'like-tianxia',
-    label: '写一首类似《天下》的歌',
-    shortLabel: '类似《天下》',
+    label: 'Epic Like Tianxia',
+    shortLabel: 'Epic Ballad',
     category: 'Genre',
     icon: 'ph-mountains',
-    title: '山河志',
+    title: 'Mountains & Rivers',
     mode: 'custom',
     prompt:
       '史诗感华语流行摇滚（Mandopop Power Ballad / Pop-Rock），气质接近经典家国叙事歌曲：前奏钢琴或木吉他铺陈，主歌克制，副歌电吉他与鼓组全面推起，宽混响合唱与激情男声高音。可加入弦乐垫底与军鼓滚奏。速度约 82–88 BPM，副歌爆发、咬字清晰有力，英雄感与悲壮并存，唱片级层次，不要电子舞曲节奏。',
@@ -66,8 +66,8 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'night-drive',
-    label: '深夜开车循环听',
-    shortLabel: '深夜开车',
+    label: 'Night Drive Loop',
+    shortLabel: 'Night Drive',
     category: 'Scene',
     icon: 'ph-car-profile',
     title: 'Midnight Drive',
@@ -79,11 +79,11 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'breakup',
-    label: '分手后想哭的歌',
-    shortLabel: '分手情歌',
+    label: 'Post-Breakup Tears',
+    shortLabel: 'Breakup',
     category: 'Mood',
     icon: 'ph-heart-break',
-    title: '未寄出的信',
+    title: 'Unsent Letter',
     mode: 'custom',
     prompt:
       '情绪浓郁的华语抒情流行（Mandopop Ballad）。稀疏钢琴前奏，主歌几乎只有人声与钢琴，副歌缓缓加入弦乐与轻鼓。人声脆弱、近麦、有呼吸与细微破音，速度约 68 BPM。电影感悲伤，结尾略带回甘，不要夸张哭腔与过度电子铺底。',
@@ -92,11 +92,11 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'cafe',
-    label: '咖啡馆下午阳光',
-    shortLabel: '咖啡馆下午',
+    label: 'Café Afternoon',
+    shortLabel: 'Café',
     category: 'Scene',
     icon: 'ph-coffee',
-    title: '阳光慢漫',
+    title: 'Slow Sunshine',
     mode: 'custom',
     prompt:
       '午后咖啡馆独立民谣（Indie Folk）。木吉他指弹清晰，轻刷鼓与极轻的贝斯，可加一点手风琴或口琴点缀。人声温暖松弛、笑容感，速度约 96 BPM。阳光、木质桌面与咖啡香气的舒适氛围，混音自然留白，不要重鼓与合成器轰炸。',
@@ -105,8 +105,8 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'gym',
-    label: '健身房燃脂电音',
-    shortLabel: '健身房电音',
+    label: 'Gym Burner',
+    shortLabel: 'Gym EDM',
     category: 'Energy',
     icon: 'ph-barbell',
     title: 'No Limit',
@@ -116,11 +116,11 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'guofeng',
-    label: '古风仙侠主题曲',
-    shortLabel: '古风仙侠',
+    label: 'Guofeng Saga',
+    shortLabel: 'Guofeng',
     category: 'Genre',
     icon: 'ph-sword',
-    title: '云深处',
+    title: 'Deep in Clouds',
     mode: 'custom',
     prompt:
       '古风仙侠国风融合流行（Guofeng Cinematic Pop）。竹笛与古筝主题动机清晰，现代鼓组与电影感弦乐推进，可加琵琶扫弦与空灵合唱垫底。女声空灵、咬字典雅，旋律有山水意境。速度约 78 BPM，神秘而侠义，副歌开阔，不要纯电子舞曲节奏，也不要过于戏腔。',
@@ -129,8 +129,8 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'sleep',
-    label: '睡前助眠纯音乐',
-    shortLabel: '睡前助眠',
+    label: 'Sleep Ambient',
+    shortLabel: 'Sleep',
     category: 'Sleep',
     icon: 'ph-moon-stars',
     title: 'Soft Horizon',
@@ -140,8 +140,8 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'party',
-    label: '周末派对热歌',
-    shortLabel: '周末派对',
+    label: 'Weekend Party',
+    shortLabel: 'Party',
     category: 'Energy',
     icon: 'ph-disco-ball',
     title: 'Lights On',
@@ -153,11 +153,11 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'healing-folk',
-    label: '治愈系民谣',
-    shortLabel: '治愈民谣',
+    label: 'Healing Folk',
+    shortLabel: 'Healing',
     category: 'Mood',
     icon: 'ph-plant',
-    title: '慢慢来',
+    title: 'Take It Slow',
     mode: 'custom',
     prompt:
       '治愈系华语民谣（Chinese Acoustic Folk）。指弹吉他为主，轻口琴或木笛点缀，极轻刷鼓。人声亲密像朋友低语，房间感自然混响，速度约 84 BPM。温暖真诚、留白充足，不要电音铺底与大编制弦乐轰炸。',
@@ -166,8 +166,8 @@ export const SONG_PRESETS: SongPreset[] = [
   },
   {
     id: 'cyberpunk',
-    label: '赛博朋克夜城',
-    shortLabel: '赛博夜城',
+    label: 'Cyberpunk Night',
+    shortLabel: 'Cyberpunk',
     category: 'Genre',
     icon: 'ph-cpu',
     title: 'Neon Rain',

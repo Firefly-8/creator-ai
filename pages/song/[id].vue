@@ -115,7 +115,7 @@ function onSaved() {
 }
 
 function statusLabel(status: string) {
-  if (status === 'generating') return '制作中'
+  if (status === 'generating') return 'In progress'
   if (status === 'ready') return 'Ready'
   if (status === 'failed') return 'Failed'
   return status
