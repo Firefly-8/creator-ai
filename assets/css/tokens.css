@@ -40,3 +40,14 @@
   --ease-out: 0.18s ease;
   --ease-press: 0.12s ease;
 }
+
+
+/* Ensure fonts load with swap to prevent FOIT */
+@font-face {
+  font-family: 'Manrope';
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sora';
+  font-display: swap;
+}

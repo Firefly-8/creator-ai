@@ -10,13 +10,14 @@
     "login": "Accedi",
     "signup": "Registrati",
     "dashboard": "Dashboard",
-    "cover": "Cover",
-    "library": "Library",
+    "cover": "Copertina",
+    "library": "Libreria",
     "image": "Image",
-    "logout": "Sign Out",
+    "logout": "Esci",
     "tagline": "AI Music & Image Studio",
     "musicGroup": "Music",
-    "imageGroup": "Image"
+    "imageGroup": "Image",
+    "admin": "Admin"
   },
   "hero": {
     "title": "Crea Musica e Immagini AI",
@@ -207,5 +208,20 @@
     "deleteFailed": "Eliminazione fallita",
     "regenerateFailed": "Rigenerazione fallita",
     "subtitle": "All generated tracks and covers"
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "typeBug": "Bug",
+    "typeFeature": "Feature",
+    "typeContent": "Content",
+    "typeOther": "Other",
+    "subject": "Subject",
+    "subjectPlaceholder": "Brief description",
+    "message": "Details",
+    "messagePlaceholder": "Tell us what you think or report an issue...",
+    "submit": "Submit Feedback",
+    "sending": "Sending...",
+    "thanks": "Thank you for your feedback!",
+    "done": "Done"
   }
 }

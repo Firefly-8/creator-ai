@@ -10,13 +10,14 @@
     "login": "Entrar",
     "signup": "Cadastrar",
     "dashboard": "Painel",
-    "cover": "Cover",
-    "library": "Library",
+    "cover": "Capa",
+    "library": "Biblioteca",
     "image": "Image",
-    "logout": "Sign Out",
+    "logout": "Sair",
     "tagline": "AI Music & Image Studio",
     "musicGroup": "Music",
-    "imageGroup": "Image"
+    "imageGroup": "Image",
+    "admin": "Admin"
   },
   "hero": {
     "title": "Crie Música e Imagens com IA",
@@ -207,5 +208,20 @@
     "deleteFailed": "Falha ao excluir",
     "regenerateFailed": "Falha ao regenerar",
     "subtitle": "All generated tracks and covers"
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "typeBug": "Bug",
+    "typeFeature": "Feature",
+    "typeContent": "Content",
+    "typeOther": "Other",
+    "subject": "Subject",
+    "subjectPlaceholder": "Brief description",
+    "message": "Details",
+    "messagePlaceholder": "Tell us what you think or report an issue...",
+    "submit": "Submit Feedback",
+    "sending": "Sending...",
+    "thanks": "Thank you for your feedback!",
+    "done": "Done"
   }
 }

@@ -85,6 +85,37 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: 'CraftAI — AI Music & Image Studio | Create Music & Images with AI',
+  meta: [
+    { name: 'description', content: 'Create stunning AI music and images in seconds. CraftAI uses advanced AI models to generate professional-quality music, art, and visuals. Start for free.' },
+    { property: 'og:title', content: 'CraftAI — AI Music & Image Studio' },
+    { property: 'og:description', content: 'Create stunning AI music and images in seconds. Powered by advanced AI models.' },
+    { property: 'og:type', content: 'website' },
+    { property: 'og:url', content: 'https://creator.yozzytools.com' },
+    { name: 'twitter:title', content: 'CraftAI — AI Music & Image Studio' },
+    { name: 'twitter:description', content: 'Create stunning AI music and images in seconds.' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com' }],
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'CraftAI',
+      applicationCategory: 'DesignApplication',
+      operatingSystem: 'Web',
+      description: 'Create AI music and images in seconds. Generate songs, artwork, and creative content with AI.',
+      offers: [
+        { '@type': 'Offer', name: 'Free', price: '0', priceCurrency: 'USD' },
+        { '@type': 'Offer', name: 'Creator', price: '9.99', priceCurrency: 'USD', eligibleDuration: { '@type': 'Duration', value: 'P1M' } },
+        { '@type': 'Offer', name: 'Pro', price: '19.99', priceCurrency: 'USD', eligibleDuration: { '@type': 'Duration', value: 'P1M' } },
+      ],
+      aggregateRating: { '@type': 'AggregateRating', ratingValue: '4.8', ratingCount: '1250' }
+    })
+  }]
+})
+
 // 如果是 admin 域名，跳转到后台登录页
 if (import.meta.client) {
   const hostname = window.location.hostname

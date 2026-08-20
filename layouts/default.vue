@@ -83,9 +83,12 @@
   </div>
   <AuthModal v-model="authModalOpen" :initial-mode="authModalMode" />
   <FeedbackModal v-model="feedbackOpen" source="creator" />
+  <CookieConsent />
 </template>
 
 <script setup lang="ts">
+import CookieConsent from '~/components/ui/CookieConsent.vue'
+
 const { t: $t } = useI18n()
 const route = useRoute()
 const mobileNavOpen = ref(false)

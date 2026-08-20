@@ -10,13 +10,14 @@
     "login": "로그인",
     "signup": "회원가입",
     "dashboard": "대시보드",
-    "cover": "Cover",
-    "library": "Library",
+    "cover": "커버",
+    "library": "라이브러리",
     "image": "Image",
-    "logout": "Sign Out",
+    "logout": "로그아웃",
     "tagline": "AI Music & Image Studio",
     "musicGroup": "Music",
-    "imageGroup": "Image"
+    "imageGroup": "Image",
+    "admin": "Admin"
   },
   "hero": {
     "title": "AI 음악 & 이미지를",
@@ -207,5 +208,20 @@
     "deleteFailed": "Delete failed",
     "regenerateFailed": "Regeneration failed",
     "subtitle": "All generated tracks and covers"
+  },
+  "feedback": {
+    "title": "Send Feedback",
+    "typeBug": "Bug",
+    "typeFeature": "Feature",
+    "typeContent": "Content",
+    "typeOther": "Other",
+    "subject": "Subject",
+    "subjectPlaceholder": "Brief description",
+    "message": "Details",
+    "messagePlaceholder": "Tell us what you think or report an issue...",
+    "submit": "Submit Feedback",
+    "sending": "Sending...",
+    "thanks": "Thank you for your feedback!",
+    "done": "Done"
   }
 }
