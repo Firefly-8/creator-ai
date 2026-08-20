@@ -53,7 +53,10 @@
           <span class="i ph-chat-circle-text text-[14px]" />
           {{ $t('feedback.title', 'Send Feedback') }}
         </button>
-        <p class="text-[11px] leading-relaxed text-ink-500 mt-3">{{ $t('nav.tagline') }}</p>
+        <div class="mt-3">
+          <LanguageSwitcher />
+        </div>
+        <p class="text-[11px] leading-relaxed text-ink-500 mt-2">{{ $t('nav.tagline') }}</p>
       </div>
     </aside>
 
@@ -84,10 +87,13 @@
   <AuthModal v-model="authModalOpen" :initial-mode="authModalMode" />
   <FeedbackModal v-model="feedbackOpen" source="creator" />
   <CookieConsent />
+  <LocaleSuggestion />
 </template>
 
 <script setup lang="ts">
 import CookieConsent from '~/components/ui/CookieConsent.vue'
+import LanguageSwitcher from '~/components/ui/LanguageSwitcher.vue'
+import LocaleSuggestion from '~/components/ui/LocaleSuggestion.vue'
 
 const { t: $t } = useI18n()
 const route = useRoute()
