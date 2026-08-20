@@ -38,6 +38,8 @@ export default defineNuxtPlugin((nuxtApp) => {
 
     async onResponseError({ response }) {
       if (response.status === 401 && import.meta.client) {
+        const auth = nuxtApp.$auth
+        if (auth?.currentUser) return
         const { openLogin } = useAuthModal()
         openLogin()
       }

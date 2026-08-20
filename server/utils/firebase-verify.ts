@@ -115,7 +115,9 @@ export async function verifyFirebaseToken(token: string): Promise<FirebasePayloa
     )
 
     const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
-    const sigBytes = Uint8Array.from(atob(signature.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
+    const sigPadding = '='.repeat((4 - signature.length % 4) % 4)
+    const sigBase64 = signature.replace(/-/g, '+').replace(/_/g, '/') + sigPadding
+    const sigBytes = Uint8Array.from(atob(sigBase64), c => c.charCodeAt(0))
 
     const isValid = await crypto.subtle.verify(
       'RSASSA-PKCS1-v1_5',

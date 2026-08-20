@@ -83,6 +83,8 @@
 import { formatDuration, type SongPublic } from '~/utils/types'
 import type { MoreMenuItem } from '~/components/ui/UiMoreMenu.vue'
 
+const { t } = useI18n()
+
 const props = withDefaults(
   defineProps<{
     songs: SongPublic[]
@@ -129,32 +131,32 @@ function menuItems(song: SongPublic): MoreMenuItem[] {
   if (props.allowRemix && isTerminal(song)) {
     items.push({
       id: 'remix',
-      label: '调整参数',
+      label: t('songResultRail.adjustParams'),
       icon: 'i-ph-pencil-simple',
     })
   }
   if (isTerminal(song)) {
     items.push({
       id: 'regenerate',
-      label: '重新生成',
+      label: t('songResultRail.regenerate'),
       icon: 'i-ph-arrows-clockwise',
       disabled: props.busyId === song.id,
     })
   }
   items.push({
     id: 'download',
-    label: '下载',
+    label: t('songResultRail.download'),
     icon: 'i-ph-download-simple',
     disabled: !ready || !song.downloadUrl,
   })
   items.push({
     id: 'open',
-    label: '查看详情',
+    label: t('songResultRail.viewDetails'),
     icon: 'i-ph-eye',
   })
   items.push({
     id: 'delete',
-    label: '删除',
+    label: t('songResultRail.delete'),
     icon: 'i-ph-trash',
     danger: true,
     dividerBefore: true,
@@ -172,7 +174,7 @@ function onMenu(id: string, song: SongPublic) {
 }
 
 function statusLabel(status: string) {
-  if (status === 'generating') return '制作中'
+  if (status === 'generating') return t('songResultRail.making')
   if (status === 'ready') return 'Ready'
   if (status === 'failed') return 'Failed'
   return status
