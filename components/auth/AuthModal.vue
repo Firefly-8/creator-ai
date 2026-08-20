@@ -328,6 +328,13 @@ function getFirebaseErrorMessage(code: string): string {
 }
 
 
+/* ── Google Button ── */
+.auth-modal__google-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 /* ── Divider ── */
 .auth-modal__divider {
   display: flex;
