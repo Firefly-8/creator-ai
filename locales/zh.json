@@ -74,8 +74,42 @@
       "cancel": {
         "q": "我可以随时取消吗？",
         "a": "是的，随时取消。订阅在账单周期结束前保持有效。"
+      },
+      "switch": {
+        "q": "以后可以切换套餐吗？",
+        "a": "是的，随时升级或降级，变更立即生效。"
+      },
+      "free_generations": {
+        "q": "什么算一次生成？",
+        "a": "每次点击生成并获得输出计为一次生成。失败的生成不计入。"
       }
-    }
+    },
+    "badge": "简单定价",
+    "monthly": "月付",
+    "annual": "年付",
+    "save20": "省 20%",
+    "forever": "永久",
+    "freeDesc": "免费试用，无任何限制",
+    "creatorDesc": "为需要更多创作的创作者准备",
+    "proDesc": "专业人士的终极选择",
+    "billedAnnually": "每年 {price}",
+    "trustSecure": "PayPal 安全支付",
+    "trustCancel": "随时取消",
+    "trustInstant": "即时激活",
+    "f_free1": "每月 10 次音乐生成",
+    "f_free2": "每月 20 次图像生成",
+    "f_free3": "基础画质输出",
+    "f_free4": "社区支持",
+    "f_creator1": "每月 100 次音乐生成",
+    "f_creator2": "每月 200 次图像生成",
+    "f_creator3": "高清画质，无水印",
+    "f_creator4": "商业许可",
+    "f_creator5": "优先支持",
+    "f_pro1": "每月 300 次音乐生成",
+    "f_pro2": "每月 500 次图像生成",
+    "f_pro3": "高清画质，无水印",
+    "f_pro4": "API 访问",
+    "f_pro5": "专属支持"
   },
   "auth": {
     "login": {
@@ -216,7 +250,9 @@
     "runExtractFirst": "请先运行提取…",
     "description": "上传参考音频，快速翻唱或进阶改词。",
     "progressTitle": "翻唱进度与曲库",
-    "emptyTitle": ["还没有翻唱作品"],
+    "emptyTitle": [
+      "还没有翻唱作品"
+    ],
     "emptyHint": "生成翻唱后会出现在这里",
     "regenerating": "重新生成中…",
     "regenerateFailed": "重新生成失败",

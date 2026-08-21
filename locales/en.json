@@ -74,8 +74,42 @@
       "cancel": {
         "q": "Can I cancel anytime?",
         "a": "Yes, cancel anytime. Your subscription remains active until the end of the billing period."
+      },
+      "switch": {
+        "q": "Can I switch plans later?",
+        "a": "Yes, upgrade or downgrade anytime. Changes take effect immediately."
+      },
+      "free_generations": {
+        "q": "What counts as a generation?",
+        "a": "Each time you click Generate and receive output, that counts as one generation. Failed generations do not count."
       }
-    }
+    },
+    "badge": "Simple Pricing",
+    "monthly": "Monthly",
+    "annual": "Annual",
+    "save20": "Save 20%",
+    "forever": "forever",
+    "freeDesc": "Try it out, no strings attached",
+    "creatorDesc": "For creators who want more",
+    "proDesc": "Maximum power for professionals",
+    "billedAnnually": "{price} billed annually",
+    "trustSecure": "Secure payment via PayPal",
+    "trustCancel": "Cancel anytime",
+    "trustInstant": "Instant activation",
+    "f_free1": "10 music generations/month",
+    "f_free2": "20 image generations/month",
+    "f_free3": "Basic quality output",
+    "f_free4": "Community support",
+    "f_creator1": "100 music generations/month",
+    "f_creator2": "200 image generations/month",
+    "f_creator3": "HD quality, no watermark",
+    "f_creator4": "Commercial license",
+    "f_creator5": "Priority support",
+    "f_pro1": "300 music generations/month",
+    "f_pro2": "500 image generations/month",
+    "f_pro3": "HD quality, no watermark",
+    "f_pro4": "API access",
+    "f_pro5": "Dedicated support"
   },
   "auth": {
     "login": {
