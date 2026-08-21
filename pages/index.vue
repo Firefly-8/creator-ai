@@ -1,70 +1,74 @@
 <template>
-  <div>
+  <div class="home-page">
+    <!-- Hero Glow -->
+    <div class="home-glow" />
+
     <!-- Hero Section -->
-    <section class="relative overflow-hidden">
-      <div class="absolute inset-0 bg-gradient-to-b from-accent/5 to-transparent" />
-      <div class="relative mx-auto max-w-6xl px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24 lg:px-8">
-        <div class="text-center">
-          <h1 class="font-display text-4xl font-800 tracking-tight text-white sm:text-5xl lg:text-6xl">
-            {{  $t('hero.title')  }}
-            <span class="block text-accent-soft">{{  $t('hero.titleHighlight')  }}</span>
+    <section class="relative overflow-hidden py-20 sm:py-28 lg:py-32">
+      <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto">
+          <span class="home-badge">{{ $t('hero.badge', 'AI Music & Image Studio') }}</span>
+          <h1 class="font-display text-4xl font-800 tracking-tight text-white sm:text-5xl lg:text-6xl mt-4 leading-[1.1]">
+            {{ $t('hero.title') }}
+            <span class="block text-accent-soft">{{ $t('hero.titleHighlight') }}</span>
           </h1>
-          <p class="mx-auto mt-6 max-w-2xl text-lg text-ink-300 sm:text-xl">
-            {{  $t('hero.subtitle')  }}
+          <p class="mx-auto mt-6 text-lg text-ink-300 leading-relaxed sm:text-xl max-w-2xl">
+            {{ $t('hero.subtitle') }}
           </p>
           <div class="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
             <NuxtLink to="/create" class="btn-primary !h-12 !px-8 !text-base">
-              {{  $t('hero.cta')  }}
+              {{ $t('hero.cta') }}
             </NuxtLink>
             <NuxtLink to="/pricing" class="btn-secondary !h-12 !px-8 !text-base">
-              {{  $t('hero.ctaSecondary')  }}
+              {{ $t('hero.ctaSecondary') }}
             </NuxtLink>
           </div>
-          <p class="mt-4 text-sm text-ink-400">{{  $t('hero.noSignup') }}</p>
+          <p class="mt-5 text-sm text-ink-400">{{ $t('hero.noSignup') }}</p>
         </div>
       </div>
     </section>
 
     <!-- Features Section -->
-    <section class="border-t border-white/[0.06] py-20 sm:py-28">
+    <section class="relative border-t border-white/[0.06] py-20 sm:py-28">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-          <h2 class="font-display text-3xl font-700 text-white sm:text-4xl">
-            {{  $t('features.title')  }}
+        <div class="text-center max-w-2xl mx-auto">
+          <span class="home-badge">{{ $t('features.badge', 'Features') }}</span>
+          <h2 class="font-display text-3xl font-700 text-white sm:text-4xl mt-4">
+            {{ $t('features.title') }}
           </h2>
           <p class="mt-4 text-lg text-ink-300">
-            {{  $t('features.subtitle')  }}
+            {{ $t('features.subtitle') }}
           </p>
         </div>
-        <div class="mt-16 grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          <div class="panel p-8">
-            <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-accent/20">
+        <div class="mt-16 grid gap-6 lg:grid-cols-3">
+          <div class="panel p-8 transition duration-200 hover:border-white/[0.12] hover:bg-[#14121e]">
+            <div class="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-accent/15">
               <span class="i-ph-waveform text-2xl text-accent-soft" />
             </div>
-            <h3 class="font-display text-xl font-600 text-white">{{  $t('features.music.title')  }}</h3>
-            <p class="mt-2 text-ink-300">{{  $t('features.music.description')  }}</p>
-            <NuxtLink to="/create" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent-soft hover:text-accent">
-              {{  $t('features.music.cta')  }} <span class="i-ph-arrow-right" />
+            <h3 class="font-display text-xl font-600 text-white">{{ $t('features.music.title') }}</h3>
+            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">{{ $t('features.music.description') }}</p>
+            <NuxtLink to="/create" class="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-soft hover:text-accent transition-colors">
+              {{ $t('features.music.cta') }} <span class="i-ph-arrow-right text-[13px]" />
             </NuxtLink>
           </div>
-          <div class="panel p-8">
-            <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-accent/20">
+          <div class="panel p-8 transition duration-200 hover:border-white/[0.12] hover:bg-[#14121e]">
+            <div class="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-accent/15">
               <span class="i-ph-image text-2xl text-accent-soft" />
             </div>
-            <h3 class="font-display text-xl font-600 text-white">{{  $t('features.image.title')  }}</h3>
-            <p class="mt-2 text-ink-300">{{  $t('features.image.description')  }}</p>
-            <NuxtLink to="/image" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent-soft hover:text-accent">
-              {{  $t('features.image.cta')  }} <span class="i-ph-arrow-right" />
+            <h3 class="font-display text-xl font-600 text-white">{{ $t('features.image.title') }}</h3>
+            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">{{ $t('features.image.description') }}</p>
+            <NuxtLink to="/image" class="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-soft hover:text-accent transition-colors">
+              {{ $t('features.image.cta') }} <span class="i-ph-arrow-right text-[13px]" />
             </NuxtLink>
           </div>
-          <div class="panel p-8">
-            <div class="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-accent/20">
+          <div class="panel p-8 transition duration-200 hover:border-white/[0.12] hover:bg-[#14121e]">
+            <div class="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-accent/15">
               <span class="i-ph-magic-wand text-2xl text-accent-soft" />
             </div>
-            <h3 class="font-display text-xl font-600 text-white">{{  $t('features.lyrics.title')  }}</h3>
-            <p class="mt-2 text-ink-300">{{  $t('features.lyrics.description')  }}</p>
-            <NuxtLink to="/create" class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent-soft hover:text-accent">
-              {{  $t('features.lyrics.cta')  }} <span class="i-ph-arrow-right" />
+            <h3 class="font-display text-xl font-600 text-white">{{ $t('features.lyrics.title') }}</h3>
+            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">{{ $t('features.lyrics.description') }}</p>
+            <NuxtLink to="/create" class="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent-soft hover:text-accent transition-colors">
+              {{ $t('features.lyrics.cta') }} <span class="i-ph-arrow-right text-[13px]" />
             </NuxtLink>
           </div>
         </div>
@@ -72,19 +76,23 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="border-t border-white/[0.06] py-20">
-      <div class="mx-auto max-w-6xl px-4 text-center sm:px-6 lg:px-8">
-        <h2 class="font-display text-3xl font-700 text-white">{{  $t('cta.title')  }}</h2>
-        <p class="mx-auto mt-4 max-w-2xl text-lg text-ink-300">{{  $t('cta.subtitle')  }}</p>
-        <NuxtLink to="/create" class="btn-primary mt-8 inline-flex !h-12 !px-8 !text-base">
-          {{  $t('cta.button')  }}
-        </NuxtLink>
+    <section class="relative border-t border-white/[0.06] py-20 sm:py-28">
+      <div class="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+        <div class="panel p-10 sm:p-14">
+          <h2 class="font-display text-3xl font-700 text-white sm:text-4xl">{{ $t('cta.title') }}</h2>
+          <p class="mx-auto mt-4 max-w-xl text-lg text-ink-300">{{ $t('cta.subtitle') }}</p>
+          <NuxtLink to="/create" class="btn-primary mt-8 inline-flex !h-12 !px-8 !text-base">
+            {{ $t('cta.button') }}
+          </NuxtLink>
+        </div>
       </div>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
+const { t: $t } = useI18n()
+
 useHead({
   title: 'CraftAI — AI Music & Image Studio | Create Music & Images with AI',
   meta: [
@@ -124,3 +132,32 @@ if (import.meta.client) {
   }
 }
 </script>
+
+<style scoped>
+.home-page {
+  position: relative;
+}
+
+.home-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -10% -10% auto -10%;
+  height: 60%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(139, 124, 255, 0.12), transparent 60%);
+  z-index: 0;
+}
+
+.home-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 124, 255, 0.2);
+  background: rgba(139, 124, 255, 0.08);
+  color: var(--accent-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+</style>

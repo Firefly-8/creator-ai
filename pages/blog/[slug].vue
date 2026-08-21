@@ -1,30 +1,36 @@
 <template>
-  <div class="py-16 sm:py-24">
-    <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-      <template v-if="post">
-        <NuxtLink to="/blog" class="inline-flex items-center gap-2 text-sm text-ink-400 hover:text-accent-soft transition-colors">
-          <span class="i-ph-arrow-left" /> Back to Blog
-        </NuxtLink>
-        <article class="mt-8">
-          <h1 class="font-display text-4xl font-800 text-white sm:text-5xl">{{ post.title }}</h1>
-          <div class="mt-4 flex items-center gap-4 text-sm text-ink-400">
-            <span>{{ post.date }}</span>
-            <span>·</span>
-            <span>{{ post.readTime }}</span>
-          </div>
-          <div class="mt-10 prose prose-invert max-w-none" v-html="post.content" />
-        </article>
-      </template>
-      <template v-else>
-        <div class="text-center py-20">
-          <h1 class="font-display text-3xl font-700 text-white">Post Not Found</h1>
-          <p class="mt-4 text-ink-300">The blog post you're looking for doesn't exist.</p>
-          <NuxtLink to="/blog" class="btn-primary mt-8 inline-flex !h-12 !px-8">
-            Back to Blog
+  <div class="content-page">
+    <!-- Glow -->
+    <div class="content-glow" />
+
+    <section class="relative py-20 sm:py-24">
+      <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+        <template v-if="post">
+          <NuxtLink to="/blog" class="inline-flex items-center gap-2 text-sm text-ink-400 hover:text-accent-soft transition-colors">
+            <span class="i-ph-arrow-left" /> Back to Blog
           </NuxtLink>
-        </div>
-      </template>
-    </div>
+          <article class="mt-8">
+            <h1 class="font-display text-4xl font-800 tracking-tight text-white sm:text-5xl">{{ post.title }}</h1>
+            <div class="mt-4 flex items-center gap-4 text-sm text-ink-400">
+              <span>{{ post.date }}</span>
+              <span class="text-ink-600">·</span>
+              <span>{{ post.readTime }}</span>
+            </div>
+            <div class="mt-10 blog-content" v-html="post.content" />
+          </article>
+        </template>
+        <template v-else>
+          <div class="text-center py-20">
+            <span class="content-badge">404</span>
+            <h1 class="font-display text-3xl font-700 text-white mt-6">Post Not Found</h1>
+            <p class="mt-4 text-ink-300">The blog post you're looking for doesn't exist.</p>
+            <NuxtLink to="/blog" class="btn-primary mt-8 inline-flex !h-11 !px-7">
+              Back to Blog
+            </NuxtLink>
+          </div>
+        </template>
+      </div>
+    </section>
   </div>
 </template>
 
@@ -75,3 +81,46 @@ useHead({
   link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/blog/' + slug }],
 })
 </script>
+
+<style scoped>
+.content-page {
+  position: relative;
+}
+
+.content-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -5% -10% auto -10%;
+  height: 40%;
+  background: radial-gradient(ellipse at 50% 0%, rgba(139, 124, 255, 0.1), transparent 60%);
+  z-index: 0;
+}
+
+.content-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(139, 124, 255, 0.2);
+  background: rgba(139, 124, 255, 0.08);
+  color: var(--accent-soft);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.blog-content :deep(h2) {
+  font-family: 'Sora', sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.blog-content :deep(a) {
+  color: var(--accent-soft);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.blog-content :deep(a:hover) {
+  color: var(--accent);
+}
+</style>

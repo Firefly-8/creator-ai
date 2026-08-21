@@ -1,12 +1,9 @@
 /**
  * 图片生成 API — D1 + MiniMax 实际调用
- * Phase 2: 接通 MiniMax + 用户同步 + 额度检查
+ * 登录用户即可使用
  */
 
 import { defineEventHandler, readBody, createError } from 'h3'
-import { nanoid } from 'nanoid'
-import { encryptForStorage } from '../../utils/db'
-import { checkQuota } from '../../utils/quota'
 import { createJob, updateJob } from '../../utils/jobs'
 import { createImageRecord, updateImage, processImageResult } from '../../utils/images'
 import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
@@ -14,9 +11,11 @@ import { rateLimitMiddleware } from '../../utils/rate-limit'
 
 export default defineEventHandler(async (event) => {
   // 1. 认证
-  n  // 1.5 速率检查n  await rateLimitMiddleware(event, 'generate')n
   const auth = event.context.auth
   if (!auth?.uid) throw createError({ statusCode: 401 })
+
+  // 1.5 速率检查
+  await rateLimitMiddleware(event, 'generate')
 
   // 2. 解析参数
   const body = await readBody(event)
@@ -30,13 +29,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'prompt is required' })
   }
 
-  // 3. 额度检查
-  const quota = checkQuota('free', 'image', 0) // TODO: 从 DB 获取已使用量
-  if (!quota.allowed) {
-    throw createError({ statusCode: 402, statusMessage: 'Quota exceeded' })
-  }
-
-  // 4. 创建图片记录 + 任务
+  // 3. 创建图片记录 + 任务
   const image = await createImageRecord(auth.uid, {
     prompt,
     scene,
@@ -49,7 +42,7 @@ export default defineEventHandler(async (event) => {
     prompt, scene, model, mode, aspectRatio,
   })
 
-  // 5. 调用 MiniMax API
+  // 4. 调用 MiniMax API
   try {
     const apiKey = await getDecryptedApiKey()
     const baseUrl = getMiniMaxBaseUrl()
@@ -77,7 +70,7 @@ export default defineEventHandler(async (event) => {
 
     const result = await res.json() as any
 
-    // 6. 处理图片结果（下载到 R2）
+    // 5. 处理图片结果（下载到 R2）
     const imagePaths = await processImageResult(result)
 
     await updateImage(image.id, {
