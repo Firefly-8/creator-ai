@@ -404,6 +404,16 @@ function applyScene(preset: ImageScenePreset) {
   if (preset.id === 'portrait') mode.value = 'i2i'
 }
 
+function styleIcon(style: string): string {
+  const map: Record<string, string> = {
+    Comic: 'i-ph-smiley',
+    Vibrant: 'i-ph-sun',
+    Medieval: 'i-ph-castle',
+    Watercolor: 'i-ph-drop',
+  }
+  return map[style] || 'i-ph-palette'
+}
+
 async function onRefFile(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
