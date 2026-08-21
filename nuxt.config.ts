@@ -122,6 +122,22 @@ export default defineNuxtConfig({
     minify: false,
   },
 
+  hooks: {
+    'nitro:build:public-assets': (nitro) => {
+      const fs = require('fs')
+      const path = require('path')
+      const redirectsPath = path.join(nitro.options.output.publicDir, '_redirects')
+      let redirectContent = ''
+      if (fs.existsSync(redirectsPath)) {
+        redirectContent = fs.readFileSync(redirectsPath, 'utf-8')
+      }
+      if (!redirectContent.includes('/*  /index.html')) {
+        redirectContent += '\n# SPA fallback for i18n locale routes\n/*  /index.html  200\n'
+        fs.writeFileSync(redirectsPath, redirectContent)
+      }
+    },
+  },
+
   vite: {
     optimizeDeps: {
       exclude: ['better-sqlite3'],
