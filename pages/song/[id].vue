@@ -35,6 +35,17 @@
             >{{  statusLabel(song.status)  }}</span>
           </p>
           <p v-if="song.errorMessage" class="mt-2 text-sm text-danger">{{  song.errorMessage  }}</p>
+          <div class="mt-3 flex items-center gap-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                :checked="isPublic"
+                class="accent-[#8b7cff] h-4 w-4"
+                @change="togglePublic"
+              />
+              <span class="text-xs text-ink-300">Show in Gallery</span>
+            </label>
+          </div>
         </div>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -57,6 +68,7 @@
         <UiButton variant="ghost" class="!text-danger hover:!bg-danger/10" @click="remove">
           Delete
         </UiButton>
+        <ShareMenu :url="`/song/${song.id}`" :title="song.title" />
       </div>
     </header>
 
@@ -99,6 +111,23 @@ const { data, pending, refresh } = await useFetch<{ song: SongPublic }>(() => `/
 
 const song = computed(() => data.value?.song || null)
 const player = usePlayerStore()
+const isPublic = ref(false)
+
+async function togglePublic() {
+  try {
+    await $fetch(`/api/songs/${id.value}/public`, {
+      method: 'PATCH',
+      body: { isPublic: !isPublic.value },
+    })
+    isPublic.value = !isPublic.value
+  } catch (err) {
+    console.error('Failed to toggle public:', err)
+  }
+}
+
+watch(song, (s) => {
+  if (s) isPublic.value = !!(s as any).isPublic
+}, { immediate: true })
 
 function play() {
   if (song.value) player.playSong(song.value)

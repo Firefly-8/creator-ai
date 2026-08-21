@@ -61,7 +61,7 @@ useHead({
     { property: 'og:title', content: 'Contact CraftAI' },
     { property: 'og:description', content: 'Get support, ask questions, or send feedback.' },
   ],
-  link: [{ rel: 'canonical', href: 'https://craftai.ai/contact' }],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/contact' }],
 })
 </script>
 

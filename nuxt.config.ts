@@ -34,6 +34,7 @@ export default defineNuxtConfig({
       firebaseMessagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID || '893647905635',
       firebaseAppId: process.env.FIREBASE_APP_ID || '1:893647905635:web:9c4d855477f5e51954e956',
       firebaseMeasurementId: process.env.FIREBASE_MEASUREMENT_ID || 'G-GNMBFM5513',
+      plausibleDomain: process.env.PLAUSIBLE_DOMAIN || '',
     },
   },
 
@@ -107,6 +108,8 @@ export default defineNuxtConfig({
       useCookie: true,
       cookieKey: 'craftai_locale',
       redirectOn: 'root',
+      alwaysRedirect: false,
+      fallbackLocale: 'en',
     },
     lazy: false,
     langDir: 'locales/',

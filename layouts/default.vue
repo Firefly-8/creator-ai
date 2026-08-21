@@ -142,6 +142,14 @@ const groups = computed(() => [
       { to: '/image', label: $t('nav.image'), icon: 'i-ph-image' },
     ],
   },
+  {
+    label: 'Discover',
+    items: [
+      { to: '/gallery', label: 'Gallery', icon: 'i-ph-grid-four' },
+      { to: '/blog', label: 'Blog', icon: 'i-ph-newspaper' },
+      { to: '/tools', label: 'Tools', icon: 'i-ph-wrench' },
+    ],
+  },
 ])
 
 const pageTitle = computed(() => {

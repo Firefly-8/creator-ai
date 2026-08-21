@@ -103,7 +103,7 @@ useHead({
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'keywords', content: 'AI music generator, AI song generator, text to music, AI composer, music generation AI' },
   ],
-  link: [{ rel: 'canonical', href: 'https://craftai.ai/ai-music-generator' }],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/ai-music-generator' }],
   script: [
     {
       type: 'application/ld+json',

@@ -61,7 +61,7 @@ useHead({
     { property: 'og:description', content: 'AI-powered creative studio for music, images, and lyrics.' },
     { property: 'og:type', content: 'website' },
   ],
-  link: [{ rel: 'canonical', href: 'https://craftai.ai/about' }],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/about' }],
 })
 </script>
 

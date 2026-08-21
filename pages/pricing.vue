@@ -170,7 +170,41 @@ const faqItems = computed(() => [
 useHead({
   title: 'Pricing — CraftAI',
   meta: [{ name: 'description', content: 'Simple pricing for CraftAI. Start free, upgrade to Creator for $9.99/month or save 20% with annual billing.' }],
-  link: [{ rel: 'canonical', href: 'https://craftai.ai/pricing' }],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/pricing' }],
+  script: [{
+    type: 'application/ld+json',
+    innerHTML: JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'Can I use generated content commercially?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Yes! Creator and Pro plans include full commercial license. You own the content you create.' },
+        },
+        {
+          '@type': 'Question',
+          name: 'What payment methods do you accept?',
+          acceptedAnswer: { '@type': 'Answer', text: 'We accept PayPal for now. Stripe support coming soon.' },
+        },
+        {
+          '@type': 'Question',
+          name: 'Can I cancel anytime?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Yes, cancel anytime. Your subscription remains active until the end of the billing period.' },
+        },
+        {
+          '@type': 'Question',
+          name: 'Can I switch plans later?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Yes, upgrade or downgrade anytime. Changes take effect immediately.' },
+        },
+        {
+          '@type': 'Question',
+          name: 'What counts as a generation?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Each time you click Generate and receive output, that counts as one generation. Failed generations do not count.' },
+        },
+      ],
+    }),
+  }],
 })
 </script>
 

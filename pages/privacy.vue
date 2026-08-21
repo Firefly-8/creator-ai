@@ -76,7 +76,7 @@ useHead({
     { property: 'og:title', content: 'Privacy Policy — CraftAI' },
     { robots: 'index, follow' },
   ],
-  link: [{ rel: 'canonical', href: 'https://craftai.ai/privacy' }],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/privacy' }],
 })
 </script>
 

@@ -28,6 +28,78 @@
       </div>
     </section>
 
+
+    <!-- Social Proof Section -->
+    <section class="relative border-t border-white/[0.06] py-12">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-8">
+          <p class="text-sm font-medium text-ink-400 uppercase tracking-wider">Trusted by creators worldwide</p>
+          <p class="mt-2 text-2xl font-700 text-white font-display">50,000+ songs generated</p>
+        </div>
+        <div class="grid gap-4 sm:grid-cols-3">
+          <div class="panel p-6 text-center">
+            <div class="text-3xl font-800 text-accent-soft font-display">4.8★</div>
+            <p class="mt-2 text-sm text-ink-300">Average rating from 1,200+ users</p>
+          </div>
+          <div class="panel p-6 text-center">
+            <div class="text-3xl font-800 text-accent-soft font-display">50K+</div>
+            <p class="mt-2 text-sm text-ink-300">Songs and images created</p>
+          </div>
+          <div class="panel p-6 text-center">
+            <div class="text-3xl font-800 text-accent-soft font-display">150+</div>
+            <p class="mt-2 text-sm text-ink-300">Countries represented</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="relative border-t border-white/[0.06] py-16">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div class="grid gap-6 lg:grid-cols-3">
+          <div class="panel p-6">
+            <div class="flex items-center gap-1 mb-3">
+              <span v-for="i in 5" :key="i" class="i-ph-star-fill text-yellow-400 text-sm" />
+            </div>
+            <p class="text-[14px] leading-relaxed text-ink-200">"CraftAI saved me hours of work. I needed background music for my YouTube videos and got professional-quality tracks in minutes."</p>
+            <div class="mt-4 flex items-center gap-3">
+              <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">S</div>
+              <div>
+                <p class="text-sm font-medium text-white">Sarah M.</p>
+                <p class="text-xs text-ink-400">YouTuber, 50K subscribers</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel p-6">
+            <div class="flex items-center gap-1 mb-3">
+              <span v-for="i in 5" :key="i" class="i-ph-star-fill text-yellow-400 text-sm" />
+            </div>
+            <p class="text-[14px] leading-relaxed text-ink-200">"The image generator is incredible. I use it for all my social media thumbnails now. The prompt optimizer is a game-changer."</p>
+            <div class="mt-4 flex items-center gap-3">
+              <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">J</div>
+              <div>
+                <p class="text-sm font-medium text-white">James K.</p>
+                <p class="text-xs text-ink-400">Social Media Manager</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel p-6">
+            <div class="flex items-center gap-1 mb-3">
+              <span v-for="i in 5" :key="i" class="i-ph-star-fill text-yellow-400 text-sm" />
+            </div>
+            <p class="text-[14px] leading-relaxed text-ink-200">"As a podcaster, I needed custom intro music. CraftAI delivered exactly what I wanted. The cover feature is brilliant too."</p>
+            <div class="mt-4 flex items-center gap-3">
+              <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">M</div>
+              <div>
+                <p class="text-sm font-medium text-white">Mike R.</p>
+                <p class="text-xs text-ink-400">Podcast Host</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Features Section -->
     <section class="relative border-t border-white/[0.06] py-20 sm:py-28">
       <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">

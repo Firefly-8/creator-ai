@@ -23,6 +23,7 @@ export interface ImageRow {
   status: string
   error_message: string | null
   meta_json: string
+  is_public: number
   created_at: string
   updated_at: string
 }
@@ -48,6 +49,7 @@ export interface SongRow {
   parent_id: string | null
   user_id: string
   meta_json: string
+  is_public: number
   created_at: string
   updated_at: string
 }

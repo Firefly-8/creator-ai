@@ -83,7 +83,7 @@ useHead({
     { property: 'og:title', content: 'Terms of Service — CraftAI' },
     { robots: 'index, follow' },
   ],
-  link: [{ rel: 'canonical', href: 'https://craftai.ai/terms' }],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/terms' }],
 })
 </script>
 

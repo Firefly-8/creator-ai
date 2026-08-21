@@ -90,32 +90,83 @@
           </p>
         </div>
 
-        <div class="grid gap-3 sm:grid-cols-2">
-          <label class="block space-y-2">
-            <span class="field-label">{{ $t('image.model') }}</span>
-            <select v-model="model" class="field">
-              <option value="image-01">image-01 ({{ $t('image.generic') }})</option>
-              <option value="image-01-live">image-01-live ({{ $t('image.style') }})</option>
-            </select>
-          </label>
-          <label class="block space-y-2">
-            <span class="field-label">{{ $t('image.aspectRatio') }}</span>
-            <select v-model="aspectRatio" class="field">
-              <option v-for="a in IMAGE_ASPECT_RATIOS" :key="a.value" :value="a.value">{{ a.label }}</option>
-            </select>
-          </label>
-          <label class="block space-y-2">
-            <span class="field-label">{{ $t('image.count') }}</span>
-            <select v-model.number="count" class="field">
-              <option v-for="n in 4" :key="n" :value="n">{{ n }}</option>
-            </select>
-          </label>
-          <label v-if="model === 'image-01-live'" class="block space-y-2">
-            <span class="field-label">{{ $t('image.styleType') }}</span>
-            <select v-model="styleType" class="field">
-              <option v-for="s in IMAGE_LIVE_STYLES" :key="s" :value="s">{{ s }}</option>
-            </select>
-          </label>
+        <!-- Model (icon buttons) -->
+        <div class="space-y-2">
+          <span class="field-label">{{ $t('image.model') }}</span>
+          <div class="flex gap-2">
+            <button
+              type="button"
+              class="icon-radio"
+              :class="{ 'is-active': model === 'image-01' }"
+              @click="model = 'image-01'"
+            >
+              <span class="i-ph-paint-brush-broad text-[16px]" />
+              <span class="icon-radio__label">Standard</span>
+            </button>
+            <button
+              type="button"
+              class="icon-radio"
+              :class="{ 'is-active': model === 'image-01-live' }"
+              @click="model = 'image-01-live'"
+            >
+              <span class="i-ph-palette text-[16px]" />
+              <span class="icon-radio__label">Style</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Aspect Ratio (visual ratio buttons) -->
+        <div class="space-y-2">
+          <span class="field-label">{{ $t('image.aspectRatio') }}</span>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="a in IMAGE_ASPECT_RATIOS"
+              :key="a.value"
+              type="button"
+              class="ratio-btn"
+              :class="{ 'is-active': aspectRatio === a.value }"
+              :title="a.value"
+              @click="aspectRatio = a.value"
+            >
+              <span class="ratio-btn__box" :class="`ratio-${a.value.replace(':', '-')}`" />
+              <span class="ratio-btn__label">{{ a.value }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Count (icon buttons) -->
+        <div class="space-y-2">
+          <span class="field-label">{{ $t('image.count') }}</span>
+          <div class="flex gap-2">
+            <button
+              v-for="n in 4"
+              :key="n"
+              type="button"
+              class="count-btn"
+              :class="{ 'is-active': count === n }"
+              @click="count = n"
+            >
+              {{ n }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Style Type (icon buttons, only for image-01-live) -->
+        <div v-if="model === 'image-01-live'" class="space-y-2">
+          <span class="field-label">{{ $t('image.styleType') }}</span>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="s in IMAGE_LIVE_STYLES"
+              :key="s"
+              type="button"
+              class="icon-radio"
+              :class="{ 'is-active': styleType === s }"
+              @click="styleType = s"
+            >
+              <span :class="styleIcon(s)" />
+              <span class="icon-radio__label">{{ s }}</span>
+            </button>
+          </div>
         </div>
 
         <div class="flex flex-wrap items-center gap-3 border-t border-white/[0.06] pt-4">
@@ -249,6 +300,8 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+import { useAnalytics } from '~/composables/useAnalytics'
+const { trackGenerateStart: trackImgStart, trackGenerateSuccess: trackImgSuccess } = useAnalytics()
 import {
   IMAGE_ASPECT_RATIOS,
   IMAGE_LIVE_STYLES,
@@ -423,7 +476,9 @@ async function generate() {
       },
     })
     promptFinal.value = res.promptFinal
+    const notes = res.notes ? `${res.notes} · ` : ''
     statusText.value = `Generated ${res.images.length} images`
+    if (notes) optimizeNotes.value = notes
     await refresh()
   } catch (err: any) {
     errorText.value = err?.data?.statusMessage || err?.message || 'Generate failed'
@@ -698,5 +753,107 @@ function onImageMenu(id: string, img: ImagePublic) {
 
 .lightbox__close:hover {
   background: rgba(255, 255, 255, 0.14);
+}
+
+/* —— Icon Radio Buttons —— */
+.icon-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ink-2, #d0cbe0);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.icon-radio:hover {
+  border-color: rgba(139, 124, 255, 0.3);
+  background: rgba(139, 124, 255, 0.08);
+}
+.icon-radio.is-active {
+  border-color: rgba(139, 124, 255, 0.5);
+  background: rgba(139, 124, 255, 0.12);
+  color: #fff;
+}
+.icon-radio__label {
+  white-space: nowrap;
+}
+
+/* —— Ratio Buttons —— */
+.ratio-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ratio-btn:hover {
+  border-color: rgba(139, 124, 255, 0.3);
+  background: rgba(139, 124, 255, 0.08);
+}
+.ratio-btn.is-active {
+  border-color: rgba(139, 124, 255, 0.5);
+  background: rgba(139, 124, 255, 0.12);
+}
+.ratio-btn__box {
+  display: block;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+.ratio-btn.is-active .ratio-btn__box {
+  background: #8b7cff;
+}
+.ratio-1-1 { width: 20px; height: 20px; }
+.ratio-16-9 { width: 28px; height: 16px; }
+.ratio-9-16 { width: 16px; height: 28px; }
+.ratio-4-3 { width: 24px; height: 18px; }
+.ratio-3-4 { width: 18px; height: 24px; }
+.ratio-3-2 { width: 27px; height: 18px; }
+.ratio-2-3 { width: 18px; height: 27px; }
+.ratio-21-9 { width: 32px; height: 14px; }
+.ratio-btn__label {
+  font-size: 0.68rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.ratio-btn.is-active .ratio-btn__label {
+  color: #b4a9ff;
+}
+
+/* —— Count Buttons —— */
+.count-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--ink-2, #d0cbe0);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.count-btn:hover {
+  border-color: rgba(139, 124, 255, 0.3);
+  background: rgba(139, 124, 255, 0.08);
+  color: #fff;
+}
+.count-btn.is-active {
+  border-color: rgba(139, 124, 255, 0.5);
+  background: rgba(139, 124, 255, 0.15);
+  color: #fff;
+  box-shadow: 0 0 0 1px rgba(139, 124, 255, 0.3);
 }
 </style>

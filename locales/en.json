@@ -17,7 +17,9 @@
     "tagline": "AI Music & Image Studio",
     "musicGroup": "Music",
     "imageGroup": "Image",
-    "admin": "Admin"
+    "admin": "Admin",
+    "gallery": "Gallery",
+    "tools": "Tools"
   },
   "hero": {
     "title": "Create AI Music & Images",

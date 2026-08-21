@@ -130,6 +130,12 @@
           @delete="removeSong"
           @open="openSong"
         />
+        <div v-if="songs.length > 0 && !isGenerating" class="flex justify-center pt-2">
+          <button class="btn-secondary !h-9 !px-5 text-sm" @click="scrollToOps">
+            <span class="i-ph-plus-circle text-[14px]" />
+            Generate More
+          </button>
+        </div>
       </div>
     </template>
   </StudioWorkspace>
@@ -137,8 +143,12 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const { trackGenerateStart, trackGenerateSuccess } = useAnalytics()
+const { notifyGenerationComplete } = useNotification()
 import { LYRIC_TAGS, type SongPublic } from '~/utils/types'
 import { SONG_PRESETS, type SongPreset } from '~/utils/presets'
+import { useAnalytics } from '~/composables/useAnalytics'
+import { useNotification } from '~/composables/useNotification'
 
 definePageMeta({ layout: "default", middleware: ["auth"] })
 
@@ -199,6 +209,7 @@ watch(job, async (j) => {
   if (j.status === 'done') {
     statusText.value = 'Ready'
     await refreshSongs().catch(() => {})
+    notifyGenerationComplete('music')
     const id = j.songId || activeSong.value?.id
     if (id) navigateTo(`/song/${id}`)
   }
@@ -301,6 +312,7 @@ async function genLyrics() {
 
 async function submit() {
   if (!requireAuth()) return
+  trackGenerateStart('music')
   submitting.value = true
   errorText.value = ''
   statusText.value = 'Starting…'
@@ -383,6 +395,12 @@ function downloadSong(song: SongPublic) {
 
 function openSong(song: SongPublic) {
   navigateTo(`/song/${song.id}`)
+}
+
+function scrollToOps() {
+  if (import.meta.client) {
+    document.querySelector('.workspace__ops')?.scrollTo?.({ top: 0, behavior: 'smooth' })
+  }
 }
 
 async function removeSong(song: SongPublic) {

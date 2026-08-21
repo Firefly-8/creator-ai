@@ -38,6 +38,8 @@ function getCookie(name: string): string | null {
 
 function switchToZh() {
   setLocale('zh')
+  // 确保 cookie 被正确设置
+  document.cookie = 'craftai_locale=zh; max-age=31536000; path=/; SameSite=Lax'
   dismiss()
 }
 

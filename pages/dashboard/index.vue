@@ -29,6 +29,38 @@
         </div>
       </div>
 
+      <!-- Daily Free Claim -->
+      <div class="mb-8 panel p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display text-lg font-600 text-white">Daily Free Generation</h2>
+            <p class="mt-1 text-sm text-ink-400">Come back every day for free generations</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div v-if="dailyStreak > 0" class="text-center">
+              <p class="text-2xl font-700 text-accent-soft">{{ dailyStreak }}</p>
+              <p class="text-[11px] text-ink-400">day streak</p>
+            </div>
+            <button
+              class="btn-primary !h-9 !px-4 text-sm"
+              :disabled="dailyMusicClaimed"
+              @click="claimDaily('music')"
+            >
+              <span v-if="dailyMusicClaimed">Claimed ✓</span>
+              <span v-else>+1 Free Music</span>
+            </button>
+            <button
+              class="btn-secondary !h-9 !px-4 text-sm"
+              :disabled="dailyImageClaimed"
+              @click="claimDaily('image')"
+            >
+              <span v-if="dailyImageClaimed">Claimed ✓</span>
+              <span v-else>+1 Free Image</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent Creations -->
       <div class="panel p-6">
         <h2 class="font-display text-lg font-600 text-white">{{ $t('dashboard.recentCreations') }}</h2>
@@ -103,9 +135,37 @@ async function loadRecent() {
   }
 }
 
+async function loadDailyFree() {
+  try {
+    const data = await $fetch('/api/user/daily-free')
+    dailyMusicClaimed.value = data.music?.claimed || false
+    dailyImageClaimed.value = data.image?.claimed || false
+    dailyStreak.value = data.streakDays || 0
+  } catch {
+    // ignore
+  }
+}
+
+async function claimDaily(type: 'music' | 'image') {
+  try {
+    const data = await $fetch<{ streakDays: number }>('/api/user/daily-free', {
+      method: 'POST',
+      body: { type },
+    })
+    if (type === 'music') dailyMusicClaimed.value = true
+    else dailyImageClaimed.value = true
+    dailyStreak.value = data.streakDays || dailyStreak.value
+  } catch (err: any) {
+    if (err?.statusCode !== 409) {
+      console.error('[Daily Free] Claim failed:', err)
+    }
+  }
+}
+
 onMounted(() => {
   loadDashboard()
   loadRecent()
+  loadDailyFree()
 })
 
 useHead({ title: 'Dashboard — CraftAI' })

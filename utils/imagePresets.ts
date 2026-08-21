@@ -18,6 +18,8 @@ export type ImageScenePreset = {
   model?: 'image-01' | 'image-01-live'
   /** image-01-live style only */
   styleType?: 'Comic' | 'Vibrant' | 'Medieval' | 'Watercolor'
+  /** Default number of images to generate */
+  defaultCount?: number
   /** Starter idea shown in the textarea */
   prompt: string
   hint: string
@@ -35,6 +37,7 @@ export const IMAGE_SCENE_PRESETS: ImageScenePreset[] = [
     shortLabel: 'Logo',
     icon: 'ph-app-window',
     aspectRatio: '1:1',
+    defaultCount: 4,
     prompt:
       'Minimal geometric brand logo mark for a music app named Pulse, periwinkle violet accent, flat vector, centered, clean white background, high contrast, scalable icon, no mockup, no tiny text clutter',
     hint: 'Square, flat vector, clean background. API has no dedicated logo mode — rely on prompt constraints.',
@@ -45,6 +48,7 @@ export const IMAGE_SCENE_PRESETS: ImageScenePreset[] = [
     shortLabel: 'UI',
     icon: 'ph-devices',
     aspectRatio: '9:16',
+    defaultCount: 2,
     prompt:
       'Modern dark-mode music player mobile UI mockup, clean hierarchy, large album art, transport controls, violet accent #8b7cff, high-end product design, readable layout, soft depth, no illegible micro text',
     hint: 'Use 9:16 / 16:9 to simulate mobile or desktop UI. Describe components and information hierarchy.',
@@ -55,6 +59,7 @@ export const IMAGE_SCENE_PRESETS: ImageScenePreset[] = [
     shortLabel: 'Poster',
     icon: 'ph-layout',
     aspectRatio: '3:4',
+    defaultCount: 4,
     prompt:
       'Editorial brand poster design, bold typography as graphic shapes, generous negative space, modern Swiss-inspired layout, violet and charcoal palette, print-ready composition, conceptual not photoreal clutter',
     hint: 'Poster / brand visual board. Describe text as graphic elements, avoid requiring readable long sentences.',
@@ -65,6 +70,7 @@ export const IMAGE_SCENE_PRESETS: ImageScenePreset[] = [
     shortLabel: 'Portrait',
     icon: 'ph-user-focus',
     aspectRatio: '3:4',
+    defaultCount: 2,
     prompt:
       'Cinematic portrait of a young musician, soft window light, shallow depth of field, natural skin detail, 85mm look, calm expression, photorealistic',
     hint: 'Image-to-image works best here: upload a single-person frontal photo as character reference.',
@@ -75,6 +81,7 @@ export const IMAGE_SCENE_PRESETS: ImageScenePreset[] = [
     shortLabel: 'Product',
     icon: 'ph-package',
     aspectRatio: '1:1',
+    defaultCount: 4,
     prompt:
       'Studio product photography of wireless earbuds on matte charcoal pedestal, softbox lighting, subtle reflection, commercial catalog style, sharp material detail',
     hint: 'E-commerce / product studio look. Emphasize materials, lighting, and surface.',
@@ -85,6 +92,7 @@ export const IMAGE_SCENE_PRESETS: ImageScenePreset[] = [
     shortLabel: 'Album',
     icon: 'ph-vinyl-record',
     aspectRatio: '1:1',
+    defaultCount: 4,
     prompt:
       'Square album cover art, rainy neon city night, moody synthwave atmosphere, abstract silhouette, no readable song title text, cinematic color grade',
     hint: 'Square cover. Use minimal readable text, focus on mood and composition.',
@@ -95,6 +103,7 @@ export const IMAGE_SCENE_PRESETS: ImageScenePreset[] = [
     shortLabel: 'General',
     icon: 'ph-image',
     aspectRatio: '16:9',
+    defaultCount: 2,
     prompt:
       'Dreamy coastal cliff at golden hour, volumetric light, film still, rich color, photorealistic detail',
     hint: 'Freely describe subject, style, lighting, and composition; prompt optimization available.',

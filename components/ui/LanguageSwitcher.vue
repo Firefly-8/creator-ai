@@ -67,6 +67,8 @@ function toggle() {
 
 function selectLocale(code: string) {
   setLocale(code)
+  // 确保 cookie 被正确设置
+  document.cookie = `craftai_locale=${code}; max-age=31536000; path=/; SameSite=Lax`
   open.value = false
 }
 
