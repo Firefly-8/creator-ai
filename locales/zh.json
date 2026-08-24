@@ -25,7 +25,8 @@
     "subtitle": "用 AI 生成歌曲、艺术作品和创意内容。无需信用卡 — 免费开始创作。",
     "cta": "免费开始创作",
     "ctaSecondary": "查看定价",
-    "noSignup": "前 10 次生成无需注册"
+    "noSignup": "前 10 次生成无需注册",
+    "badge": "AI 音乐与图像工作室"
   },
   "features": {
     "title": "创作所需，一应俱全",
@@ -44,7 +45,8 @@
       "title": "AI 歌词创作",
       "description": "创作任何风格的歌词。编辑和润色直到完美。",
       "cta": "试试歌词创作"
-    }
+    },
+    "badge": "功能特点"
   },
   "cta": {
     "title": "准备好创作了吗？",
@@ -307,6 +309,7 @@
   "ui": {
     "refresh": "刷新",
     "refreshList": "刷新列表",
-    "moreActions": "更多操作"
+    "moreActions": "更多操作",
+    "language": "语言"
   }
 }

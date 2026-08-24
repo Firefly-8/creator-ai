@@ -27,7 +27,8 @@
     "subtitle": "Generate songs, artwork, and creative content with AI. No credit card required — start creating for free.",
     "cta": "Start Creating Free",
     "ctaSecondary": "View Pricing",
-    "noSignup": "No signup required for first 10 generations"
+    "noSignup": "No signup required for first 10 generations",
+    "badge": "AI Music & Image Studio"
   },
   "features": {
     "title": "Everything You Need to Create",
@@ -46,7 +47,8 @@
       "title": "AI Lyrics Writer",
       "description": "Generate song lyrics in any style. Edit and refine until it's perfect.",
       "cta": "Try Lyrics Writer"
-    }
+    },
+    "badge": "Features"
   },
   "cta": {
     "title": "Ready to Create?",
@@ -319,6 +321,7 @@
   "ui": {
     "refresh": "Refresh",
     "refreshList": "Refresh list",
-    "moreActions": "More actions"
+    "moreActions": "More actions",
+    "language": "Language"
   }
 }
