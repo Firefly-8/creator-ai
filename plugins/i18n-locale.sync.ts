@@ -1,15 +1,8 @@
 /**
- * i18n 语言同步插件
- * 确保 SSR 和 CSR 之间语言设置一致
- * 从 cookie 读取用户选择的语言，覆盖浏览器默认检测
+ * i18n 语言同步插件 — 空插件，保留以备将来扩展
+ * locale 同步已由 @nuxtjs/i18n 内置的 detectBrowserLanguage.cookieKey 处理
  */
 export default defineNuxtPlugin(() => {
-  const { locale, setLocale } = useI18n()
-
-  // 从 cookie 读取用户之前选择的语言
-  const savedLocale = useCookie('craftai_locale')
-
-  if (savedLocale.value && savedLocale.value !== locale.value) {
-    setLocale(savedLocale.value)
-  }
+  // @nuxtjs/i18n 的 detectBrowserLanguage 配置已处理 cookie 同步
+  // 不需要额外逻辑
 })

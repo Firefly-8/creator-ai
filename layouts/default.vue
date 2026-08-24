@@ -96,6 +96,7 @@ import LanguageSwitcher from '~/components/ui/LanguageSwitcher.vue'
 import LocaleSuggestion from '~/components/ui/LocaleSuggestion.vue'
 
 const { t: $t } = useI18n()
+const localePath = useLocalePath()
 const route = useRoute()
 const mobileNavOpen = ref(false)
 const { user, authReady, logout } = useAuth()
@@ -131,23 +132,23 @@ const groups = computed(() => [
   {
     label: $t('nav.musicGroup'),
     items: [
-      { to: '/create', label: $t('nav.create'), icon: 'i-ph-waveform' },
-      { to: '/cover', label: $t('nav.cover'), icon: 'i-ph-arrows-clockwise' },
-      { to: '/library', label: $t('nav.library'), icon: 'i-ph-music-notes' },
+      { to: localePath('/create'), label: $t('nav.create'), icon: 'i-ph-waveform' },
+      { to: localePath('/cover'), label: $t('nav.cover'), icon: 'i-ph-arrows-clockwise' },
+      { to: localePath('/library'), label: $t('nav.library'), icon: 'i-ph-music-notes' },
     ],
   },
   {
     label: $t('nav.imageGroup'),
     items: [
-      { to: '/image', label: $t('nav.image'), icon: 'i-ph-image' },
+      { to: localePath('/image'), label: $t('nav.image'), icon: 'i-ph-image' },
     ],
   },
   {
     label: 'Discover',
     items: [
-      { to: '/gallery', label: 'Gallery', icon: 'i-ph-grid-four' },
-      { to: '/blog', label: 'Blog', icon: 'i-ph-newspaper' },
-      { to: '/tools', label: 'Tools', icon: 'i-ph-wrench' },
+      { to: localePath('/gallery'), label: 'Gallery', icon: 'i-ph-grid-four' },
+      { to: localePath('/blog'), label: 'Blog', icon: 'i-ph-newspaper' },
+      { to: localePath('/tools'), label: 'Tools', icon: 'i-ph-wrench' },
     ],
   },
 ])
