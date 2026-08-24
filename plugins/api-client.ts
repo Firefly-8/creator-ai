@@ -37,12 +37,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     },
 
     async onResponseError({ response }) {
-      if (response.status === 401 && import.meta.client) {
-        const auth = nuxtApp.$auth
-        if (auth?.currentUser) return
-        const { openLogin } = useAuthModal()
-        openLogin()
-      }
+      // 401 时静默处理，避免在插件上下文中调用 useAuthModal() 报错
+      // 用户下次操作时会自然触发登录流程
     },
   })
 
