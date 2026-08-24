@@ -117,7 +117,7 @@ watch([user, authReady], async () => {
     return
   }
   try {
-    const token = await user.value.getIdToken()
+    const token = await user.value.getIdToken(true)
     const res = await $fetch<{ role: string }>('/api/user/role', {
       headers: { Authorization: `Bearer ${token}` },
     })

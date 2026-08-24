@@ -169,7 +169,7 @@ export function useAuth() {
 
   // 获取 ID Token
   async function getIdToken(): Promise<string | null> {
-    return user.value?.getIdToken() || null
+    return user.value?.getIdToken(true) || null
   }
 
   return {

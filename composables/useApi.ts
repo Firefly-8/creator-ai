@@ -1,7 +1,7 @@
 /**
  * API 客户端 — 自动附加 Firebase Token
  * 所有 API 请求通过此 composable 发送
- * 
+ *
  * 使用示例:
  * const { get, post, del } = useApi()
  * const data = await get('/api/auth/me')
@@ -16,7 +16,8 @@ export function useApi() {
     try {
       const auth = nuxtApp.$auth
       if (auth?.currentUser) {
-        const token = await auth.currentUser.getIdToken()
+        // 强制刷新 token，避免过期导致 401
+        const token = await auth.currentUser.getIdToken(true)
         if (token) headers['Authorization'] = `Bearer ${token}`
       }
     } catch { /* ignore */ }
