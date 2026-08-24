@@ -181,3 +181,34 @@ curl -s -X POST -H "Authorization: Bearer $CF_API_TOKEN" \
 ### 测试环境配置修复
 - **问题**：craftai-staging 项目 D1 绑定指向生产库，缺少 nodejs_compat
 - **修复**：通过 CF API 更新 deployment_configs
+
+---
+
+## 推送前检查流程（必须执行）
+
+**每次推送前必须运行 `bash scripts/pre-push-check.sh`，通过后才允许推送。**
+
+检查项：
+1. **构建检查** — `npm run build` 必须通过
+2. **SSR 渲染检查** — 本地 wrangler 预览首页必须返回 HTTP 200（不是 500）
+3. **插件上下文检查** — async 插件中不得调用 composable（useI18n/useCookie/useAuthModal 等）
+4. **i18n key 检查** — 模板中使用的 key 必须存在于 en.json
+
+### 常见陷阱（已踩坑记录）
+
+| 陷阱 | 原因 | 修复 |
+|------|------|------|
+| `useI18n()` 在 async 插件中报错 | async 破坏 setup 上下文 | 移除 async 或用 nuxtApp.$i18n |
+| `localePath is not a function` | useI18n() 不返回 localePath | 使用 `useLocalePath()` composable |
+| SSR 500 `"message":"26"` | i18n 插件冲突 | 移除自定义 locale 同步，依赖内置 cookie 检测 |
+| staging 500 | CF Pages 配置被覆盖（D1/KV 指向生产） | 推送后检查 CF API 配置 |
+| auth 401 循环 | token 未刷新 | `getIdToken(true)` 强制刷新 |
+
+### 推送流程
+1. 完成代码修改
+2. 运行 `bash scripts/pre-push-check.sh`
+3. 确认所有检查通过
+4. 告知用户变更摘要
+5. 等待用户确认"推送"
+6. 执行 git push
+7. 验证 staging 环境（curl -I https://staging.creator.yozzytools.com）
