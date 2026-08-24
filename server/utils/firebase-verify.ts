@@ -1,9 +1,6 @@
 /**
  * Firebase Token 验证 — 使用 JWKS 公钥
  * 轻量级实现，无需 firebase-admin SDK
- * 
- * Firebase 公钥地址: https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com
- * 公钥缓存 24 小时
  */
 
 import { createError } from 'h3'
@@ -17,7 +14,7 @@ const CACHE_TTL = 24 * 60 * 60 * 1000 // 24 小时
 const FIREBASE_PROJECT_ID = 'creator-cab02'
 
 interface FirebasePayload {
-  sub: string        // UID
+  sub: string
   email?: string
   email_verified?: boolean
   name?: string
@@ -28,15 +25,14 @@ interface FirebasePayload {
   iss: string
 }
 
-/**
- * 获取 Firebase 公钥
- */
 async function getPublicKeys(): Promise<Record<string, string>> {
   if (cachedKeys && Date.now() < cacheExpiry) {
+    console.log('[Firebase] Using cached JWKS keys')
     return cachedKeys
   }
 
   try {
+    console.log('[Firebase] Fetching JWKS from Google...')
     const res = await fetch(
       'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
     )
@@ -45,18 +41,15 @@ async function getPublicKeys(): Promise<Record<string, string>> {
     const data = await res.json() as Record<string, string>
     cachedKeys = data
     cacheExpiry = Date.now() + CACHE_TTL
+    console.log(`[Firebase] JWKS fetched OK, ${Object.keys(data).length} keys cached`)
     return data
   } catch (err) {
     console.error('[Firebase] JWKS fetch error:', err)
-    // 如果缓存存在但过期，仍返回旧缓存
     if (cachedKeys) return cachedKeys
     throw err
   }
 }
 
-/**
- * 将 X.509 PEM 转为 Uint8Array (SPKI format)
- */
 function pemToKey(pem: string): Uint8Array {
   const b64 = pem
     .replace(/-----BEGIN CERTIFICATE-----/, '')
@@ -70,41 +63,49 @@ function pemToKey(pem: string): Uint8Array {
   return bytes
 }
 
-/**
- * Base64URL 解码
- */
 function base64UrlDecode(str: string): string {
   const padding = '='.repeat((4 - str.length % 4) % 4)
   const base64 = str.replace(/-/g, '+').replace(/_/g, '/') + padding
   return atob(base64)
 }
 
-/**
- * 验证 Firebase ID Token
- * 返回解码后的 payload，验证失败返回 null
- */
 export async function verifyFirebaseToken(token: string): Promise<FirebasePayload | null> {
   try {
-    // 1. 解析 JWT 结构
     const parts = token.split('.')
-    if (parts.length !== 3) return null
+    if (parts.length !== 3) {
+      console.log('[Firebase] FAIL: token does not have 3 parts')
+      return null
+    }
 
     const header = JSON.parse(base64UrlDecode(parts[0])) as { kid: string; alg: string }
     const payload = JSON.parse(base64UrlDecode(parts[1])) as FirebasePayload
-    const signature = parts[2]
+    console.log(`[Firebase] Token header: kid=${header.kid}, alg=${header.alg}`)
+    console.log(`[Firebase] Token payload: aud=${payload.aud}, exp=${payload.exp}, sub=${payload.sub}`)
 
-    // 2. 基本验证
-    if (header.alg !== 'RS256') return null
-    if (payload.aud !== FIREBASE_PROJECT_ID) return null
-    if (payload.exp * 1000 < Date.now()) return null
-    if (!payload.sub) return null
+    if (header.alg !== 'RS256') {
+      console.log('[Firebase] FAIL: alg is not RS256:', header.alg)
+      return null
+    }
+    if (payload.aud !== FIREBASE_PROJECT_ID) {
+      console.log(`[Firebase] FAIL: aud mismatch. Expected ${FIREBASE_PROJECT_ID}, got ${payload.aud}`)
+      return null
+    }
+    if (payload.exp * 1000 < Date.now()) {
+      console.log(`[Firebase] FAIL: token expired. exp=${payload.exp}, now=${Math.floor(Date.now()/1000)}`)
+      return null
+    }
+    if (!payload.sub) {
+      console.log('[Firebase] FAIL: no sub')
+      return null
+    }
 
-    // 3. 获取公钥
     const keys = await getPublicKeys()
     const pem = keys[header.kid]
-    if (!pem) return null
+    if (!pem) {
+      console.log(`[Firebase] FAIL: no key for kid=${header.kid}`)
+      return null
+    }
 
-    // 4. 验证签名
     const keyData = pemToKey(pem)
     const key = await crypto.subtle.importKey(
       'spki',
@@ -115,8 +116,8 @@ export async function verifyFirebaseToken(token: string): Promise<FirebasePayloa
     )
 
     const data = new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
-    const sigPadding = '='.repeat((4 - signature.length % 4) % 4)
-    const sigBase64 = signature.replace(/-/g, '+').replace(/_/g, '/') + sigPadding
+    const sigPadding = '='.repeat((4 - parts[2].length % 4) % 4)
+    const sigBase64 = parts[2].replace(/-/g, '+').replace(/_/g, '/') + sigPadding
     const sigBytes = Uint8Array.from(atob(sigBase64), c => c.charCodeAt(0))
 
     const isValid = await crypto.subtle.verify(
@@ -126,11 +127,15 @@ export async function verifyFirebaseToken(token: string): Promise<FirebasePayloa
       data
     )
 
-    if (!isValid) return null
+    if (!isValid) {
+      console.log('[Firebase] FAIL: signature verification failed')
+      return null
+    }
 
+    console.log('[Firebase] Token verified OK, sub=', payload.sub)
     return payload
   } catch (err) {
-    console.error('[Firebase] Token verification error:', err)
+    console.error('[Firebase] Token verification exception:', err)
     return null
   }
 }

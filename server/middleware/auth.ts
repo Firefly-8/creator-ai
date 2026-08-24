@@ -10,8 +10,8 @@ const PUBLIC_PATHS = [
   '/api/subscriptions/plans',
   '/api/robots',
   '/api/sitemap',
-  '/api/upload',      // 上传前会单独验证
-  '/api/admin',       // 管理后台使用 cookie 认证，由 admin-auth 中间件处理
+  '/api/upload',
+  '/api/admin',
   '/_nuxt',
   '/logo.png',
   '/favicon.ico',
@@ -32,6 +32,8 @@ export default defineEventHandler(async (event) => {
   const authHeader = getHeader(event, 'authorization')
   const token = typeof authHeader === 'string' ? authHeader.replace('Bearer ', '') : ''
   
+  console.log(`[Auth Middleware] ${event.method} ${path}, has token: ${!!token}`)
+  
   if (!token) {
     throw createError({ statusCode: 401, statusMessage: 'Missing authorization token' })
   }
@@ -51,4 +53,6 @@ export default defineEventHandler(async (event) => {
     name: payload.name,
     picture: payload.picture,
   }
+  
+  console.log(`[Auth Middleware] OK, uid=${payload.sub}`)
 })
