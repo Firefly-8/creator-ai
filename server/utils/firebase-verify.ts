@@ -34,53 +34,54 @@ function toBase64Url(bytes: Uint8Array): string {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
 }
 
+function parseASN1(data: Uint8Array, offset: number) {
+  const tag = data[offset++]
+  let len = data[offset++]
+  let headerSize = 2
+  if (len & 0x80) {
+    const numBytes = len & 0x7f
+    len = 0
+    for (let i = 0; i < numBytes; i++) {
+      len = (len << 8) | data[offset++]
+    }
+    headerSize += numBytes
+  }
+  return { tag, length: len, offset, headerSize }
+}
+
 function parseX509PublicKey(certData: Uint8Array): { n: string; e: string } | null {
   try {
     let pos = 0
-    function parseASN1(offset: number) {
-      const tag = certData[offset++]
-      let len = certData[offset++]
-      let headerSize = 2
-      if (len & 0x80) {
-        const numBytes = len & 0x7f
-        len = 0
-        for (let i = 0; i < numBytes; i++) {
-          len = (len << 8) | certData[offset++]
-        }
-        headerSize += numBytes
-      }
-      return { tag, length: len, offset, headerSize }
-    }
-    const cert = parseASN1(pos)
+    const cert = parseASN1(certData, pos)
     pos = cert.offset
-    const tbs = parseASN1(pos)
+    const tbs = parseASN1(certData, pos)
     pos = tbs.offset
     if (certData[pos] === 0xa0) {
-      const skip = parseASN1(pos)
+      const skip = parseASN1(certData, pos)
       pos = skip.offset + skip.length
     }
-    const serial = parseASN1(pos)
+    const serial = parseASN1(certData, pos)
     pos = serial.offset + serial.length
-    const sig = parseASN1(pos)
+    const sig = parseASN1(certData, pos)
     pos = sig.offset + sig.length
-    const issuer = parseASN1(pos)
+    const issuer = parseASN1(certData, pos)
     pos = issuer.offset + issuer.length
-    const validity = parseASN1(pos)
+    const validity = parseASN1(certData, pos)
     pos = validity.offset + validity.length
-    const subject = parseASN1(pos)
+    const subject = parseASN1(certData, pos)
     pos = subject.offset + subject.length
-    const spki = parseASN1(pos)
+    const spki = parseASN1(certData, pos)
     let spkiPos = spki.offset
-    const alg = parseASN1(spkiPos)
+    const alg = parseASN1(certData, spkiPos)
     spkiPos = alg.offset + alg.length
-    const pubKey = parseASN1(spkiPos)
+    const pubKey = parseASN1(certData, spkiPos)
     const keyBytes = certData.slice(pubKey.offset + 1, pubKey.offset + 1 + pubKey.length - 1)
     let keyPos = 0
-    const rsaSeq = parseASN1(keyBytes)
+    const rsaSeq = parseASN1(keyBytes, keyPos)
     keyPos = rsaSeq.offset
-    const modulus = parseASN1(keyBytes)
+    const modulus = parseASN1(keyBytes, keyPos)
     keyPos = modulus.offset + modulus.length
-    const exponent = parseASN1(keyBytes)
+    const exponent = parseASN1(keyBytes, keyPos)
     keyPos = exponent.offset + exponent.length
     const nBytes = keyBytes.slice(modulus.offset, modulus.offset + modulus.length)
     const eBytes = keyBytes.slice(exponent.offset, exponent.offset + exponent.length)
@@ -162,6 +163,7 @@ export async function verifyFirebaseToken(token: string): Promise<FirebasePayloa
       console.log(`[Firebase] FAIL: kid not found. Available kids: ${Object.keys(keys).join(', ')}`)
       return null
     }
+    console.log(`[Firebase] JWK n length: ${jwk.n.length}, e length: ${jwk.e.length}`)
     const key = await crypto.subtle.importKey(
       'jwk',
       { kty: 'RSA', n: jwk.n, e: jwk.e, alg: 'RS256', ext: true },
