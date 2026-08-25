@@ -131,17 +131,37 @@ function base64UrlDecode(str: string): string {
 export async function verifyFirebaseToken(token: string): Promise<FirebasePayload | null> {
   try {
     const parts = token.split('.')
-    if (parts.length !== 3) return null
+    if (parts.length !== 3) {
+      console.log('[Firebase] FAIL: token does not have 3 parts')
+      return null
+    }
     const header = JSON.parse(base64UrlDecode(parts[0])) as { kid: string; alg: string }
     const payload = JSON.parse(base64UrlDecode(parts[1])) as FirebasePayload
     const signature = parts[2]
-    if (header.alg !== 'RS256') return null
-    if (payload.aud !== FIREBASE_PROJECT_ID) return null
-    if (payload.exp * 1000 < Date.now()) return null
-    if (!payload.sub) return null
+    console.log(`[Firebase] kid=${header.kid}, alg=${header.alg}, aud=${payload.aud}, exp=${payload.exp}, sub=${payload.sub}`)
+    if (header.alg !== 'RS256') {
+      console.log('[Firebase] FAIL: alg is not RS256')
+      return null
+    }
+    if (payload.aud !== FIREBASE_PROJECT_ID) {
+      console.log(`[Firebase] FAIL: aud mismatch. Expected ${FIREBASE_PROJECT_ID}, got ${payload.aud}`)
+      return null
+    }
+    if (payload.exp * 1000 < Date.now()) {
+      console.log(`[Firebase] FAIL: token expired. exp=${payload.exp}, now=${Math.floor(Date.now()/1000)}`)
+      return null
+    }
+    if (!payload.sub) {
+      console.log('[Firebase] FAIL: no sub')
+      return null
+    }
     const keys = await getPublicKeys()
+    console.log(`[Firebase] JWKS keys loaded: ${Object.keys(keys).length} keys`)
     const jwk = keys[header.kid]
-    if (!jwk) return null
+    if (!jwk) {
+      console.log(`[Firebase] FAIL: kid not found. Available kids: ${Object.keys(keys).join(', ')}`)
+      return null
+    }
     const key = await crypto.subtle.importKey(
       'jwk',
       { kty: 'RSA', n: jwk.n, e: jwk.e, alg: 'RS256', ext: true },
@@ -154,7 +174,11 @@ export async function verifyFirebaseToken(token: string): Promise<FirebasePayloa
     const sigBase64 = signature.replace(/-/g, '+').replace(/_/g, '/') + sigPadding
     const sigBytes = Uint8Array.from(atob(sigBase64), (c) => c.charCodeAt(0))
     const isValid = await crypto.subtle.verify('RSASSA-PKCS1-v1_5', key, sigBytes, data)
-    if (!isValid) return null
+    if (!isValid) {
+      console.log('[Firebase] FAIL: signature verification failed')
+      return null
+    }
+    console.log('[Firebase] Token verified OK')
     return payload
   } catch (err) {
     console.error('[Firebase] Token verification error:', err)
