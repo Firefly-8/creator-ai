@@ -3,8 +3,12 @@
     <!-- Glow -->
     <div class="content-glow" />
 
-    <section class="relative py-20 sm:py-28">
-      <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <section class="relative overflow-hidden py-20 sm:py-28">
+      <div class="absolute inset-0 z-0">
+        <img src="/generated/about-hero.jpg" alt="" class="h-full w-full object-cover object-center" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0c0a1a]/75 via-[#0c0a1a]/65 to-[#0c0a1a]" />
+      </div>
+      <div class="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div class="text-center">
           <span class="content-badge">About Us</span>
           <h1 class="font-display text-4xl font-800 tracking-tight text-white sm:text-5xl mt-4">

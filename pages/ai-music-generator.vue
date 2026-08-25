@@ -5,6 +5,10 @@
 
     <!-- Hero -->
     <section class="relative overflow-hidden py-20 sm:py-28 lg:py-32">
+      <div class="absolute inset-0 z-0">
+        <img src="/generated/hero-music.jpg" alt="" class="h-full w-full object-cover object-center" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0c0a1a]/70 via-[#0c0a1a]/60 to-[#0c0a1a]" />
+      </div>
       <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
           <span class="home-badge">AI Music Generator</span>

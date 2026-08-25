@@ -5,6 +5,10 @@
 
     <!-- Hero Section -->
     <section class="relative overflow-hidden py-20 sm:py-28 lg:py-32">
+      <div class="absolute inset-0 z-0">
+        <img src="/generated/hero-home.jpg" alt="" class="h-full w-full object-cover object-center" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0c0a1a]/70 via-[#0c0a1a]/60 to-[#0c0a1a]" />
+      </div>
       <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
           <span class="home-badge">{{ $t('hero.badge', 'AI Music & Image Studio') }}</span>
@@ -63,7 +67,7 @@
             </div>
             <p class="text-[14px] leading-relaxed text-ink-200">"CraftAI saved me hours of work. I needed background music for my YouTube videos and got professional-quality tracks in minutes."</p>
             <div class="mt-4 flex items-center gap-3">
-              <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">S</div>
+              <img src="/generated/avatar-sarah.jpg" alt="Sarah M." class="h-8 w-8 rounded-full object-cover" />
               <div>
                 <p class="text-sm font-medium text-white">Sarah M.</p>
                 <p class="text-xs text-ink-400">YouTuber, 50K subscribers</p>
@@ -76,7 +80,7 @@
             </div>
             <p class="text-[14px] leading-relaxed text-ink-200">"The image generator is incredible. I use it for all my social media thumbnails now. The prompt optimizer is a game-changer."</p>
             <div class="mt-4 flex items-center gap-3">
-              <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">J</div>
+              <img src="/generated/avatar-james.jpg" alt="James K." class="h-8 w-8 rounded-full object-cover" />
               <div>
                 <p class="text-sm font-medium text-white">James K.</p>
                 <p class="text-xs text-ink-400">Social Media Manager</p>
@@ -89,7 +93,7 @@
             </div>
             <p class="text-[14px] leading-relaxed text-ink-200">"As a podcaster, I needed custom intro music. CraftAI delivered exactly what I wanted. The cover feature is brilliant too."</p>
             <div class="mt-4 flex items-center gap-3">
-              <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">M</div>
+              <img src="/generated/avatar-mike.jpg" alt="Mike R." class="h-8 w-8 rounded-full object-cover" />
               <div>
                 <p class="text-sm font-medium text-white">Mike R.</p>
                 <p class="text-xs text-ink-400">Podcast Host</p>
