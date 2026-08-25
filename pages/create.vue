@@ -438,4 +438,15 @@ async function hydrateRemixFromQuery() {
 onMounted(() => {
   hydrateRemixFromQuery()
 })
+
+useHead({
+  title: 'Create AI Music — Free AI Music Generator | CraftAI',
+  meta: [
+    { name: 'description', content: 'Create AI music for free. Describe your song style and generate complete tracks with vocals and instruments. No musical experience needed.' },
+    { property: 'og:title', content: 'Create AI Music — Free AI Music Generator' },
+    { property: 'og:description', content: 'Describe your song and AI generates it in seconds. Free to start.' },
+    { property: 'og:type', content: 'website' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/create' }],
+})
 </script>

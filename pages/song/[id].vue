@@ -104,6 +104,24 @@ definePageMeta({ layout: 'default' })
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 const showEditor = ref(false)
+const pageTitle = computed(() => song.value ? `${song.value.title} — CraftAI` : 'Track — CraftAI')
+const pageDescription = computed(() => {
+  if (!song.value) return 'Listen to this AI-generated track on CraftAI.'
+  const prompt = song.value.prompt
+  if (prompt && prompt.length > 160) return `${prompt.slice(0, 157)}…`
+  return prompt || 'Listen to this AI-generated track on CraftAI.'
+})
+
+useHead({
+  title: pageTitle,
+  meta: [
+    { name: 'description', content: pageDescription },
+    { property: 'og:title', content: pageTitle },
+    { property: 'og:description', content: pageDescription },
+    { property: 'og:type', content: 'music.song' },
+  ],
+  link: [{ rel: 'canonical', href: `https://creator.yozzytools.com/song/${id.value}` }],
+})
 
 const { data, pending, refresh } = await useFetch<{ song: SongPublic }>(() => `/api/songs/${id.value}`, {
   watch: [id],

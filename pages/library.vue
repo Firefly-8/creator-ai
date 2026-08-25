@@ -51,10 +51,10 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const filter = ref<'all' | 'ready' | 'generating' | 'failed'>('all')
 const filters = [
-  { id: 'all' as const, label: 't("library.all")' },
-  { id: 'ready' as const, label: 't("library.ready")' },
-  { id: 'generating' as const, label: 't("library.generating")' },
-  { id: 'failed' as const, label: 't("library.failed")' },
+  { id: 'all' as const, label: t('library.all') },
+  { id: 'ready' as const, label: t('library.ready') },
+  { id: 'generating' as const, label: t('library.generating') },
+  { id: 'failed' as const, label: t('library.failed') },
 ]
 
 const busyId = ref<string | null>(null)
@@ -117,4 +117,16 @@ async function removeSong(song: SongPublic) {
     busyId.value = null
   }
 }
+
+useHead({
+  title: 'My Library — CraftAI',
+  meta: [
+    { name: 'description', content: 'Your AI music library. Access, manage, and download all your generated tracks and covers.' },
+    { property: 'og:title', content: 'My Library — CraftAI' },
+    { property: 'og:description', content: 'Access and manage your AI-generated music.' },
+    { property: 'og:type', content: 'website' },
+    { name: 'robots', content: 'noindex' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/library' }],
+})
 </script>

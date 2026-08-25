@@ -393,4 +393,15 @@ async function hydrateRemixFromQuery() {
 onMounted(() => {
   hydrateRemixFromQuery()
 })
+
+useHead({
+  title: 'AI Cover Generator — Create AI Cover Songs | CraftAI',
+  meta: [
+    { name: 'description', content: 'Create AI cover songs for free. Upload a track or describe a style, and AI generates a professional cover with new vocals and arrangements.' },
+    { property: 'og:title', content: 'AI Cover Generator — Create AI Cover Songs' },
+    { property: 'og:description', content: 'Upload a track and AI generates a professional cover in seconds. Free to start.' },
+    { property: 'og:type', content: 'website' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/cover' }],
+})
 </script>

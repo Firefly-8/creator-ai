@@ -602,6 +602,17 @@ function onImageMenu(id: string, img: ImagePublic) {
   else if (id === 'open') openLightbox(img)
   else if (id === 'delete') remove(img.id)
 }
+
+useHead({
+  title: 'AI Image Generator — Create Images with AI | CraftAI',
+  meta: [
+    { name: 'description', content: 'Generate stunning AI images for free. Describe any scene, style, or concept and create unique visuals in seconds.' },
+    { property: 'og:title', content: 'AI Image Generator — Create Images with AI' },
+    { property: 'og:description', content: 'Describe any concept and generate unique AI images in seconds. Free to start.' },
+    { property: 'og:type', content: 'website' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/image' }],
+})
 </script>
 
 <style scoped>
