@@ -160,6 +160,7 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const requireAuth = useRequireAuth()
 const { user, authReady } = useAuth()
 const { openLoginWithRedirect } = useAuthModal()
 const route = useRoute()

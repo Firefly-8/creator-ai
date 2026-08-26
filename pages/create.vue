@@ -153,6 +153,7 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const requireAuth = useRequireAuth()
 const { trackGenerateStart, trackGenerateSuccess } = useAnalytics()
 const { notifyGenerationComplete } = useNotification()
 const { user, authReady } = useAuth()

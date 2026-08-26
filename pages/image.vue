@@ -310,6 +310,7 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const requireAuth = useRequireAuth()
 import { useAnalytics } from '~/composables/useAnalytics'
 const { trackGenerateStart: trackImgStart, trackGenerateSuccess: trackImgSuccess } = useAnalytics()
 const { user, authReady } = useAuth()
