@@ -8,6 +8,8 @@
 const PUBLIC_PATHS = [
   '/api/auth',
   '/api/subscriptions/plans',
+  '/api/gallery',
+  '/api/blog',
   '/api/robots',
   '/api/sitemap',
   '/api/upload',
