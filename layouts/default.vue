@@ -25,7 +25,8 @@
         </div>
       </nav>
 
-      <div class="studio-sidebar__foot">
+      <!-- Auth Section — always visible at top on mobile -->
+      <div class="studio-sidebar__auth">
         <template v-if="authReady && !user">
           <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">{{ $t('nav.login') }}</button>
           <button class="btn-primary w-full text-sm" @click="openSignup">{{ $t('nav.signup') }}</button>
@@ -38,11 +39,15 @@
             <span class="text-xs text-ink-300 truncate">{{ user.email }}</span>
           </div>
           <button class="btn-secondary w-full text-sm" @click="handleLogout">{{ $t('nav.logout') }}</button>
-          <!-- Admin Link -->
+        </template>
+      </div>
+
+      <div class="studio-sidebar__foot">
+        <!-- Admin Link (only when logged in) -->
+        <template v-if="authReady && user && isAdmin">
           <NuxtLink
-            v-if="isAdmin"
             to="/admin"
-            class="btn-secondary w-full text-sm mt-2 !inline-flex !items-center !justify-center gap-1.5"
+            class="btn-secondary w-full text-sm !inline-flex !items-center !justify-center gap-1.5"
             @click="mobileNavOpen = false"
           >
             <span class="i-ph-shield-star text-[14px]" />

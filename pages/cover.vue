@@ -65,6 +65,14 @@
             <span class="i-ph-scan text-[14px]" />
             {{ $t('cover.extractLyrics') }}
           </UiButton>
+          <UiButton
+            v-if="preprocessing"
+            variant="ghost"
+            size="sm"
+            @click="cancelPreprocess"
+          >
+            {{ $t('cover.cancel', 'Cancel') }}
+          </UiButton>
           <label class="block space-y-2">
             <span class="field-label">{{ $t('cover.editLyrics') }}</span>
             <textarea v-model="lyrics" class="field lyric-editor !min-h-40" :placeholder="$t('cover.runExtractFirst')" />
@@ -132,16 +140,29 @@
           @remix="loadFromSong"
           @regenerate="regenerate"
           @download="downloadSong"
-          @delete="removeSong"
+          @delete="promptDelete"
           @open="openSong"
         />
       </div>
     </template>
+  <ConfirmModal
+      v-model="confirmOpen"
+      title="Delete Song"
+      :message="deleteMessage"
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      danger
+      @confirm="deleteSongConfirmed"
+      @cancel="confirmOpen = false"
+    />
   </StudioWorkspace>
 </template>
 
 <script setup lang="ts">
 const { t } = useI18n()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
+const route = useRoute()
 import type { SongPublic } from '~/utils/types'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
@@ -160,6 +181,7 @@ const uploadName = ref('')
 const featureId = ref<string | null>(null)
 const structurePreview = ref<{ label: string; start: number; end: number }[]>([])
 const preprocessing = ref(false)
+const preprocessCancelled = ref(false)
 const submitting = ref(false)
 const busyId = ref<string | null>(null)
 const remixFrom = ref<string | null>(null)
@@ -168,7 +190,33 @@ const statusText = ref('')
 const activeSong = ref<SongPublic | null>(null)
 const jobId = ref<string | null>(null)
 const { job } = useJobStream(jobId)
-const route = useRoute()
+
+// Delete confirmation modal
+const confirmOpen = ref(false)
+const confirmTarget = ref<SongPublic | null>(null)
+const deleteMessage = computed(() =>
+  confirmTarget.value ? `Delete "${confirmTarget.value.title}"? This action cannot be undone.` : ''
+)
+function promptDelete(song: SongPublic) {
+  confirmTarget.value = song
+  confirmOpen.value = true
+}
+async function deleteSongConfirmed() {
+  const song = confirmTarget.value
+  if (!song) return
+  confirmOpen.value = false
+  confirmTarget.value = null
+  busyId.value = song.id
+  try {
+    await $fetch(`/api/songs/${song.id}`, { method: 'DELETE' })
+    if (activeSong.value?.id === song.id) activeSong.value = null
+    await refreshSongs()
+  } catch (err: any) {
+    errorText.value = err?.data?.statusMessage || err?.message || 'Delete failed'
+  } finally {
+    busyId.value = null
+  }
+}
 const router = useRouter()
 
 const { data: songsData, pending: songsPending, refresh: refreshSongs } = await useFetch<{ songs: SongPublic[] }>('/api/songs', {
@@ -233,19 +281,30 @@ async function onFile(e: Event) {
 async function runPreprocess() {
   if (!uploadId.value) return
   preprocessing.value = true
+  preprocessCancelled.value = false
   errorText.value = ''
   statusText.value = 'Preprocessing…'
+  const MAX_PREPROCESS_MS = 5 * 60 * 1000 // 5 minutes
+  const startTime = Date.now()
   try {
     const res = await $fetch<{ job: any }>('/api/cover/preprocess', {
       method: 'POST',
       body: { audio_upload_id: uploadId.value },
     })
     let done = res.job
-    while (done.status !== 'done' && done.status !== 'error') {
+    while (done.status !== 'done' && done.status !== 'error' && !preprocessCancelled.value) {
+      if (Date.now() - startTime > MAX_PREPROCESS_MS) {
+        throw new Error('Preprocessing timed out after 5 minutes, please try again')
+      }
       await new Promise((r) => setTimeout(r, 800))
       const poll = await $fetch<{ job: any }>(`/api/jobs/${res.job.id}`)
       done = poll.job
       statusText.value = done.progress
+    }
+    if (preprocessCancelled.value) {
+      statusText.value = ''
+      preprocessing.value = false
+      return
     }
     if (done.status === 'error') throw new Error(done.errorMessage || 'Preprocess failed')
     featureId.value = done.result?.cover_feature_id
@@ -262,6 +321,10 @@ async function runPreprocess() {
   } finally {
     preprocessing.value = false
   }
+}
+
+function cancelPreprocess() {
+  preprocessCancelled.value = true
 }
 
 async function submit() {
@@ -360,20 +423,6 @@ function openSong(song: SongPublic) {
   navigateTo(`/song/${song.id}`)
 }
 
-async function removeSong(song: SongPublic) {
-  if (!confirm(`Delete "${song.title}"? This action cannot be undone.`)) return
-  busyId.value = song.id
-  try {
-    await $fetch(`/api/songs/${song.id}`, { method: 'DELETE' })
-    if (activeSong.value?.id === song.id) activeSong.value = null
-    await refreshSongs()
-  } catch (err: any) {
-    errorText.value = err?.data?.statusMessage || err?.message || 'Delete failed'
-  } finally {
-    busyId.value = null
-  }
-}
-
 async function hydrateRemixFromQuery() {
   const id = typeof route.query.remix === 'string' ? route.query.remix : ''
   if (!id) return
@@ -391,7 +440,17 @@ async function hydrateRemixFromQuery() {
 }
 
 onMounted(() => {
+  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+  }
   hydrateRemixFromQuery()
+})
+
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
 })
 
 useHead({

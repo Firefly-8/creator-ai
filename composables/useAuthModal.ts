@@ -2,6 +2,7 @@ import { ref } from 'vue'
 
 const isOpen = ref(false)
 const initialMode = ref<'login' | 'signup'>('login')
+const redirectPath = ref<string | null>(null)
 
 export function useAuthModal() {
   function openLogin() {
@@ -14,6 +15,16 @@ export function useAuthModal() {
     isOpen.value = true
   }
 
+  function openLoginWithRedirect(path?: string) {
+    initialMode.value = 'login'
+    redirectPath.value = path || null
+    isOpen.value = true
+  }
+
+  function clearRedirect() {
+    redirectPath.value = null
+  }
+
   function close() {
     isOpen.value = false
   }
@@ -21,8 +32,11 @@ export function useAuthModal() {
   return {
     isOpen,
     initialMode,
+    redirectPath,
     openLogin,
     openSignup,
+    openLoginWithRedirect,
+    clearRedirect,
     close,
   }
 }

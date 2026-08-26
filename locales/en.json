@@ -26,7 +26,7 @@
     "titleHighlight": "in Seconds",
     "subtitle": "Generate songs, artwork, and creative content with AI. No credit card required — start creating for free.",
     "cta": "Start Creating Free",
-    "ctaSecondary": "View Pricing",
+    "ctaSecondary": "Explore Gallery",
     "noSignup": "No signup required for first 10 generations",
     "badge": "AI Music & Image Studio"
   },
@@ -323,5 +323,11 @@
     "refreshList": "Refresh list",
     "moreActions": "More actions",
     "language": "Language"
+  },
+  "homeDaily": {
+    "title": "Daily Free Generations",
+    "desc": "Get 10 free music and 20 free images every month — no credit card needed.",
+    "cta": "Claim Free Generations",
+    "browse": "Browse Gallery"
   }
 }

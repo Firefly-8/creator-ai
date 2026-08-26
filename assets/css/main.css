@@ -105,6 +105,17 @@ h3,
   margin-top: 1.15rem;
 }
 
+.studio-sidebar__auth {
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  /* Sticky on mobile so auth actions are always visible without scrolling */
+  position: sticky;
+  top: 0;
+  background: rgba(10, 9, 16, 0.95);
+  backdrop-filter: blur(16px);
+  z-index: 1;
+}
+
 .studio-nav-group__label {
   margin: 0 0 0.45rem 0.65rem;
   color: #655f7c;

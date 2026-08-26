@@ -8,7 +8,21 @@
       </div>
     </div>
   </div>
-  <div v-else-if="!song" class="panel p-10 text-center text-ink-300">Track not found.</div>
+  <div v-else-if="!song" class="panel p-12 text-center">
+      <div class="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.06]">
+        <span class="i-ph-music-notes-simple text-3xl text-ink-400" />
+      </div>
+      <h2 class="mb-2 font-display text-xl font-700 text-white">Track not found</h2>
+      <p class="mb-6 text-sm text-ink-400">This track may have been deleted or is not available.</p>
+      <div class="flex items-center justify-center gap-3">
+        <button class="btn btn--secondary" @click="navigateTo('/library')">
+          <span class="i-ph-arrow-left mr-1.5" />Back to Library
+        </button>
+        <button class="btn btn--primary" @click="navigateTo('/create')">
+          <span class="i-ph-plus mr-1.5" />Create New
+        </button>
+      </div>
+    </div>
   <div v-else class="space-y-6">
     <header class="flex flex-wrap items-start justify-between gap-4">
       <div class="flex gap-4">
@@ -92,6 +106,18 @@
       />
     </ClientOnly>
   </div>
+    <Teleport to="body">
+      <ConfirmModal
+        v-model="confirmOpen"
+        title="Delete Track"
+        message="This action cannot be undone."
+        confirm-label="Delete"
+        cancel-label="Cancel"
+        danger
+        @confirm="onConfirmDelete"
+        @cancel="confirmOpen = false"
+      />
+    </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -129,7 +155,18 @@ const { data, pending, refresh } = await useFetch<{ song: SongPublic }>(() => `/
 
 const song = computed(() => data.value?.song || null)
 const player = usePlayerStore()
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 const isPublic = ref(false)
+
+// Delete confirmation modal
+const confirmOpen = ref(false)
+function onConfirmDelete() {
+  confirmOpen.value = false
+  removeConfirmed()
+}
+function promptDelete() {
+  confirmOpen.value = true
+}
 
 async function togglePublic() {
   try {
@@ -152,7 +189,9 @@ function play() {
 }
 
 async function remove() {
-  if (!confirm('Delete this track?')) return
+  promptDelete()
+}
+async function removeConfirmed() {
   await $fetch(`/api/songs/${id.value}`, { method: 'DELETE' })
   navigateTo('/library')
 }

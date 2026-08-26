@@ -89,6 +89,9 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
+const route = useRoute()
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const { get } = useApi()
@@ -163,9 +166,20 @@ async function claimDaily(type: 'music' | 'image') {
 }
 
 onMounted(() => {
+  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+    return
+  }
   loadDashboard()
   loadRecent()
   loadDailyFree()
+})
+
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
 })
 
 useHead({ title: 'Dashboard — CraftAI' })

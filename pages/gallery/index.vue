@@ -29,9 +29,16 @@
           </button>
         </div>
 
-        <!-- Loading -->
-        <div v-if="pending" class="mt-12 flex justify-center">
-          <div class="animate-pulse text-ink-400">Loading gallery...</div>
+        <!-- Loading skeleton -->
+        <div v-if="pending" class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div v-for="i in 6" :key="i" class="panel overflow-hidden">
+            <div class="aspect-square animate-pulse bg-white/[0.06]" />
+            <div class="p-4 space-y-2">
+              <div class="h-4 w-2/3 rounded bg-white/[0.06]" />
+              <div class="h-3 w-full rounded bg-white/[0.04]" />
+              <div class="mt-3 h-5 w-16 rounded-full bg-white/[0.06]" />
+            </div>
+          </div>
         </div>
 
         <!-- Gallery Grid -->

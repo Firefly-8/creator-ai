@@ -40,12 +40,26 @@
         @open="openSong"
       />
     </template>
+  <ConfirmModal
+      v-model="confirmOpen"
+      :title="t('library.deleteConfirm', { title: confirmTarget?.title ?? '' })"
+      message="This action cannot be undone."
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      danger
+      @confirm="deleteSongConfirmed"
+      @cancel="confirmOpen = false"
+    />
   </StudioWorkspace>
 </template>
 
 <script setup lang="ts">
 const { t } = useI18n()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
+const route = useRoute()
 import type { SongPublic } from '~/utils/types'
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -104,8 +118,15 @@ function openSong(song: SongPublic) {
   navigateTo(`/song/${song.id}`)
 }
 
-async function removeSong(song: SongPublic) {
-  if (!confirm(`${t('library.deleteConfirm', { title: song.title })}`)) return
+function promptDeleteSong(song: SongPublic) {
+  confirmTarget.value = song
+  confirmOpen.value = true
+}
+async function deleteSongConfirmed() {
+  const song = confirmTarget.value
+  if (!song) return
+  confirmOpen.value = false
+  confirmTarget.value = null
   busyId.value = song.id
   actionError.value = ''
   try {
@@ -128,5 +149,18 @@ useHead({
     { name: 'robots', content: 'noindex' },
   ],
   link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/library' }],
+})
+
+// Auth guard: 未登录时弹出登录框，登录后跳回当前页
+onMounted(() => {
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+  }
+})
+
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
 })
 </script>

@@ -4,7 +4,14 @@
       <div class="panel p-8">
         <div class="text-center">
           <h1 class="font-display text-2xl font-700 text-white">Create your account</h1>
-          <p class="mt-2 text-ink-300">Start creating with AI for free</p>
+          <p class="mt-2 text-ink-300">
+            <template v-if="planLabel">Complete your {{ planLabel }} plan signup</template>
+            <template v-else>Start creating with AI for free</template>
+          </p>
+          <div v-if="planLabel" class="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-xs text-accent-soft font-semibold">
+            <span class="i-ph-star-fill text-[10px]" />
+            {{ planLabel }} Plan Selected
+          </div>
         </div>
 
         <form class="mt-8 space-y-4" @submit.prevent="handleSubmit">
@@ -55,6 +62,16 @@
 
 <script setup lang="ts">
 const { signUpWithEmail, signInWithGoogle } = useAuth()
+const route = useRoute()
+const plan = computed(() => {
+  const p = route.query.plan
+  return typeof p === 'string' && ['creator', 'pro'].includes(p) ? p : null
+})
+const planLabel = computed(() => {
+  if (plan.value === 'creator') return 'Creator'
+  if (plan.value === 'pro') return 'Pro'
+  return null
+})
 
 const name = ref('')
 const email = ref('')
@@ -71,7 +88,11 @@ async function handleSubmit() {
   error.value = ''
   try {
     await signUpWithEmail(email.value, password.value)
-    await navigateTo('/dashboard')
+    if (plan.value) {
+      await navigateTo(`/pricing?plan=${plan.value}`)
+    } else {
+      await navigateTo('/dashboard')
+    }
   } catch (e: any) {
     error.value = getFirebaseErrorMessage(e.code)
   } finally {
@@ -84,7 +105,11 @@ async function signUpWithGoogle() {
   error.value = ''
   try {
     await signInWithGoogle()
-    await navigateTo('/dashboard')
+    if (plan.value) {
+      await navigateTo(`/pricing?plan=${plan.value}`)
+    } else {
+      await navigateTo('/dashboard')
+    }
   } catch (e: any) {
     error.value = getFirebaseErrorMessage(e.code)
   } finally {

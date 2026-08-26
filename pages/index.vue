@@ -23,11 +23,36 @@
             <NuxtLink to="/create" class="btn-primary !h-12 !px-8 !text-base">
               {{ $t('hero.cta') }}
             </NuxtLink>
-            <NuxtLink to="/pricing" class="btn-secondary !h-12 !px-8 !text-base">
+            <NuxtLink to="/gallery" class="btn-secondary !h-12 !px-8 !text-base">
               {{ $t('hero.ctaSecondary') }}
             </NuxtLink>
           </div>
           <p class="mt-5 text-sm text-ink-400">{{ $t('hero.noSignup') }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daily Free Banner -->
+    <section class="relative border-t border-white/[0.06]">
+      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
+        <div class="home-daily-banner">
+          <div class="home-daily-banner__left">
+            <div class="home-daily-banner__icon">
+              <span class="i-ph-gift text-2xl text-accent-soft" />
+            </div>
+            <div>
+              <h3 class="home-daily-banner__title">{{ $t('homeDaily.title', 'Daily Free Generations') }}</h3>
+              <p class="home-daily-banner__desc">{{ $t('homeDaily.desc', 'Get 10 free music and 20 free images every month — no credit card needed.') }}</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-3">
+            <NuxtLink to="/signup" class="btn-primary !h-10 !px-6 !text-sm">
+              {{ $t('homeDaily.cta', 'Claim Free Generations') }}
+            </NuxtLink>
+            <NuxtLink to="/gallery" class="btn-secondary !h-10 !px-6 !text-sm">
+              {{ $t('homeDaily.browse', 'Browse Gallery') }}
+            </NuxtLink>
+          </div>
         </div>
       </div>
     </section>
@@ -221,6 +246,46 @@ if (import.meta.client) {
   height: 60%;
   background: radial-gradient(ellipse at 50% 0%, rgba(139, 124, 255, 0.12), transparent 60%);
   z-index: 0;
+}
+
+.home-daily-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, rgba(139, 124, 255, 0.08) 0%, rgba(139, 124, 255, 0.04) 100%);
+  border: 1px solid rgba(139, 124, 255, 0.2);
+  border-radius: var(--radius-lg);
+  flex-wrap: wrap;
+}
+.home-daily-banner__left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 0;
+}
+.home-daily-banner__icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  background: rgba(139, 124, 255, 0.15);
+  flex-shrink: 0;
+}
+.home-daily-banner__title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.02em;
+}
+.home-daily-banner__desc {
+  margin-top: 0.2rem;
+  font-size: 0.82rem;
+  color: var(--ink-300);
 }
 
 .home-badge {

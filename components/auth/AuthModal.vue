@@ -26,7 +26,7 @@
             </div>
 
             <!-- Tabs -->
-            <div class="auth-modal__tabs is-hidden" role="tablist">
+            <div class="auth-modal__tabs" role="tablist">
               <button
                 role="tab"
                 :aria-selected="mode === 'login'"
@@ -151,6 +151,7 @@ const emit = defineEmits<{
 }>()
 
 const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth()
+const { redirectPath, clearRedirect } = useAuthModal()
 
 const mode = ref(props.initialMode || 'login')
 const email = ref('')
@@ -166,6 +167,7 @@ const isOpen = computed({
 function close() {
   isOpen.value = false
   error.value = ''
+  clearRedirect()
 }
 
 watch(() => props.initialMode, (val) => {
@@ -188,7 +190,9 @@ async function handleSubmit() {
       await signUpWithEmail(email.value, password.value)
     }
     close()
-    await navigateTo('/dashboard')
+    const redirect = redirectPath.value
+    clearRedirect()
+    await navigateTo(redirect || '/dashboard')
   } catch (e: any) {
     error.value = getFirebaseErrorMessage(e.code)
   } finally {
@@ -202,7 +206,9 @@ async function handleGoogleSignIn() {
   try {
     await signInWithGoogle()
     close()
-    await navigateTo('/dashboard')
+    const redirect = redirectPath.value
+    clearRedirect()
+    await navigateTo(redirect || '/dashboard')
   } catch (e: any) {
     error.value = getFirebaseErrorMessage(e.code)
   } finally {

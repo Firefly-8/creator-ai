@@ -43,12 +43,9 @@
             <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-white/10" /></div>
             <div class="relative flex justify-center text-sm"><span class="bg-[#12101a] px-2 text-ink-400">Or continue with</span></div>
           </div>
-          <div class="mt-4 grid grid-cols-2 gap-3">
-            <button class="btn-secondary !h-10" :disabled="loading" @click="handleGoogleSignIn">
-              <span class="i-ph-google-logo text-lg" /> Google
-            </button>
-            <button class="btn-secondary !h-10" :disabled="loading" @click="handleGitHubSignIn">
-              <span class="i-ph-github-logo text-lg" /> GitHub
+          <div class="mt-4">
+            <button class="btn-secondary w-full !h-10" :disabled="loading" @click="handleGoogleSignIn">
+              <span class="i-ph-google-logo text-lg" /> Continue with Google
             </button>
           </div>
         </div>
@@ -94,10 +91,6 @@ async function handleGoogleSignIn() {
   } finally {
     loading.value = false
   }
-}
-
-async function handleGitHubSignIn() {
-  error.value = 'GitHub login coming soon'
 }
 
 function getFirebaseErrorMessage(code: string): string {

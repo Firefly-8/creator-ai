@@ -138,6 +138,16 @@
         </div>
       </div>
     </template>
+  <ConfirmModal
+      v-model="confirmOpen"
+      :title="t('create.deleteConfirm', { title: confirmTarget?.title ?? '' })"
+      message="This action cannot be undone."
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      danger
+      @confirm="onConfirmDelete"
+      @cancel="confirmOpen = false"
+    />
   </StudioWorkspace>
 </template>
 
@@ -145,10 +155,13 @@
 const { t } = useI18n()
 const { trackGenerateStart, trackGenerateSuccess } = useAnalytics()
 const { notifyGenerationComplete } = useNotification()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
 import { LYRIC_TAGS, type SongPublic } from '~/utils/types'
 import { SONG_PRESETS, type SongPreset } from '~/utils/presets'
 import { useAnalytics } from '~/composables/useAnalytics'
 import { useNotification } from '~/composables/useNotification'
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 
 definePageMeta({ layout: "default", middleware: ["auth"] })
 
@@ -174,6 +187,20 @@ const statusText = ref('')
 const activeSong = ref<SongPublic | null>(null)
 const jobId = ref<string | null>(null)
 const { job } = useJobStream(jobId)
+
+// Delete confirmation modal
+const confirmOpen = ref(false)
+const confirmTarget = ref<SongPublic | null>(null)
+function onConfirmDelete() {
+  if (!confirmTarget.value) return
+  removeSong(confirmTarget.value)
+  confirmOpen.value = false
+  confirmTarget.value = null
+}
+function promptDelete(song: SongPublic) {
+  confirmTarget.value = song
+  confirmOpen.value = true
+}
 const route = useRoute()
 const router = useRouter()
 let presetRequestId = 0
@@ -210,8 +237,7 @@ watch(job, async (j) => {
     statusText.value = 'Ready'
     await refreshSongs().catch(() => {})
     notifyGenerationComplete('music')
-    const id = j.songId || activeSong.value?.id
-    if (id) navigateTo(`/song/${id}`)
+    // 自动跳转打断心流 — 改为在结果 rail 中展示新歌曲，保持用户在创作页面
   }
 })
 
@@ -262,10 +288,21 @@ async function preparePresetLyrics(preset: SongPreset) {
 }
 
 onMounted(() => {
+  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+  }
   const presetId = typeof route.query.preset === 'string' ? route.query.preset : ''
   if (!presetId) return
   const found = SONG_PRESETS.find((p) => p.id === presetId)
   if (found) applyPreset(found)
+})
+
+// Auth guard watcher: 处理 auth 状态在 mount 之后才就绪的情况
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
 })
 
 function insertTag(tag: string) {
@@ -404,7 +441,7 @@ function scrollToOps() {
 }
 
 async function removeSong(song: SongPublic) {
-  if (!confirm(`${t('create.deleteConfirm', { title: song.title })}`)) return
+  promptDelete(song)
   busyId.value = song.id
   errorText.value = ''
   try {

@@ -295,6 +295,16 @@
         </div>
       </Teleport>
     </template>
+  <ConfirmModal
+      v-model="confirmOpen"
+      title="Delete Image"
+      message="This action cannot be undone."
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      danger
+      @confirm="onConfirmDelete"
+      @cancel="confirmOpen = false"
+    />
   </StudioWorkspace>
 </template>
 
@@ -302,6 +312,9 @@
 const { t } = useI18n()
 import { useAnalytics } from '~/composables/useAnalytics'
 const { trackGenerateStart: trackImgStart, trackGenerateSuccess: trackImgSuccess } = useAnalytics()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
+const route = useRoute()
 import {
   IMAGE_ASPECT_RATIOS,
   IMAGE_LIVE_STYLES,
@@ -366,8 +379,41 @@ const { data, pending, refresh } = await useFetch<{ images: ImagePublic[] }>('/a
   key: 'gallery-images',
 })
 const images = computed(() => data.value?.images || [])
+// Default: expand first image's prompt for immediate context
+watch(images, (imgs) => {
+  if (imgs.length > 0 && expandedId.value === null) {
+    expandedId.value = imgs[0].id
+  }
+}, { immediate: true })
 const expandedId = ref<string | null>(null)
 const lightbox = ref<ImagePublic | null>(null)
+
+// Delete confirmation modal
+const confirmOpen = ref(false)
+const confirmTarget = ref<ImagePublic | null>(null)
+function onConfirmDelete() {
+  if (!confirmTarget.value) return
+  const img = confirmTarget.value
+  confirmOpen.value = false
+  confirmTarget.value = null
+  deleteImageConfirmed(img)
+}
+function promptDelete(img: ImagePublic) {
+  confirmTarget.value = img
+  confirmOpen.value = true
+}
+async function deleteImageConfirmed(img: ImagePublic) {
+  const id = img.id
+  if (expandedId.value === id) expandedId.value = null
+  if (lightbox.value?.id === id) lightbox.value = null
+  busyId.value = id
+  try {
+    await $fetch(`/api/images/${id}`, { method: 'DELETE' })
+    await refresh()
+  } finally {
+    busyId.value = null
+  }
+}
 
 function sceneLabel(id: string) {
   return IMAGE_SCENE_PRESETS.find((p) => p.id === id)?.shortLabel || id
@@ -385,7 +431,19 @@ function onKeydown(e: KeyboardEvent) {
   if (e.key === 'Escape') lightbox.value = null
 }
 
-onMounted(() => window.addEventListener('keydown', onKeydown))
+onMounted(() => {
+  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+  }
+  window.addEventListener('keydown', onKeydown)
+})
+
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
+})
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 function applyScene(preset: ImageScenePreset) {
@@ -498,17 +556,8 @@ async function generate() {
   }
 }
 
-async function remove(id: string) {
-  if (!confirm('Delete this image? This action cannot be undone.')) return
-  if (expandedId.value === id) expandedId.value = null
-  if (lightbox.value?.id === id) lightbox.value = null
-  busyId.value = id
-  try {
-    await $fetch(`/api/images/${id}`, { method: 'DELETE' })
-    await refresh()
-  } finally {
-    busyId.value = null
-  }
+function remove(img: ImagePublic) {
+  promptDelete(img)
 }
 
 async function regenerate(img: ImagePublic) {
@@ -600,7 +649,7 @@ function onImageMenu(id: string, img: ImagePublic) {
   else if (id === 'regenerate') regenerate(img)
   else if (id === 'download') downloadImage(img)
   else if (id === 'open') openLightbox(img)
-  else if (id === 'delete') remove(img.id)
+  else if (id === 'delete') remove(img)
 }
 
 useHead({
