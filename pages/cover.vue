@@ -45,7 +45,7 @@
           <textarea
             v-model="prompt"
             class="field min-h-24"
-            placeholder="{{ $t('cover.stylePlaceholder') }}"
+            :placeholder="$t('cover.stylePlaceholder')"
           />
         </label>
 
@@ -67,7 +67,7 @@
           </UiButton>
           <label class="block space-y-2">
             <span class="field-label">{{ $t('cover.editLyrics') }}</span>
-            <textarea v-model="lyrics" class="field lyric-editor !min-h-40" placeholder="{{ $t('cover.runExtractFirst') }}" />
+            <textarea v-model="lyrics" class="field lyric-editor !min-h-40" :placeholder="$t('cover.runExtractFirst')" />
           </label>
           <p v-if="featureId" class="field-hint">{{ $t('cover.featureReady') }}</p>
           <div v-if="structurePreview.length" class="rounded-xl border border-white/10 bg-ink-950/50 p-3">

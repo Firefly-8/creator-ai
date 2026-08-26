@@ -47,7 +47,7 @@
             v-model="prompt"
             class="field min-h-32"
             maxlength="1500"
-            placeholder="{{ $t('image.promptPlaceholder') }}"
+            :placeholder="$t('image.promptPlaceholder')"
           />
         </label>
 

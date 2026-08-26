@@ -4,10 +4,10 @@
     <div class="home-glow" />
 
     <!-- Hero Section -->
-    <section class="relative overflow-hidden py-20 sm:py-28 lg:py-32">
+    <section class="relative overflow-hidden flex items-center min-h-[80vh] py-20 sm:py-28 lg:py-32">
       <div class="absolute inset-0 z-0">
         <img src="/generated/hero-home.jpg" alt="" class="h-full w-full object-cover object-center" />
-        <div class="absolute inset-0 bg-gradient-to-b from-[#0c0a1a]/70 via-[#0c0a1a]/60 to-[#0c0a1a]" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0c0a1a]/60 via-[#0c0a1a]/40 to-[#0c0a1a]/80" />
       </div>
       <div class="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div class="text-center max-w-3xl mx-auto">
