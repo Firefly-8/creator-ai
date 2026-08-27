@@ -16,10 +16,10 @@ export default defineEventHandler(async (event) => {
   const d1 = getDB(event)
   if (!d1) throw createError({ statusCode: 500 })
 
-  // 检查是否有 admin 表记录
-  const admin = await d1.prepare(
-    'SELECT role FROM admins WHERE user_id = ?'
+  // 检查用户特权表是否有 admin 记录
+  const priv = await d1.prepare(
+    "SELECT privilege FROM user_privileges WHERE user_id = ? AND privilege = 'admin' LIMIT 1"
   ).bind(payload.sub).first()
 
-  return { role: admin?.role || 'user' }
+  return { role: priv ? 'admin' : 'user' }
 })
