@@ -1,6 +1,6 @@
 <template>
   <div class="page-shell studio-shell">
-    <EmailVerificationGuard />
+    <AuthEmailVerificationGuard />
     <aside class="studio-sidebar" :class="{ 'is-open': mobileNavOpen }">
       <div class="studio-sidebar__brand">
         <NuxtLink to="/create" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
