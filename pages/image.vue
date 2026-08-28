@@ -526,7 +526,7 @@ async function generate() {
   if (!canGenerate.value) return
   generating.value = true
   errorText.value = ''
-  statusText.value = deepOptimize.value ? $t('image.optimizingAndGenerating') : $t('image.generating')
+  statusText.value = deepOptimize.value ? t('image.optimizingAndGenerating') : t('image.generating')
   try {
     const res = await $fetch<{ images: ImagePublic[]; promptFinal: string }>('/api/image/generate', {
       method: 'POST',
@@ -594,13 +594,13 @@ function loadFromImage(img: ImagePublic) {
   deepOptimize.value = !!meta.deepOptimize
   if (meta.uploadId) {
     uploadId.value = String(meta.uploadId)
-    refName.value = $t('image.restoredRef')
+    refName.value = t('image.restoredRef')
   } else if (img.mode === 'i2i') {
     uploadId.value = null
     refName.value = ''
   }
   remixFrom.value = img.title || 'Untitled'
-  statusText.value = $t('image.loadedParams')
+  statusText.value = t('image.loadedParams')
   errorText.value = ''
   document.querySelector('.workspace__ops')?.scrollTo?.({ top: 0, behavior: 'smooth' })
 }
