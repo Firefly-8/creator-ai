@@ -12,7 +12,14 @@ export default defineEventHandler(async (event) => {
   const type = String(query.type || 'all')
   const offset = (page - 1) * limit
 
+  // 调试：测试 D1 获取
+  console.log('[Gallery] _platform keys:', Object.keys((event as any).context?._platform || {}))
+  console.log('[Gallery] cloudflare:', !!(event as any).context?._platform?.cloudflare)
+  console.log('[Gallery] DB via _platform:', !!(event as any).context?._platform?.cloudflare?.env?.DB)
+  console.log('[Gallery] globalThis.DB:', !!(globalThis as any).DB)
+
   const db = getDB(event)
+  console.log('[Gallery] getDB returned:', !!db)
   if (!db) throw createError({ statusCode: 503, statusMessage: 'Database not available' })
 
   const items: any[] = []
