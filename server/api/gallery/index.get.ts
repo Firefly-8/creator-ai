@@ -12,16 +12,11 @@ export default defineEventHandler(async (event) => {
   const offset = (page - 1) * limit
 
   const db = getDB(event)
-  if (!db) {
-    console.log('[Gallery] DB not available, checking paths:')
-    console.log('[Gallery] _platform:', (event as any).context?._platform)
-    console.log('[Gallery] cloudflare:', (event as any).context?._platform?.cloudflare)
-    throw createError({ statusCode: 503, statusMessage: 'Database not available' })
-  }
+  if (!db) throw createError({ statusCode: 503, statusMessage: 'Database not available' })
+
+  const items: any[] = []
 
   try {
-    const items: any[] = []
-
     // 获取公开音乐
     if (type === 'all' || type === 'music') {
       const musicLimit = type === 'music' ? limit : Math.ceil(limit / 2)
@@ -81,17 +76,9 @@ export default defineEventHandler(async (event) => {
 
     return {
       items: items.slice(0, limit),
-      pagination: {
-        page,
-        limit,
-        hasMore: items.length >= limit,
-      },
+      pagination: { page, limit, hasMore: items.length >= limit },
     }
   } catch (err: any) {
-    console.error('[Gallery] Error:', err?.message, err?.stack)
-    throw createError({
-      statusCode: 500,
-      statusMessage: err?.message || 'Server Error',
-    })
+    throw createError({ statusCode: 500, statusMessage: err?.message || 'Server Error' })
   }
 })
