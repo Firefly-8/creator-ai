@@ -4,7 +4,7 @@
  * 尝试多种方式获取 D1 数据库实例：
  * 1. globalThis.DB（已有值）
  * 2. globalThis.__env__.DB（Cloudflare Pages 运行时）
- * 3. event.context._platform.cloudflare.env.DB（Nitro 上下文）
+ * 3. event.context.cloudflare.env.DB（Nitro Cloudflare Pages 上下文）
  */
 
 import type { H3Event } from 'h3'
@@ -22,9 +22,21 @@ export function getDB(event?: H3Event): D1Database | undefined {
     return env.DB
   }
 
-  // 方式 3: Nitro 上下文
+  // 方式 3: Nitro Cloudflare Pages 上下文
   if (event) {
+    // 优先: event.context.cloudflare.env.DB (Nitro Cloudflare Pages preset)
+    const cf = (event as any).context?.cloudflare
+    if (cf?.env?.DB) {
+      ;(globalThis as any).DB = cf.env.DB
+      return cf.env.DB
+    }
+    // 兼容: event.context._platform.env.DB
     const platform = (event as any).context?._platform
+    if (platform?.env?.DB) {
+      ;(globalThis as any).DB = platform.env.DB
+      return platform.env.DB
+    }
+    // 兼容旧路径
     if (platform?.cloudflare?.env?.DB) {
       ;(globalThis as any).DB = platform.cloudflare.env.DB
       return platform.cloudflare.env.DB
