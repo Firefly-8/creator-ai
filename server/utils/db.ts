@@ -93,6 +93,24 @@ function getD1(): D1Database {
     return d1
   }
   
+  // 尝试其他路径
+  console.log('[DB] globalThis.DB not found, checking other paths...')
+  const env2 = (globalThis as any).__env
+  if (env2?.DB) {
+    console.log('[DB] Found DB via __env.DB')
+    d1Instance = env2.DB
+    return d1Instance
+  }
+
+  const cf = (globalThis as any).__cloudflare?.env
+  if (cf?.DB) {
+    console.log('[DB] Found DB via __cloudflare.env.DB')
+    d1Instance = cf.DB
+    return d1Instance
+  }
+
+  console.log('[DB] D1 not available. globalThis keys:', Object.keys(globalThis).filter(k => k.toLowerCase().includes('db') || k.toLowerCase().includes('env') || k.toLowerCase().includes('cloudflare')))
+
   throw new Error('D1 database not available. Ensure DB binding is configured in wrangler.toml')
 }
 

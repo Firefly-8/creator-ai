@@ -11,12 +11,16 @@ import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { optimizeImagePrompt } from '../../utils/minimax'
 
 export default defineEventHandler(async (event) => {
+  console.log("[Image Generate] === Start ===")
   // 1. 认证
   const auth = event.context.auth
+  console.log("[Image Generate] auth:", auth ? `uid=${auth.uid}` : "null")
   if (!auth?.uid) throw createError({ statusCode: 401 })
 
   // 1.5 速率检查
+  console.log("[Image Generate] Checking rate limit...")
   await rateLimitMiddleware(event, 'generate')
+  console.log("[Image Generate] Rate limit OK")
 
   // 2. 解析参数
   const body = await readBody(event)
@@ -77,7 +81,8 @@ export default defineEventHandler(async (event) => {
 
     await updateJob(job.id, { status: 'processing' })
 
-    const res = await fetch(`${baseUrl}/v1/image_generation`, {
+    console.log("[Image Generate] Calling MiniMax API...")
+  const res = await fetch(`${baseUrl}/v1/image_generation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

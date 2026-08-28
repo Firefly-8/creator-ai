@@ -7,6 +7,7 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { getHeader } from 'h3'
 
 export default defineEventHandler(async (event) => {
+  console.log('[Sync] === Start ===')
   // 验证 Token
   const authHeader = getHeader(event, 'authorization')
   const token = typeof authHeader === 'string' ? authHeader.replace('Bearer ', '') : ''
@@ -21,6 +22,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Missing token' })
   }
 
+  console.log('[Sync] Verifying Firebase token...')
   const { verifyFirebaseToken } = await import('../../utils/firebase-verify')
   const payload = await verifyFirebaseToken(token)
   if (!payload) {
@@ -37,8 +39,10 @@ export default defineEventHandler(async (event) => {
   const emailVerified = payload.email_verified || false
 
   // 获取 D1 binding
+  console.log('[Sync] Getting D1 database...')
   const { getDB } = await import('../../utils/db-runtime')
   const d1 = getDB(event)
+  console.log('[Sync] D1 result:', d1 ? 'DB found' : 'DB is null/undefined')
   if (!d1) throw createError({ statusCode: 500, statusMessage: 'DB not available' })
 
   const now = new Date().toISOString()
