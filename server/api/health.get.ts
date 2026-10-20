@@ -48,5 +48,7 @@ export default defineEventHandler((event) => {
       ENCRYPTION_MASTER_KEY: has('ENCRYPTION_MASTER_KEY'),
       MINIMAX_BASE_URL: has('MINIMAX_BASE_URL'),
     },
+    // 只列 key 名，不列值，方便核对变量到底有没有注入到 worker
+    envKeys: Object.keys(env).sort(),
   }
 })
