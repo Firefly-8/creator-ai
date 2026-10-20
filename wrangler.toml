@@ -1,26 +1,29 @@
-# ⚠️ 本文件不是 Cloudflare Pages 的部署配置源，请勿在 Pages 项目里依赖它
+# ⚠️ Cloudflare Pages 部署配置源 —— 改动前先读这段
 #
-# 背景：CF Pages 的 Git 集成会把仓库根目录的 wrangler.toml 当作 "source of truth"，
-# 每次部署都用文件里的绑定覆盖 Dashboard 里配置的绑定。
-# 但生产（craftai）和预发布（craftai-staging）两个 Pages 项目共用这一个仓库，
-# 它们需要绑定不同的 D1 数据库，单个文件无法同时表达。
+# 1) CF Pages 的 Git 集成把仓库根目录的 wrangler.toml 当作 "source of truth"：
+#    每次部署都用这里的绑定覆盖 Dashboard 里的绑定。
+#    Dashboard 上能看到的字段只是只读镜像，改这里才是真正生效的地方。
 #
-# 解决办法：这里**不写** pages_build_output_dir。缺少该 key 时，CF Pages 会忽略本文件，
-# Dashboard 侧的绑定配置才会生效（见 scripts/cf-bindings.py，已配置为：
-#   craftai          production → craftai-db          (bb60e6ae-...)
-#                    preview    → craftai-db-staging  (8e812571-...)
-#   craftai-staging  production → craftai-db-staging  (8e812571-...)
-#                    preview    → craftai-db-staging  (8e812571-...)
-# ）预发布环境一律指向 craftai-db-staging，避免写脏生产数据。
+# 2) 生产（craftai）和预发布（craftai-staging）两个 Pages 项目共用这一个仓库，
+#    但需要绑定不同的 D1 数据库。单个文件无法同时表达，因此：
+#      - 本文件 = 预发布配置（craftai-db-staging）
+#        → craftai-staging 的 production / preview 环境都用它 ✅
+#        → craftai 的 preview 环境（test 分支）也会用它 ✅（预览不碰生产数据）
+#      - 生产配置在 wrangler.production.toml，
+#        由 scripts/prepare-wrangler.mjs 在 craftai 项目的构建过程中替换进来
+#        （craftai 的 build command 带 CF_DEPLOY_ENV=production）
 #
-# 下面这些绑定只服务于本地 `wrangler pages dev` 开发，不影响线上。
-# 线上环境变量（MINIMAX_API_KEY / APP_SECRET 等）配置在 Cloudflare Dashboard。
+# 3) 不要再往这里加 D1/KV/R2 绑定而不同时更新另一个文件，否则两个环境会串库。
+#    校验用：node scripts/check-bindings.mjs
 
 name = "craftai"
 compatibility_date = "2025-06-01"
 compatibility_flags = ["nodejs_compat"]
 
-# D1 数据库绑定（本地开发用；线上绑定见上方说明）
+# Cloudflare Pages 配置
+pages_build_output_dir = "dist"
+
+# D1 数据库绑定（预发布库）
 [[d1_databases]]
 binding = "DB"
 database_name = "craftai-db-staging"
@@ -36,3 +39,9 @@ bucket_name = "craftai-storage"
 [[kv_namespaces]]
 binding = "CACHE"
 id = "4ebb1e030d274e2dbf35ab559d602649"
+
+# 环境变量（非敏感）
+[vars]
+NUXT_PUBLIC_APP_NAME = "Creator"
+NUXT_PUBLIC_SITE_URL = "https://creator.yozzytools.com"
+MINIMAX_BASE_URL = "https://api.minimaxi.com"
