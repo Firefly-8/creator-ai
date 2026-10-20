@@ -35,8 +35,8 @@
       <!-- Auth Section — always visible at top on mobile -->
       <div class="studio-sidebar__auth">
         <template v-if="authReady && !user">
-          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">{{ $t('nav.login') }}</button>
-          <button class="btn-primary w-full text-sm" @click="openSignup">{{ $t('nav.signup') }}</button>
+          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">{{ 'Sign in' }}</button>
+          <button class="btn-primary w-full text-sm" @click="openSignup">{{ 'Sign up' }}</button>
         </template>
         <template v-else-if="authReady && user">
           <div class="flex items-center gap-2 mb-2">
@@ -45,7 +45,7 @@
             </div>
             <span class="text-xs text-ink-300 truncate">{{ user.email }}</span>
           </div>
-          <button class="btn-secondary w-full text-sm" @click="handleLogout">{{ $t('nav.logout') }}</button>
+          <button class="btn-secondary w-full text-sm" @click="handleLogout">{{ 'Sign out' }}</button>
         </template>
       </div>
 
@@ -58,17 +58,17 @@
             @click="mobileNavOpen = false"
           >
             <span class="i-ph-shield-star text-[14px]" />
-            {{ $t('nav.admin', 'Admin') }}
+            {{ 'Admin' }}
           </NuxtLink>
         </template>
         <button class="sidebar-feedback-btn" @click="openFeedback()">
           <span class="i ph-chat-circle-text text-[14px]" />
-          {{ $t('feedback.title', 'Send Feedback') }}
+          {{ 'Send feedback' }}
         </button>
         <div class="mt-3">
           <LanguageSwitcher />
         </div>
-        <p class="text-[11px] leading-relaxed text-ink-500 mt-2">{{ $t('nav.tagline') }}</p>
+        <p class="text-[11px] leading-relaxed text-ink-500 mt-2">{{ 'Personalised cards &amp; canvas prints' }}</p>
       </div>
     </aside>
 
@@ -86,7 +86,7 @@
         <span class="font-display text-[15px] font-650 text-white">{{ pageTitle }}</span>
         <div class="flex items-center gap-2 w-9 justify-end">
           <template v-if="authReady && !user">
-            <button class="text-xs text-ink-300 hover:text-white" @click="openLogin">{{ $t('nav.login') }}</button>
+            <button class="text-xs text-ink-300 hover:text-white" @click="openLogin">{{ 'Sign in' }}</button>
           </template>
         </div>
       </header>
@@ -107,7 +107,16 @@ import CookieConsent from '~/components/ui/CookieConsent.vue'
 import LanguageSwitcher from '~/components/ui/LanguageSwitcher.vue'
 import LocaleSuggestion from '~/components/ui/LocaleSuggestion.vue'
 
-const { t: $t } = useI18n()
+// ⚠️ 这里**不要**再用 useI18n()。
+// 2026-10-20 实测：在 layouts/default.vue 里 `const { t: $t } = useI18n()`
+// 拿到的 t 在**客户端**是 undefined（SSR 正常），模板里一调就抛
+// "n.t is not a function" → 整个页面 500，而 error.vue 的 h1 硬编码 "404"，
+// 看起来像路由 404，实际 statusCode 是 500，极难排查。
+// 影响面是所有使用本布局的页面（9 个）。已改为硬编码英文；
+// 产品也已确认英语优先、10 语种暂不投入。
+// ⚠️ 同理 useHead() 只能在 setup 顶层调用（依赖 inject），
+//    写在 onMounted 回调里同样会炸。
+
 const route = useRoute()
 const mobileNavOpen = ref(false)
 const { user, authReady, logout } = useAuth()
@@ -144,14 +153,14 @@ const groups = computed(() => [
     label: 'Make',
     items: [
       { to: '/cards', label: 'Create a Card', icon: 'i-ph-gift' },
-      { to: '/image', label: $t('nav.image'), icon: 'i-ph-image' },
+      { to: '/image', label: 'AI Image Studio', icon: 'i-ph-image' },
     ],
   },
   {
-    label: $t('nav.musicGroup'),
+    label: 'Music',
     items: [
-      { to: '/create', label: $t('nav.create'), icon: 'i-ph-waveform' },
-      { to: '/cover', label: $t('nav.cover'), icon: 'i-ph-arrows-clockwise' },
+      { to: '/create', label: 'Create a song', icon: 'i-ph-waveform' },
+      { to: '/cover', label: 'Cover art', icon: 'i-ph-arrows-clockwise' },
       { to: '/music-library', label: 'Music library', icon: 'i-ph-music-notes' },
     ],
   },
@@ -173,7 +182,7 @@ const pageTitle = computed(() => {
     '/music-library': 'Music library',
     '/my-cards': 'My cards',
     '/cards': 'Create a Card',
-    '/image': $t('nav.imageGroup'),
+    '/image': 'Image',
   }
   if (route.path.startsWith('/song/')) return 'Track'
   return map[route.path] || 'Create Keepsakes'
