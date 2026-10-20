@@ -207,6 +207,8 @@ watch(() => route.fullPath, () => {
   background: var(--fill-soft);
 }
 
+
+</style>
 <style scoped>
 /* 「旧 AI 工具站」提示 —— 这套深色工作台是降级保留的老站，
    顶部给一条明确出口，用户不该以为这里还是主站 */

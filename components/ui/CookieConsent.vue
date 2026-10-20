@@ -60,6 +60,8 @@ function rejectCookies() {
   opacity: 0;
 }
 
+
+</style>
 <style scoped>
 /* 浅色暖调 —— 与品牌/弹窗一致（原来用的是深色紫，和新品牌不搭，
    而且会和登录弹窗同屏出现，非常突兀） */
