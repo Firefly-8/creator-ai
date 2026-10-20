@@ -382,12 +382,26 @@ async function useSample() {
   }
 }
 
+/**
+ * 上传参考图。
+ * 上传接口需要登录（未登录时返回 401）——
+ * 这时**不要阻断流程**：降级成不带参考图的生成（t2i），
+ * 用户仍然能看到成品，注册后回来再用自己的照片。
+ */
 async function uploadPhoto(): Promise<string> {
   if (!photoFile.value) return ''
   const fd = new FormData()
   fd.append('file', photoFile.value)
-  const res = await api.upload<{ uploadId: string }>('/api/image/upload', fd)
-  return res.uploadId
+  try {
+    const res = await api.upload<{ uploadId: string }>('/api/image/upload', fd)
+    return res.uploadId || ''
+  } catch (e: any) {
+    if (isUnauthorized(e)) {
+      uploadId.value = ''
+      return ''
+    }
+    throw e
+  }
 }
 
 async function generate() {

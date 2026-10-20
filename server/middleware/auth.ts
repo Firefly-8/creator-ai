@@ -12,6 +12,9 @@ const PUBLIC_PATHS = [
   '/api/blog',
   '/api/health',
   '/api/minimax/quota',
+  // 样例底图：用户「没有照片？用样例」的兜底入口，
+  // 必须在登录前可用（纯静态资源，无隐私风险）
+  '/api/image/samples',
   '/api/robots',
   '/api/sitemap',
   '/api/upload',
