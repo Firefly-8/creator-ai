@@ -153,7 +153,11 @@ const { data, pending, refresh } = await useFetch<{ song: SongPublic }>(() => `/
   watch: [id],
 })
 
+// ⚠️ 必须定义在 pageTitle / pageDescription 之前：useHead 会同步求值
+// 这些 computed，而它们的 getter 里要用到 song —— 放在后面就是 TDZ，
+// 客户端直接抛 "Cannot access 's' before initialization" → 整页 500。
 const song = computed(() => data.value?.song || null)
+
 const player = usePlayerStore()
 import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 const isPublic = ref(false)
