@@ -236,6 +236,10 @@ curl -s -X POST -H "Authorization: Bearer $CF_API_TOKEN" \
 **⚠️ 绝对不能**把用户生成的内容放进 `craftai-assets`（那是公开桶）——
 用户图片只在私有桶 `craftai-storage`。
 
+**例外：应用图标类资源留在 `public/`**（`logo.png` / `logo-512.png` / `favicon.ico`）。
+favicon 必须同源才可靠，logo 要被 `og:image` 和导航栏引用，体积只有几十 KB ——
+这类属于「应用本身」，不属于「内容资源」。
+
 **改文案/换图后的重建流程**：
 ```bash
 node scripts/build-assets.mjs         # 底图 → 叠排版 → WebP → 上传 showcase/

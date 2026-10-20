@@ -147,7 +147,7 @@ const groups = computed(() => [
     items: [
       { to: localePath('/create'), label: $t('nav.create'), icon: 'i-ph-waveform' },
       { to: localePath('/cover'), label: $t('nav.cover'), icon: 'i-ph-arrows-clockwise' },
-      { to: localePath('/library'), label: $t('nav.library'), icon: 'i-ph-music-notes' },
+      { to: localePath('/music-library'), label: 'Music library', icon: 'i-ph-music-notes' },
     ],
   },
   {
@@ -164,7 +164,9 @@ const pageTitle = computed(() => {
   const map: Record<string, string> = {
     '/create': 'Create',
     '/cover': 'Cover',
-    '/library': 'Library',
+    '/library': 'Music library',
+    '/music-library': 'Music library',
+    '/my-cards': 'My cards',
     '/cards': 'Create a Card',
     '/image': $t('nav.imageGroup'),
   }

@@ -15,7 +15,7 @@
       <h2 class="mb-2 font-display text-xl font-700 text-white">Track not found</h2>
       <p class="mb-6 text-sm text-ink-400">This track may have been deleted or is not available.</p>
       <div class="flex items-center justify-center gap-3">
-        <button class="btn btn--secondary" @click="navigateTo('/library')">
+        <button class="btn btn--secondary" @click="navigateTo('/music-library')">
           <span class="i-ph-arrow-left mr-1.5" />Back to Library
         </button>
         <button class="btn btn--primary" @click="navigateTo('/create')">
@@ -193,7 +193,7 @@ async function remove() {
 }
 async function removeConfirmed() {
   await $fetch(`/api/songs/${id.value}`, { method: 'DELETE' })
-  navigateTo('/library')
+  navigateTo('/music-library')
 }
 
 function onSaved() {

@@ -21,7 +21,7 @@
             <button class="mk-btn mk-btn--primary" @click="openSignup">Start free</button>
           </template>
           <template v-else-if="authReady && user">
-            <NuxtLink to="/library" class="mk-btn mk-btn--ghost">My cards</NuxtLink>
+            <NuxtLink to="/my-cards" class="mk-btn mk-btn--ghost">My cards</NuxtLink>
             <button class="mk-btn mk-btn--ghost" @click="handleLogout">Log out</button>
           </template>
         </div>
@@ -36,6 +36,7 @@
         <NuxtLink to="/gallery" class="mk-mobile__link" @click="mobileOpen = false">Gallery</NuxtLink>
         <NuxtLink to="/pricing" class="mk-mobile__link" @click="mobileOpen = false">Pricing</NuxtLink>
         <NuxtLink to="/blog" class="mk-mobile__link" @click="mobileOpen = false">Blog</NuxtLink>
+        <NuxtLink to="/my-cards" class="mk-mobile__link" @click="mobileOpen = false">My cards</NuxtLink>
         <template v-if="authReady && !user">
           <button class="mk-btn mk-btn--ghost w-full" @click="openLogin(); mobileOpen = false">Log in</button>
           <button class="mk-btn mk-btn--primary w-full" @click="openSignup(); mobileOpen = false">Start free</button>
@@ -59,6 +60,7 @@
           <div>
             <p class="mk-foot__label">Make</p>
             <NuxtLink to="/cards">Create a card</NuxtLink>
+            <NuxtLink to="/my-cards">My cards</NuxtLink>
             <NuxtLink to="/gallery">Gallery</NuxtLink>
           </div>
           <div>

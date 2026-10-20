@@ -1,211 +1,279 @@
 <template>
-  <div class="content-page">
-    <div class="content-glow" />
+  <div class="ck-post">
+    <div class="ck-wrap ck-wrap--narrow">
+      <NuxtLink to="/blog" class="ck-back">
+        <span class="i-ph-arrow-left" />
+        All articles
+      </NuxtLink>
 
-    <section class="relative py-20 sm:py-28">
-      <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <!-- 返回链接 -->
-        <NuxtLink to="/blog" class="inline-flex items-center gap-1.5 text-sm text-ink-400 hover:text-accent-soft transition-colors mb-8">
-          <span class="i-ph-arrow-left text-[14px]" />
-          Back to Blog
-        </NuxtLink>
+      <div v-if="pending" class="ck-loading">Loading…</div>
 
-        <!-- 加载状态 -->
-        <div v-if="pending" class="animate-pulse">
-          <div class="h-8 w-3/4 bg-white/10 rounded mb-4"></div>
-          <div class="h-4 w-1/2 bg-white/10 rounded"></div>
-        </div>
-
-        <!-- 文章内容 -->
-        <article v-else-if="post">
-          <!-- 标签 -->
-          <div class="flex flex-wrap items-center gap-2 mb-4">
-            <span
-              v-for="tag in post.tags"
-              :key="tag"
-              class="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold text-accent-soft"
-            >
-              {{ tag }}
-            </span>
+      <article v-else-if="post" class="ck-article">
+        <header class="ck-article__head">
+          <div class="ck-tags">
+            <span v-for="t in post.tags.slice(0, 3)" :key="t" class="ck-tag">{{ t }}</span>
           </div>
+          <h1 class="ck-h1">{{ post.title }}</h1>
+          <p class="ck-meta">
+            {{ post.authorName }} · {{ formatDate(post.publishedAt) }} · {{ post.readingMinutes }} min read
+          </p>
+        </header>
 
-          <h1 class="font-display text-3xl font-800 tracking-tight text-white sm:text-4xl leading-tight">
-            {{ post.title }}
-          </h1>
+        <img
+          v-if="post.coverImage"
+          :src="post.coverImage"
+          :alt="post.title"
+          class="ck-article__cover"
+          decoding="async"
+        />
 
-          <div class="mt-4 flex items-center gap-3 text-sm text-ink-400">
-            <span>{{ post.authorName }}</span>
-            <span class="text-ink-600">·</span>
-            <span>{{ formatDate(post.publishedAt) }}</span>
-            <span class="text-ink-600">·</span>
-            <span>{{ post.readingMinutes }} min read</span>
-          </div>
+        <!-- 正文：marked 渲染 -->
+        <div class="ck-prose" v-html="renderedContent" />
 
-          <div class="mt-4 text-sm text-ink-500">
-            {{ post.viewCount }} views
-          </div>
-
-          <!-- 文章正文 -->
-          <div class="mt-10 blog-content" v-html="renderedContent" />
-
-          <!-- 文章内 CTA -->
-          <div class="mt-12 rounded-2xl border border-accent/20 bg-accent/5 p-8 text-center">
-            <h3 class="font-display text-xl font-700 text-white">Ready to Create?</h3>
-            <p class="mt-2 text-ink-300">Try CraftAI free — no credit card required.</p>
-            <NuxtLink to="/create" class="btn-primary mt-5 inline-flex !h-11 !px-7">
-              Start Creating Free
+        <footer class="ck-article__foot">
+          <div class="ck-cta">
+            <h2 class="ck-cta__title">Ready to make one?</h2>
+            <p class="ck-cta__text">
+              Start from an occasion, add their photo and their name, and write
+              the words yourself.
+            </p>
+            <NuxtLink to="/cards" class="ck-btn ck-btn--primary">
+              Create a card
+              <span class="i-ph-arrow-right" />
             </NuxtLink>
           </div>
-        </article>
+        </footer>
+      </article>
 
-        <!-- 404 -->
-        <div v-else class="text-center py-20">
-          <h1 class="font-display text-3xl font-700 text-white">Article Not Found</h1>
-          <p class="mt-4 text-ink-400">The article you are looking for does not exist.</p>
-          <NuxtLink to="/blog" class="btn-secondary mt-6 inline-flex">Back to Blog</NuxtLink>
+      <div v-else class="ck-loading">That article does not exist.</div>
+
+      <!-- 相关 -->
+      <section v-if="related.length" class="ck-related">
+        <h2 class="ck-related__title">Read next</h2>
+        <div class="ck-related__grid">
+          <NuxtLink
+            v-for="r in related"
+            :key="r.id"
+            :to="`/blog/${r.slug}`"
+            class="ck-related__item"
+          >
+            <img v-if="r.coverImage" :src="r.coverImage" :alt="r.title" loading="lazy" decoding="async" />
+            <span class="ck-related__text">{{ r.title }}</span>
+          </NuxtLink>
         </div>
-
-        <!-- 相关文章 -->
-        <aside v-if="related.length" class="mt-16 border-t border-white/[0.06] pt-12">
-          <h2 class="font-display text-xl font-700 text-white mb-6">Related Articles</h2>
-          <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <NuxtLink
-              v-for="r in related"
-              :key="r.id"
-              :to="`/blog/${r.slug}`"
-              class="panel p-5 transition duration-200 hover:border-white/[0.12]"
-            >
-              <h3 class="font-display text-[15px] font-600 text-white hover:text-accent-soft transition-colors line-clamp-2">
-                {{ r.title }}
-              </h3>
-              <p class="mt-2 text-[13px] text-ink-400 line-clamp-2">{{ r.excerpt }}</p>
-              <p class="mt-3 text-xs text-ink-500">{{ r.readingMinutes }} min read</p>
-            </NuxtLink>
-          </div>
-        </aside>
-      </div>
-    </section>
+      </section>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { marked } from 'marked'
+
+definePageMeta({ layout: 'marketing' })
+
 const route = useRoute()
-const slug = computed(() => route.params.slug as string)
+const slug = computed(() => String(route.params.slug || ''))
 
-const { data, pending } = await useFetch(`/api/blog/${slug.value}`, {
-  key: `blog-${slug.value}`,
-})
+const { data, pending } = await useFetch<{ post: any; related: any[] }>(
+  () => `/api/blog/${slug.value}`,
+  { key: () => `blog-post-${slug.value}` },
+)
 
-const post = computed(() => data.value?.post || null)
-const related = computed(() => data.value?.related || [])
+const post = computed(() => (data.value as any)?.post || null)
+// related 由服务端算（同标签优先），不用在前端再拉一遍列表
+const related = computed(() => (data.value as any)?.related || [])
 
-// 简单的 markdown -> HTML 转换
+/** 用 marked 渲染 Markdown（比原来那段正则转换靠谱得多） */
 const renderedContent = computed(() => {
-  if (!post.value?.content) return ''
-  return simpleMarkdownToHtml(post.value.content)
+  const md = post.value?.content
+  if (!md) return ''
+  return marked.parse(md, { async: false }) as string
 })
 
-function simpleMarkdownToHtml(md: string): string {
-  let html = md
-  
-  // Headers
-  html = html.replace(/^### (.+)$/gm, '<h3 class="font-display text-lg font-600 text-white mt-8 mb-3">$1</h3>')
-  html = html.replace(/^## (.+)$/gm, '<h2 class="font-display text-xl font-700 text-white mt-10 mb-4">$1</h2>')
-  html = html.replace(/^# (.+)$/gm, '<h1 class="font-display text-2xl font-800 text-white mt-12 mb-4">$1</h1>')
-  
-  // Bold
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong class="font-600 text-white">$1</strong>')
-  
-  // Italic
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
-  
-  // Unordered lists
-  html = html.replace(/^- (.+)$/gm, '<li class="text-[15px] leading-relaxed text-ink-200 ml-4">$1</li>')
-  
-  // Ordered lists
-  html = html.replace(/^\d+\. (.+)$/gm, '<li class="text-[15px] leading-relaxed text-ink-200 ml-4 list-decimal">$1</li>')
-  
-  // Paragraphs
-  html = html.replace(/^(?!<[hl]|<li)(.+)$/gm, '<p class="text-[15px] leading-relaxed text-ink-200 mt-4">$1</p>')
-  
-  // Clean up empty paragraphs
-  html = html.replace(/<p class="[^"]*">\s*<\/p>/g, '')
-  
-  return html
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  } catch {
-    return dateStr
-  }
-}
-
-// 动态 SEO
-watchEffect(() => {
-  if (!post.value) return
+useHead(() => {
   const p = post.value
-  useHead({
-    title: `${p.metaTitle || p.title} | CraftAI Blog`,
-    meta: [
-      { name: 'description', content: p.metaDescription || p.excerpt },
-      { property: 'og:title', content: p.title },
-      { property: 'og:description', content: p.excerpt },
-      { property: 'og:type', content: 'article' },
-      { property: 'article:published_time', content: p.publishedAt },
-      { property: 'article:author', content: p.authorName },
-      { name: 'twitter:card', content: 'summary_large_image' },
-      { name: 'twitter:title', content: p.title },
-      { name: 'twitter:description', content: p.excerpt },
-    ],
-    link: [{ rel: 'canonical', href: `https://creator.yozzytools.com/blog/${p.slug}` }],
-    script: [
-      {
-        type: 'application/ld+json',
-        innerHTML: JSON.stringify({
-          '@context': 'https://schema.org',
-          '@type': 'Article',
-          headline: p.title,
-          description: p.excerpt,
-          author: { '@type': 'Organization', name: p.authorName },
-          datePublished: p.publishedAt,
-          dateModified: p.updatedAt,
-          publisher: {
-            '@type': 'Organization',
-            name: 'CraftAI',
-            logo: { '@type': 'ImageObject', url: 'https://creator.yozzytools.com/logo.png' },
-          },
-        }),
-      },
-    ],
-  })
+  return {
+    title: p ? `${p.title} — Create Keepsakes` : 'Create Keepsakes',
+    meta: p
+      ? [
+          { name: 'description', content: p.metaDescription || p.excerpt },
+          { property: 'og:title', content: p.title },
+          { property: 'og:description', content: p.excerpt },
+          { property: 'og:type', content: 'article' },
+          { property: 'article:published_time', content: p.publishedAt },
+          { property: 'og:image', content: p.coverImage || 'https://assets.yozzytools.com/og-image.jpg' },
+          { name: 'twitter:card', content: 'summary_large_image' },
+        ]
+      : [],
+    link: [{ rel: 'canonical', href: `https://create.yozzytools.com/blog/${slug.value}` }],
+  }
 })
+
+function formatDate(s: string) {
+  if (!s) return ''
+  const d = new Date(s)
+  if (Number.isNaN(d.getTime())) return ''
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+}
 </script>
 
 <style scoped>
-.content-page {
-  position: relative;
+.ck-post {
+  --ck-bg: #fbf7f1;
+  --ck-cream: #f5ede1;
+  --ck-white: #fffdfa;
+  --ck-ink: #2a2420;
+  --ck-ink-2: #6b5f55;
+  --ck-line: rgba(58, 46, 38, 0.12);
+  --ck-coral: #c8543d;
+  --ck-coral-deep: #a53f2c;
+  --ck-serif: 'Playfair Display', Georgia, serif;
+
+  min-height: 70vh;
+  padding: 2.5rem 0 5rem;
+  background: var(--ck-bg);
+  color: var(--ck-ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+.ck-wrap { max-width: 74rem; margin: 0 auto; padding: 0 1.5rem; }
+.ck-wrap--narrow { max-width: 46rem; }
+
+.ck-h1 {
+  font-family: var(--ck-serif);
+  font-size: clamp(1.9rem, 4.4vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.15;
 }
 
-.content-glow {
-  pointer-events: none;
-  position: absolute;
-  inset: -5% -10% auto -10%;
-  height: 40%;
-  background: radial-gradient(ellipse at 50% 0%, rgba(139, 124, 255, 0.1), transparent 60%);
-  z-index: 0;
+.ck-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 2rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ck-ink-2);
+  text-decoration: none;
+}
+.ck-back:hover { color: var(--ck-coral-deep); }
+
+.ck-loading { padding: 3rem 0; text-align: center; color: var(--ck-ink-2); }
+
+.ck-tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.ck-tag {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(200, 84, 61, 0.1);
+  color: var(--ck-coral-deep);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.ck-meta { font-size: 0.8125rem; color: #a08f81; }
+
+.ck-article__head { margin-bottom: 1.75rem; }
+.ck-article__head .ck-h1 { margin-top: 0.75rem; }
+.ck-article__head .ck-meta { margin-top: 0.75rem; }
+.ck-article__cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 1rem;
+  margin-bottom: 2rem;
 }
 
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+/* ---------- 正文 ---------- */
+.ck-prose {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: #3f362f;
 }
+.ck-prose :deep(h2) {
+  margin: 2.25rem 0 0.75rem;
+  font-family: var(--ck-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--ck-ink);
+}
+.ck-prose :deep(h3) {
+  margin: 1.75rem 0 0.6rem;
+  font-family: var(--ck-serif);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ck-ink);
+}
+.ck-prose :deep(p) { margin: 1rem 0; }
+.ck-prose :deep(strong) { font-weight: 700; color: var(--ck-ink); }
+.ck-prose :deep(em) { font-style: italic; }
+.ck-prose :deep(ul),
+.ck-prose :deep(ol) { margin: 1rem 0; padding-left: 1.4rem; }
+.ck-prose :deep(li) { margin: 0.45rem 0; }
+.ck-prose :deep(a) { color: var(--ck-coral-deep); font-weight: 600; text-underline-offset: 3px; }
+.ck-prose :deep(blockquote) {
+  margin: 1.5rem 0;
+  padding: 0.9rem 1.25rem;
+  border-left: 3px solid var(--ck-coral);
+  border-radius: 0 0.6rem 0.6rem 0;
+  background: var(--ck-cream);
+  font-family: var(--ck-serif);
+  font-size: 1.0625rem;
+  font-style: italic;
+  color: var(--ck-ink);
+}
+.ck-prose :deep(blockquote p) { margin: 0.4rem 0; }
+.ck-prose :deep(hr) { margin: 2.5rem 0; border: 0; border-top: 1px solid var(--ck-line); }
+.ck-prose :deep(code) {
+  padding: 0.12rem 0.4rem;
+  border-radius: 0.3rem;
+  background: var(--ck-cream);
+  font-size: 0.9em;
+}
+
+/* ---------- 文末 CTA ---------- */
+.ck-article__foot { margin-top: 3rem; }
+.ck-cta {
+  padding: 2rem;
+  border-radius: 1.1rem;
+  background: var(--ck-cream);
+  text-align: center;
+}
+.ck-cta__title { margin: 0; font-family: var(--ck-serif); font-size: 1.6rem; font-weight: 600; }
+.ck-cta__text { margin: 0.6rem auto 1.25rem; max-width: 38ch; font-size: 0.9375rem; line-height: 1.6; color: var(--ck-ink-2); }
+.ck-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: 999px;
+  background: var(--ck-coral);
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.ck-btn:hover { background: var(--ck-coral-deep); }
+
+/* ---------- 相关 ---------- */
+.ck-related { margin-top: 4rem; }
+.ck-related__title {
+  margin: 0 0 1.25rem;
+  font-family: var(--ck-serif);
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+.ck-related__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; }
+.ck-related__item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid var(--ck-line);
+  border-radius: 0.9rem;
+  background: var(--ck-white);
+  text-decoration: none;
+  transition: transform 0.16s ease;
+}
+.ck-related__item:hover { transform: translateY(-2px); }
+.ck-related__item img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 0.6rem; }
+.ck-related__text { font-size: 0.875rem; font-weight: 600; line-height: 1.4; color: var(--ck-ink); }
 </style>

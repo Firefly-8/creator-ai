@@ -91,7 +91,10 @@ export default defineEventHandler(async (event) => {
   const image = await createImageRecord(auth.uid, {
     prompt,
     prompt_final: finalPrompt,
-    scene,
+    // ⚠️ 存 scenario id（而不是 body.scene 的 'general'）——
+    //    「My cards」列表要按场景显示「给妈妈的生日卡」这类人话，
+    //    存 'general' 就只能显示一个泛泛的标签。
+    scene: scenarioUsed || scene,
     model,
     mode,
     aspectRatio,
