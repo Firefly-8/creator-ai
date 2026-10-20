@@ -212,3 +212,47 @@ curl -s -X POST -H "Authorization: Bearer $CF_API_TOKEN" \
 5. 等待用户确认"推送"
 6. 执行 git push
 7. 验证 staging 环境（curl -I https://staging.creator.yozzytools.com）
+
+---
+
+## 静态资源约定（2026-10-20 起）⚠️
+
+**静态资源（字体 / 品牌成品图 / 样例图 / 社交图）不放 `public/`，一律走 R2 直链。**
+
+| 项 | 值 |
+|---|---|
+| 公开桶 | `craftai-assets`（**独立于私有桶 `craftai-storage`**） |
+| 域名 | `https://assets.yozzytools.com`（R2 自定义域） |
+| 常量 | `utils/assets.ts` → `ASSET_BASE` / `assetUrl()` |
+| 目录 | `fonts/` `showcase/` `samples/` `source/` `og-image.jpg` |
+| CORS | 桶级规则 `Access-Control-Allow-Origin: *`（**跨域 @font-face 必须有**） |
+| 缓存 | 字体 `max-age=31536000, immutable`；图片 `max-age=604800` |
+
+**为什么**：
+1. 放进应用包 → 每次部署重传 3.3MB，占 Pages 文件配额
+2. 这些资源跨环境共享（与生产/预发布无关），只需上传一次
+3. R2 可单独配 cache-control 和 CORS
+
+**⚠️ 绝对不能**把用户生成的内容放进 `craftai-assets`（那是公开桶）——
+用户图片只在私有桶 `craftai-storage`。
+
+**改文案/换图后的重建流程**：
+```bash
+node scripts/build-assets.mjs         # 底图 → 叠排版 → WebP → 上传 showcase/
+node scripts/build-static-assets.mjs  # 字体实例化 + 样例 + 社交图 → 上传
+```
+两个脚本都支持 `--dry-run`（只构建到 `.assets/` 不上传）。
+底图（无文字的生成图）在 R2 的 `source/` 下，仓库不存。
+
+**换 R2 域名时**要同时改三处：`utils/assets.ts`、
+`assets/css/brand-fonts.css`（@font-face 的 url() 里不能用 CSS 变量，只能写死）、
+`pages/index.vue` 的 preload link。
+
+---
+
+## 成品卡片排版规范（2026-10-20）
+
+**图上字下**。详见 `docs/implementation-notes-cards.md`，关键三条：
+1. **模型一个字都不许画** —— prompt 自动带 `NO_TEXT_CLAUSE`（实测会写出 "Happy 70th Runthdscket"）
+2. 有参考图（i2i）时只给 `i2iSafe` 画风（强画风会改写主体特征）
+3. sharp 合成：`text` 无 `size` 参数（靠 `dpi = 字号 × 6`），**不能同时给 width 和 height**
