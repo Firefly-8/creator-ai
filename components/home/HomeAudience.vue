@@ -47,7 +47,7 @@ const audiences: Audience[] = [
     image: 'https://assets.yozzytools.com/showcase/person-mum.webp',
     alt: 'A watercolour card of roses and carnations in a morning-lit garden',
     icon: 'ph-flower-lotus',
-    href: '/cards?scenario=parents-day&for=mum',
+    href: '/for/mum',
   },
   {
     id: 'dad',
@@ -56,7 +56,7 @@ const audiences: Audience[] = [
     image: 'https://assets.yozzytools.com/showcase/person-dad.webp',
     alt: 'An oil pastel card of a golf course at golden hour',
     icon: 'ph-golf',
-    href: '/cards?scenario=retirement&for=dad',
+    href: '/for/dad',
   },
   {
     id: 'grandma',
@@ -65,7 +65,7 @@ const audiences: Audience[] = [
     image: 'https://assets.yozzytools.com/showcase/person-grandma.webp',
     alt: 'An oil painting of golden balloons and white roses for a milestone birthday',
     icon: 'ph-crown',
-    href: '/cards?scenario=milestone&for=grandma',
+    href: '/for/grandma',
   },
   {
     id: 'grandpa',
@@ -74,7 +74,7 @@ const audiences: Audience[] = [
     image: 'https://assets.yozzytools.com/showcase/person-grandpa.webp',
     alt: 'A vintage postcard style card of a rocking chair on a porch',
     icon: 'ph-armchair',
-    href: '/cards?scenario=milestone&for=grandpa',
+    href: '/for/grandpa',
   },
   {
     id: 'friend',
@@ -83,7 +83,7 @@ const audiences: Audience[] = [
     image: 'https://assets.yozzytools.com/showcase/person-friend.webp',
     alt: 'A watercolour card of wildflowers and a warm cup of tea',
     icon: 'ph-coffee',
-    href: '/cards?scenario=thank-you',
+    href: '/for/friend',
   },
   {
     id: 'partner',
@@ -92,7 +92,7 @@ const audiences: Audience[] = [
     image: 'https://assets.yozzytools.com/showcase/person-partner.webp',
     alt: 'An oil painting of white lace, ribbons and soft roses',
     icon: 'ph-rings',
-    href: '/cards?scenario=wedding',
+    href: '/for/partner',
   },
   {
     id: 'teacher',
@@ -101,7 +101,7 @@ const audiences: Audience[] = [
     image: 'https://assets.yozzytools.com/showcase/person-teacher.webp',
     alt: 'An impressionist painting of a beach at sunset with a single chair',
     icon: 'ph-chalkboard',
-    href: '/cards?scenario=retirement&for=teacher',
+    href: '/for/teacher',
   },
   {
     id: 'pet',
@@ -110,7 +110,7 @@ const audiences: Audience[] = [
     image: 'https://assets.yozzytools.com/showcase/person-pet.webp',
     alt: 'A hand painted watercolour portrait of a golden retriever wearing a party hat',
     icon: 'ph-paw-print',
-    href: '/cards?scenario=pet',
+    href: '/for/pet',
   },
 ]
 </script>

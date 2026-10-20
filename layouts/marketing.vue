@@ -64,6 +64,12 @@
             <NuxtLink to="/gallery">Gallery</NuxtLink>
           </div>
           <div>
+            <p class="mk-foot__label">Who is it for</p>
+            <NuxtLink v-for="a in audiences" :key="a.slug" :to="`/for/${a.slug}`">
+              For {{ a.short }}
+            </NuxtLink>
+          </div>
+          <div>
             <p class="mk-foot__label">Company</p>
             <NuxtLink to="/about">About</NuxtLink>
             <NuxtLink to="/contact">Contact</NuxtLink>
@@ -90,11 +96,13 @@
 <script setup lang="ts">
 import CookieConsent from '~/components/ui/CookieConsent.vue'
 import FeedbackModal from '~/components/ui/FeedbackModal.vue'
+import { AUDIENCES } from '~/utils/audiences'
 
 const { user, authReady, logout } = useAuth()
 const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
 const mobileOpen = ref(false)
 const feedbackOpen = ref(false)
+const audiences = AUDIENCES
 
 async function handleLogout() {
   await logout()

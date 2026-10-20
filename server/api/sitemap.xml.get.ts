@@ -3,9 +3,10 @@
  * Includes all public pages + blog posts for SEO
  */
 import { getDB } from '../utils/db-runtime'
+import { AUDIENCES } from '../../utils/audiences'
 
 export default defineEventHandler(async (event) => {
-  const baseUrl = 'https://creator.yozzytools.com'
+  const baseUrl = 'https://create.yozzytools.com'
 
   const routes = [
     { path: '/', priority: 1.0, changefreq: 'daily' },
@@ -21,7 +22,16 @@ export default defineEventHandler(async (event) => {
     { path: '/signup', priority: 0.4, changefreq: 'monthly' },
     { path: '/ai-music-generator', priority: 0.7, changefreq: 'weekly' },
     { path: '/ai-image-generator', priority: 0.7, changefreq: 'weekly' },
+    { path: '/cards', priority: 0.9, changefreq: 'weekly' },
+    { path: '/gallery', priority: 0.8, changefreq: 'weekly' },
+    { path: '/music-library', priority: 0.4, changefreq: 'monthly' },
+    { path: '/tools', priority: 0.4, changefreq: 'monthly' },
   ]
+
+  // 按人分类的落地页 —— 主要的长尾流量入口
+  for (const a of AUDIENCES) {
+    routes.push({ path: `/for/${a.slug}`, priority: 0.85, changefreq: 'weekly' })
+  }
 
   // 获取已发布文章
   const db = getDB(event)
