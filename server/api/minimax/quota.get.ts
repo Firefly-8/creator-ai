@@ -55,20 +55,34 @@ export default defineEventHandler(async (event) => {
     '/account/plan',
     '/v1/subscription/info',
     '/v1/query_plan_info',
+    '/v1/api/openplatform/coding_plan/remains',
+    '/v1/api/openplatform/plan_info',
+    '/v1/query_user_info',
+    '/v1/user/info',
+    '/account/query_info',
+    '/v1/token_plan/user_info',
+    '/v1/image_generation/quota',
+    '/v1/query_image_quota',
+    '/account/query_image_quota',
+    '/v1/token_plan/image_remains',
+    '/v1/image_quota',
+    '/v1/query_daily_quota',
+    '/v1/token_plan/remains/daily',
   ]
   const planInfos: any[] = []
   if (getQuery(event).planinfo) {
     for (const p of planInfoCandidates) {
       const r = await probeJson(`${baseUrl}${p}`, key)
       planInfos.push({ path: p, status: r.status, body: r.body, error: r.error })
-      if (r.status === 200 && r.body) break
+      if (r.status === 200 && r.body && !String(r.body).includes('"status_code":2013')) break
     }
   }
 
-  // 实测：生成 1 张图，看 5 小时窗口额度掉了多少（需带一次性 token）
+  // 实测：生成 N 张图，看 5 小时窗口 / 周窗口额度掉了多少（需带一次性 token）
   let probeResult: any = null
   const probeToken = getQuery(event).probe
   if (probeToken) {
+    const probeN = Math.min(9, Math.max(1, Number(getQuery(event).n) || 1))
     const before = await probeJson(`${baseUrl}/v1/token_plan/remains`, key)
     const genRes = await fetch(`${baseUrl}/v1/image_generation`, {
       method: 'POST',
@@ -77,7 +91,7 @@ export default defineEventHandler(async (event) => {
         model: 'image-01',
         prompt: 'a simple solid blue circle centered on a plain white background, flat vector',
         aspect_ratio: '1:1',
-        n: 1,
+        n: probeN,
         response_format: 'url',
         prompt_optimizer: false,
       }),
@@ -89,9 +103,12 @@ export default defineEventHandler(async (event) => {
       return m ? {
         interval: m.current_interval_remaining_percent,
         weekly: m.current_weekly_remaining_percent,
+        endTime: m.end_time,
+        weeklyEndTime: m.weekly_end_time,
       } : null
     }
     probeResult = {
+      n: probeN,
       genStatus: genRes.status,
       genBaseResp: genBody?.base_resp || null,
       genImageCount: Array.isArray(genBody?.data?.image_urls) ? genBody.data.image_urls.length : 0,
