@@ -4,6 +4,7 @@
  * 用来快速判断线上环境是否正常，尤其是：
  *   - D1 绑定是否配置成功（以及从哪条路径拿到的）
  *   - 关键环境变量是否齐备（只报有无，不报值）
+ *   - MiniMax API Key 能否正常解密（密钥链路是否通）
  *
  * 公开端点，不返回任何敏感信息。
  */
@@ -21,13 +22,26 @@ function getRuntimeEnv(event: any): Record<string, any> {
   return (globalThis as any).__env__ || {}
 }
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
   const { db, source, available } = resolveDB(event)
   const env = getRuntimeEnv(event)
 
   const has = (key: string) => {
     const v = env[key]
     return typeof v === 'string' ? v.length > 0 : v !== undefined && v !== null
+  }
+
+  // 验证 MiniMax 密钥链路：主密钥 + 加密后的 API Key 能否解开
+  let minimax: { configured: boolean; error: string | null } = {
+    configured: false,
+    error: null,
+  }
+  try {
+    const { getDecryptedApiKey } = await import('../utils/secureConfig')
+    const key = await getDecryptedApiKey()
+    minimax = { configured: Boolean(key), error: key ? null : '密钥为空' }
+  } catch (err: any) {
+    minimax = { configured: false, error: err?.message || String(err) }
   }
 
   return {
@@ -48,7 +62,6 @@ export default defineEventHandler((event) => {
       ENCRYPTION_MASTER_KEY: has('ENCRYPTION_MASTER_KEY'),
       MINIMAX_BASE_URL: has('MINIMAX_BASE_URL'),
     },
-    // 只列 key 名，不列值，方便核对变量到底有没有注入到 worker
-    envKeys: Object.keys(env).sort(),
+    minimax,
   }
 })
