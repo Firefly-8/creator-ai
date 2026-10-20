@@ -10,9 +10,15 @@ export function useAuthModal() {
     isOpen.value = true
   }
 
-  function openSignup() {
+  function openSignup(path?: string) {
     initialMode.value = 'signup'
+    redirectPath.value = path || null
     isOpen.value = true
+  }
+
+  /** 注册完成后跳回原页面（之前只有登录有，注册会丢掉 redirect） */
+  function openSignupWithRedirect(path?: string) {
+    openSignup(path)
   }
 
   function openLoginWithRedirect(path?: string) {
@@ -36,6 +42,7 @@ export function useAuthModal() {
     openLogin,
     openSignup,
     openLoginWithRedirect,
+    openSignupWithRedirect,
     clearRedirect,
     close,
   }
