@@ -113,7 +113,6 @@ const mobileNavOpen = ref(false)
 const { user, authReady, logout } = useAuth()
 const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
 const { isOpen: feedbackOpen, openFeedback } = useFeedback()
-useRobots()
 
 async function handleLogout() {
   await logout()
