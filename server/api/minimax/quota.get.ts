@@ -32,7 +32,7 @@ async function probeJson(url: string, key: string) {
   }
 }
 
-export default defineEventHandler(async () => {
+export default defineEventHandler(async (event) => {
   let key = ''
   try {
     key = await getDecryptedApiKey()
@@ -45,6 +45,61 @@ export default defineEventHandler(async () => {
 
   // 订阅制额度：5 小时窗口 / 每日 / 每周
   const plan = await probeJson(`${baseUrl}/v1/token_plan/remains`, key)
+
+  // 探测可能的「套餐信息」接口（零成本，用来确认档位）
+  const planInfoCandidates = [
+    '/v1/token_plan/info',
+    '/v1/token_plan/plan',
+    '/v1/token_plan/quota',
+    '/account/query_plan',
+    '/account/plan',
+    '/v1/subscription/info',
+    '/v1/query_plan_info',
+  ]
+  const planInfos: any[] = []
+  if (getQuery(event).planinfo) {
+    for (const p of planInfoCandidates) {
+      const r = await probeJson(`${baseUrl}${p}`, key)
+      planInfos.push({ path: p, status: r.status, body: r.body, error: r.error })
+      if (r.status === 200 && r.body) break
+    }
+  }
+
+  // 实测：生成 1 张图，看 5 小时窗口额度掉了多少（需带一次性 token）
+  let probeResult: any = null
+  const probeToken = getQuery(event).probe
+  if (probeToken) {
+    const before = await probeJson(`${baseUrl}/v1/token_plan/remains`, key)
+    const genRes = await fetch(`${baseUrl}/v1/image_generation`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'image-01',
+        prompt: 'a simple solid blue circle centered on a plain white background, flat vector',
+        aspect_ratio: '1:1',
+        n: 1,
+        response_format: 'url',
+        prompt_optimizer: false,
+      }),
+    })
+    const genBody = await genRes.json().catch(() => null)
+    const after = await probeJson(`${baseUrl}/v1/token_plan/remains`, key)
+    const pct = (r: any) => {
+      const m = r?.body?.model_remains?.find((x: any) => x.model_name === 'general')
+      return m ? {
+        interval: m.current_interval_remaining_percent,
+        weekly: m.current_weekly_remaining_percent,
+      } : null
+    }
+    probeResult = {
+      genStatus: genRes.status,
+      genBaseResp: genBody?.base_resp || null,
+      genImageCount: Array.isArray(genBody?.data?.image_urls) ? genBody.data.image_urls.length : 0,
+      genError: genBody?.error || null,
+      before: pct(before),
+      after: pct(after),
+    }
+  }
 
   // 按量计费余额（两种历史路径都试）
   const balanceCandidates = [
@@ -64,6 +119,8 @@ export default defineEventHandler(async () => {
     keyKind: kind,
     keyLength: key.length,
     plan,
+    planInfos,
+    probeResult,
     balances,
     timestamp: new Date().toISOString(),
   }
