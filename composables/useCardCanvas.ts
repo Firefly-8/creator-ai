@@ -12,6 +12,8 @@
  */
 import { ref, shallowRef, computed, onMounted, watch } from 'vue'
 import { CARD_SPECS, getCardSpec, defaultSpecFor, type CardSpec } from '~/utils/cardSpecs'
+// 字体在 R2 上（不在应用包里），见 utils/assets.ts
+import { ASSET_BASE, FONT_FILES as FONT_FILE_NAMES } from '~/utils/assets'
 
 export interface CardTextItem {
   id: string
@@ -42,13 +44,6 @@ export interface CardDraft {
   texts: CardTextItem[]
 }
 
-const FONT_FILES: Record<string, { file: string; weight?: string }> = {
-  display: { file: 'PlayfairDisplay-SemiBold.ttf' },
-  displayBold: { file: 'PlayfairDisplay-Bold.ttf' },
-  body: { file: 'Lora-Regular.ttf' },
-  script: { file: 'Caveat-Bold.ttf' },
-}
-
 /** 预览宽度（CSS 像素），导出时按倍率放大 */
 const PREVIEW_W = 560
 
@@ -74,9 +69,9 @@ export function useCardCanvas(initial?: Partial<CardDraft>) {
     if (import.meta.server) return
     try {
       const faces = await Promise.all(
-        Object.entries(FONT_FILES).map(async ([key, meta]) => {
-          const face = new FontFace(key, `url(/fonts/${meta.file})`, {
-            weight: meta.weight || 'normal',
+        Object.entries(FONT_FILE_NAMES).map(async ([key, file]) => {
+          const face = new FontFace(key, `url(${ASSET_BASE}/fonts/${file})`, {
+            weight: 'normal',
           })
           await face.load()
           document.fonts.add(face)

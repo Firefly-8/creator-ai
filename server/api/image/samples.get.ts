@@ -7,11 +7,11 @@
 import { defineEventHandler } from 'h3'
 
 const SAMPLES = [
-  { id: 'person-pet', url: '/samples/person-pet.webp', label: 'A golden retriever in a party hat' },
-  { id: 'person-grandma', url: '/samples/person-grandma.webp', label: 'Golden balloons and white roses' },
-  { id: 'person-mum', url: '/samples/person-mum.webp', label: 'Roses and a cup of tea' },
-  { id: 'scene-christmas', url: '/samples/scene-christmas.webp', label: 'A decorated Christmas tree' },
-  { id: 'scene-wallart', url: '/samples/scene-wallart.webp', label: 'A village street in the afternoon' },
+  { id: 'person-pet', url: 'https://assets.yozzytools.com/samples/person-pet.webp', label: 'A golden retriever in a party hat' },
+  { id: 'person-grandma', url: 'https://assets.yozzytools.com/samples/person-grandma.webp', label: 'Golden balloons and white roses' },
+  { id: 'person-mum', url: 'https://assets.yozzytools.com/samples/person-mum.webp', label: 'Roses and a cup of tea' },
+  { id: 'scene-christmas', url: 'https://assets.yozzytools.com/samples/scene-christmas.webp', label: 'A decorated Christmas tree' },
+  { id: 'scene-wallart', url: 'https://assets.yozzytools.com/samples/scene-wallart.webp', label: 'A village street in the afternoon' },
 ]
 
 export default defineEventHandler(() => {

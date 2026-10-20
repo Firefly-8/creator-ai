@@ -38,14 +38,14 @@
         <!-- 真实成品卡示例（不是占位图） -->
         <div class="ck-hero__art">
           <div class="ck-card ck-card--hero">
-            <img src="/showcase/hero-birthday.webp" alt="A finished birthday card with the words Happy Birthday, Margaret" />
+            <img src="https://assets.yozzytools.com/showcase/hero-birthday.webp" alt="A finished birthday card with the words Happy Birthday, Margaret" />
             <div class="ck-card__caption">
               <p class="ck-card__kicker">Their inside joke</p>
               <p class="ck-card__line">“Margaret still does the crossword in pen.”</p>
             </div>
           </div>
           <div class="ck-card ck-card--peek" aria-hidden="true">
-            <img src="/showcase/scene-christmas.webp" alt="" />
+            <img src="https://assets.yozzytools.com/showcase/scene-christmas.webp" alt="" />
           </div>
         </div>
       </div>
@@ -95,7 +95,7 @@
           </NuxtLink>
         </div>
         <div class="ck-season__art">
-          <img src="/showcase/scene-christmas.webp" alt="A watercolour Christmas card with a decorated tree" />
+          <img src="https://assets.yozzytools.com/showcase/scene-christmas.webp" alt="A watercolour Christmas card with a decorated tree" />
         </div>
       </div>
     </section>
@@ -167,29 +167,29 @@ definePageMeta({ layout: 'marketing' })
 
 useHead({
   title: 'Create Keepsakes — Personalised cards & canvas prints for the people you love',
+  // ⚠️ 只能有一个 meta 键 —— 对象字面量里重复 key 后者会覆盖前者，
+  //    之前分开写两个 meta 数组把 description 弄丢了
   meta: [
     {
       name: 'description',
       content:
         'Their photo, their favourite things, that joke only you get. Turn it into a card they will actually keep — name spelled right, ready to print.',
     },
-  ],
-  link: [
-    // 字体自托管，不引 Google Fonts（GDPR：外链会把用户 IP 传给 Google）
-    { rel: 'preload', as: 'font', type: 'font/ttf', href: '/fonts/PlayfairDisplay-SemiBold.ttf', crossorigin: 'anonymous' },
-    { rel: 'preload', as: 'font', type: 'font/ttf', href: '/fonts/Lora-Regular.ttf', crossorigin: 'anonymous' },
-    { rel: 'canonical', href: 'https://create.yozzytools.com/' },
-  ],
-  meta: [
     { property: 'og:title', content: 'Create Keepsakes — cards for the people you love' },
     { property: 'og:description', content: 'Their photo, their favourite things, that joke only you get. A card they will actually keep.' },
     { property: 'og:type', content: 'website' },
     { property: 'og:url', content: 'https://create.yozzytools.com/' },
-    { property: 'og:image', content: 'https://create.yozzytools.com/og-image.jpg' },
+    { property: 'og:image', content: 'https://assets.yozzytools.com/og-image.jpg' },
     { property: 'og:image:width', content: '1200' },
     { property: 'og:image:height', content: '630' },
     { name: 'twitter:card', content: 'summary_large_image' },
-    { name: 'twitter:image', content: 'https://create.yozzytools.com/og-image.jpg' },
+    { name: 'twitter:image', content: 'https://assets.yozzytools.com/og-image.jpg' },
+  ],
+  link: [
+    // 字体自托管在 R2，不引 Google Fonts（GDPR：外链会把用户 IP 传给 Google）
+    { rel: 'preload', as: 'font', type: 'font/ttf', href: 'https://assets.yozzytools.com/fonts/PlayfairDisplay-SemiBold.ttf', crossorigin: 'anonymous' },
+    { rel: 'preload', as: 'font', type: 'font/ttf', href: 'https://assets.yozzytools.com/fonts/Lora-Regular.ttf', crossorigin: 'anonymous' },
+    { rel: 'canonical', href: 'https://create.yozzytools.com/' },
   ],
 })
 
@@ -233,22 +233,22 @@ const whys = [
 
 const gallery = [
   {
-    image: '/showcase/person-grandma.webp',
+    image: 'https://assets.yozzytools.com/showcase/person-grandma.webp',
     alt: 'A milestone birthday card in oil painting style',
     caption: 'Milestone birthdays — for the big one',
   },
   {
-    image: '/showcase/scene-wallart.webp',
+    image: 'https://assets.yozzytools.com/showcase/scene-wallart.webp',
     alt: 'An impressionist painting of a small hometown street',
     caption: 'Wall art — the place you grew up',
   },
   {
-    image: '/showcase/person-pet.webp',
+    image: 'https://assets.yozzytools.com/showcase/person-pet.webp',
     alt: 'A hand painted portrait of a golden retriever',
     caption: 'Pets — the one who is really in charge',
   },
   {
-    image: '/showcase/scene-thankyou-parent.webp',
+    image: 'https://assets.yozzytools.com/showcase/scene-thankyou-parent.webp',
     alt: 'A quiet get well soon card in oil pastel',
     caption: 'Get well soon — said gently',
   },

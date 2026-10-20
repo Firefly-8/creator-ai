@@ -1,5 +1,9 @@
 /**
- * 品牌字体 —— 自托管（不引 Google Fonts）
+ * 品牌字体 —— 自托管（不引 Google Fonts），且放在 R2 上（不在应用包里）
+ *
+ * 字体文件：https://assets.yozzytools.com/fonts/*.ttf
+ * ⚠️ url() 里不能用 CSS 变量，所以域名写死在这里；
+ *    换域名时这里和 utils/assets.ts 要一起改。
  *
  * ⚠️ 为什么不引外链：
  *   1. GDPR / UK GDPR：引用 fonts.googleapis.com 会把用户 IP 传给 Google。
@@ -14,21 +18,21 @@
 /* ---------- Playfair Display（衬线标题） ---------- */
 @font-face {
   font-family: 'Playfair Display';
-  src: url('/fonts/PlayfairDisplay-Regular.ttf') format('truetype');
+  src: url('https://assets.yozzytools.com/fonts/PlayfairDisplay-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Playfair Display';
-  src: url('/fonts/PlayfairDisplay-SemiBold.ttf') format('truetype');
+  src: url('https://assets.yozzytools.com/fonts/PlayfairDisplay-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Playfair Display';
-  src: url('/fonts/PlayfairDisplay-Bold.ttf') format('truetype');
+  src: url('https://assets.yozzytools.com/fonts/PlayfairDisplay-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -37,14 +41,14 @@
 /* ---------- Lora（正文衬线） ---------- */
 @font-face {
   font-family: 'Lora';
-  src: url('/fonts/Lora-Regular.ttf') format('truetype');
+  src: url('https://assets.yozzytools.com/fonts/Lora-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Lora';
-  src: url('/fonts/Lora-SemiBold.ttf') format('truetype');
+  src: url('https://assets.yozzytools.com/fonts/Lora-SemiBold.ttf') format('truetype');
   font-weight: 600;
   font-style: normal;
   font-display: swap;
@@ -53,14 +57,14 @@
 /* ---------- Caveat（手写签名） ---------- */
 @font-face {
   font-family: 'Caveat';
-  src: url('/fonts/Caveat-Regular.ttf') format('truetype');
+  src: url('https://assets.yozzytools.com/fonts/Caveat-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'Caveat';
-  src: url('/fonts/Caveat-Bold.ttf') format('truetype');
+  src: url('https://assets.yozzytools.com/fonts/Caveat-Bold.ttf') format('truetype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
