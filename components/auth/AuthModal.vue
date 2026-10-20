@@ -306,7 +306,8 @@ async function handleGoogleSignIn() {
 .ck-auth__overlay {
   position: fixed;
   inset: 0;
-  z-index: 80;
+  /* ⚠️ 必须高于 CookieConsent 的 z-[100]，否则 cookie 条会浮在弹窗上面 */
+  z-index: 120;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -389,7 +390,7 @@ async function handleGoogleSignIn() {
 }
 .ck-auth__tab {
   flex: 1;
-  padding: 0.6rem 0.75rem;
+  padding: 0.6rem 0.5rem;
   border: none;
   border-radius: 999px;
   background: transparent;
@@ -397,6 +398,7 @@ async function handleGoogleSignIn() {
   font-weight: 600;
   color: var(--ck-ink-2);
   cursor: pointer;
+  white-space: nowrap;
   transition: background 0.16s ease, color 0.16s ease;
 }
 .ck-auth__tab:hover { color: var(--ck-ink); }
