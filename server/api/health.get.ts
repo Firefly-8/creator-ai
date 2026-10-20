@@ -63,5 +63,11 @@ export default defineEventHandler(async (event) => {
       MINIMAX_BASE_URL: has('MINIMAX_BASE_URL'),
     },
     minimax,
+    // 逐个键报告"有没有值"，不报值本身
+    envPresent: Object.fromEntries(
+      Object.keys(env)
+        .sort()
+        .map((k) => [k, has(k)])
+    ),
   }
 })
