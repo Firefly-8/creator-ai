@@ -17,7 +17,10 @@
 </template>
 
 <script setup lang="ts">
-// ⚠️ 同 LanguageSwitcher：不要用 useI18n()，用全局 $i18n
+// ⚠️ 不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，客户端拿到的
+// t 不是函数 → 模板里一调 t(...) 就抛 "i.t is not a function" → 整页 500。
+// 翻译一律走 useT()（内部是 useNuxtApp().$i18n.t），locale/setLocale 走 $i18n。
+const { t } = useT()
 const { $i18n } = useNuxtApp()
 const locale = $i18n.locale
 const setLocale = (code: string) => $i18n.setLocale(code as any)
