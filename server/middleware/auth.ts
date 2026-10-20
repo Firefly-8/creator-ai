@@ -10,6 +10,7 @@ const PUBLIC_PATHS = [
   '/api/subscriptions/plans',
   '/api/gallery',
   '/api/blog',
+  '/api/health',
   '/api/robots',
   '/api/sitemap',
   '/api/upload',

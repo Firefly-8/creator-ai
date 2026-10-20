@@ -1,14 +1,38 @@
+# ⚠️ 本文件不是 Cloudflare Pages 的部署配置源，请勿在 Pages 项目里依赖它
+#
+# 背景：CF Pages 的 Git 集成会把仓库根目录的 wrangler.toml 当作 "source of truth"，
+# 每次部署都用文件里的绑定覆盖 Dashboard 里配置的绑定。
+# 但生产（craftai）和预发布（craftai-staging）两个 Pages 项目共用这一个仓库，
+# 它们需要绑定不同的 D1 数据库，单个文件无法同时表达。
+#
+# 解决办法：这里**不写** pages_build_output_dir。缺少该 key 时，CF Pages 会忽略本文件，
+# Dashboard 侧的绑定配置才会生效（见 scripts/cf-bindings.py，已配置为：
+#   craftai          production → craftai-db          (bb60e6ae-...)
+#                    preview    → craftai-db-staging  (8e812571-...)
+#   craftai-staging  production → craftai-db-staging  (8e812571-...)
+#                    preview    → craftai-db-staging  (8e812571-...)
+# ）预发布环境一律指向 craftai-db-staging，避免写脏生产数据。
+#
+# 下面这些绑定只服务于本地 `wrangler pages dev` 开发，不影响线上。
+# 线上环境变量（MINIMAX_API_KEY / APP_SECRET 等）配置在 Cloudflare Dashboard。
+
 name = "craftai"
 compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
 
-# Cloudflare Pages 配置
-pages_build_output_dir = "dist"
+# D1 数据库绑定（本地开发用；线上绑定见上方说明）
+[[d1_databases]]
+binding = "DB"
+database_name = "craftai-db-staging"
+database_id = "8e812571-57b0-4232-bfc4-13264dc9e420"
+migrations_dir = "server/db/migrations"
 
-# 注意：D1/KV/R2 绑定由 Cloudflare Pages 项目配置管理
-# 请通过 CF Dashboard 或 API 修改，不要在这里配置（会覆盖项目设置）
+# R2 存储桶绑定
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "craftai-storage"
 
-# 环境变量（非敏感）
-[vars]
-NUXT_PUBLIC_APP_NAME = "Creator"
-NUXT_PUBLIC_SITE_URL = "https://creator.yozzytools.com"
-MINIMAX_BASE_URL = "https://api.minimaxi.com"
+# KV 命名空间（限流/缓存）
+[[kv_namespaces]]
+binding = "CACHE"
+id = "4ebb1e030d274e2dbf35ab559d602649"

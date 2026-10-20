@@ -6,6 +6,8 @@
  * 不加密字段：id, status, created_at 等（用于查询和索引）
  */
 
+import { DB_BINDING_NAME, resolveDB } from './db-runtime'
+
 // ============ 类型定义 ============
 
 export interface ImageRow {
@@ -81,37 +83,23 @@ export function setD1Database(db: D1Database) {
 }
 
 /**
- * 获取 D1 数据库实例（从 CF Workers binding）
+ * 获取 D1 数据库实例
+ *
+ * 统一走 server/utils/db-runtime.ts 的解析逻辑，
+ * 避免这里再维护一套平行实现（历史上两套路径不一致导致线上取不到 DB）。
  */
 function getD1(): D1Database {
   if (d1Instance) return d1Instance
-  
-  // CF Workers 环境：从 globalThis 获取 DB binding
-  const d1 = (globalThis as any).DB
-  if (d1) {
-    d1Instance = d1
-    return d1
-  }
-  
-  // 尝试其他路径
-  console.log('[DB] globalThis.DB not found, checking other paths...')
-  const env2 = (globalThis as any).__env
-  if (env2?.DB) {
-    console.log('[DB] Found DB via __env.DB')
-    d1Instance = env2.DB
-    return d1Instance
-  }
 
-  const cf = (globalThis as any).__cloudflare?.env
-  if (cf?.DB) {
-    console.log('[DB] Found DB via __cloudflare.env.DB')
-    d1Instance = cf.DB
-    return d1Instance
+  const { db, source } = resolveDB()
+  if (!db) {
+    throw new Error(
+      `D1 database not available (binding "${DB_BINDING_NAME}" missing). ` +
+      'Check Cloudflare Pages → Settings → Functions → D1 database bindings.'
+    )
   }
-
-  console.log('[DB] D1 not available. globalThis keys:', Object.keys(globalThis).filter(k => k.toLowerCase().includes('db') || k.toLowerCase().includes('env') || k.toLowerCase().includes('cloudflare')))
-
-  throw new Error('D1 database not available. Ensure DB binding is configured in wrangler.toml')
+  d1Instance = db
+  return d1Instance
 }
 
 // ============ 异步查询接口 ============
