@@ -10,15 +10,24 @@
 import { defineEventHandler } from 'h3'
 import { DB_BINDING_NAME, resolveDB } from '../utils/db-runtime'
 
+/**
+ * 读运行时的绑定环境。
+ * Cloudflare Pages 上是 worker 的 env：globalThis.__env__（Nitro 每次请求设置）
+ * 或 event.context._platform.cloudflare.env。
+ */
+function getRuntimeEnv(event: any): Record<string, any> {
+  const cf = event?.context?._platform?.cloudflare?.env
+  if (cf) return cf
+  return (globalThis as any).__env__ || {}
+}
+
 export default defineEventHandler((event) => {
   const { db, source, available } = resolveDB(event)
-  const config = useRuntimeConfig()
+  const env = getRuntimeEnv(event)
 
-  const envChecks = {
-    MINIMAX_API_KEY: Boolean(config.minimaxApiKey || process.env.MINIMAX_API_KEY),
-    ENCRYPTED_MINIMAX_API_KEY: Boolean(config.encryptedMinimaxApiKey || process.env.ENCRYPTED_MINIMAX_API_KEY),
-    APP_SECRET: Boolean(config.appSecret || process.env.APP_SECRET),
-    ENCRYPTION_MASTER_KEY: Boolean(config.encryptionMasterKey || process.env.ENCRYPTION_MASTER_KEY),
+  const has = (key: string) => {
+    const v = env[key]
+    return typeof v === 'string' ? v.length > 0 : v !== undefined && v !== null
   }
 
   return {
@@ -32,6 +41,12 @@ export default defineEventHandler((event) => {
         ? null
         : `D1 binding "${DB_BINDING_NAME}" not found — check Cloudflare Pages → Settings → Functions → D1 database bindings`,
     },
-    env: envChecks,
+    env: {
+      MINIMAX_API_KEY: has('MINIMAX_API_KEY'),
+      ENCRYPTED_MINIMAX_API_KEY: has('ENCRYPTED_MINIMAX_API_KEY'),
+      APP_SECRET: has('APP_SECRET'),
+      ENCRYPTION_MASTER_KEY: has('ENCRYPTION_MASTER_KEY'),
+      MINIMAX_BASE_URL: has('MINIMAX_BASE_URL'),
+    },
   }
 })
