@@ -260,3 +260,43 @@ node scripts/build-static-assets.mjs  # 字体实例化 + 样例 + 社交图 →
 1. **模型一个字都不许画** —— prompt 自动带 `NO_TEXT_CLAUSE`（实测会写出 "Happy 70th Runthdscket"）
 2. 有参考图（i2i）时只给 `i2iSafe` 画风（强画风会改写主体特征）
 3. sharp 合成：`text` 无 `size` 参数（靠 `dpi = 字号 × 6`），**不能同时给 width 和 height**
+
+---
+
+## ⚠️ 三个让排查绕远路的坑（2026-10-20 全部踩过）
+
+### 1. `useI18n()` 的 `t` 在客户端可能不是函数
+Nuxt 的 auto-import 把 `useI18n` 解析到了 **vue-i18n 原始实现**
+（`.nuxt/imports.d.ts`），不是 @nuxtjs/i18n 的 runtime 包装版。
+原始版在客户端、尤其在**自动导入的 UI 组件**里拿不到 provide 的 i18n instance，
+返回的 `t` 不是函数 → 组件一渲染就抛 `n.t is not a function` → **整页 500**。
+
+- **SSR 完全正常**，只在 hydration 后炸 ⇒ 极难查
+- `error.vue` 的 h1 是**硬编码的 "404"**，看起来像路由 404，实际 statusCode 是 500
+- ✅ 一律用 `composables/useT.ts`（内部走 `useNuxtApp().$i18n.t`，全局 composer，一定可靠）
+- ❌ 不要在 `components/ui/*` 这类自动导入组件里用 `useI18n().t`
+
+### 2. 改 `.vue` 的 style 块时别用 `str.replace("</style>", ...)`
+Python 的 `str.replace` 会**替换所有出现**，把文件里唯一的 `</style>` 换掉 →
+原有 style 块没闭合 → 后面的 `<script setup>` 全被当成 CSS → 组件脚本不执行 → 500。
+**用带锚点的正则或按行插入。** 已有 `tests/nuxt-templates.test.ts` 守住标签配对。
+
+### 3. `useHead()` 只能在 setup 顶层调用
+它依赖 `inject` 拿 head 实例，写在 `onMounted` 回调里同样会炸。
+
+---
+
+## 🔍 验证 prod 行为：跑构建产物，别等部署
+
+```bash
+npm run cf:build
+npx wrangler pages dev dist --port 3222 --ip 127.0.0.1
+# 然后用 playwright 访问 http://127.0.0.1:3222/<route>
+```
+**为什么重要**：`nuxt dev` 正常、prod bundle 炸的情况很常见
+（auto-import 解析、minify、tree-shaking 只在 build 产物里才现形）。
+跑产物 1 分钟就能复现，比 push + 等部署 + 等 CDN 缓存快 5 分钟以上。
+
+配套工具：
+- `scripts/audit-pages.mjs` —— 逐页截图 + 提取风格信号（背景色/是否新风格/标题）
+- `scripts/shot-auth-modal.mjs` —— 弹窗类组件的截图验收

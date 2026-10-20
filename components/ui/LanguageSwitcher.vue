@@ -2,7 +2,7 @@
   <div class="lang-switcher">
     <button
       class="lang-switcher__btn"
-      :aria-label="t('ui.language', 'Language')"
+      aria-label="Language"
       @click="toggle"
     >
       <span class="i-ph-translate text-[15px]" />
@@ -29,7 +29,11 @@
 </template>
 
 <script setup lang="ts">
-const { locale, setLocale, t } = useI18n()
+// ⚠️ 不要用 useI18n() 的 t：auto-import 把它解析到了 vue-i18n 的原始实现
+// （见 .nuxt/imports.d.ts），客户端拿不到 instance 时 t 不是函数，
+// 组件一渲染就抛 "n.t is not a function"，整页 500。
+// locale / setLocale 来自 @nuxtjs/i18n 的包装，是安全的。
+const { locale, setLocale } = useI18n()
 const open = ref(false)
 
 const currentLocaleName = computed(() => {
