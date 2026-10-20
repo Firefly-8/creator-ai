@@ -1,583 +1,370 @@
 <template>
-  <div class="pricing-page">
-    <!-- Glow -->
-    <div class="pricing-glow" />
-
-    <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative">
-      <!-- Header -->
-      <div class="text-center max-w-2xl mx-auto">
-        <span class="pricing-badge">{{ $t('pricing.badge', 'Simple Pricing') }}</span>
-        <h1 class="font-display text-4xl font-800 text-white sm:text-5xl mt-4 leading-tight">
-          {{ $t('pricing.title') }}
-        </h1>
-        <p class="mt-4 text-lg text-ink-300 leading-relaxed">{{ $t('pricing.subtitle') }}</p>
-      </div>
-
-      <!-- Billing Toggle -->
-      <div class="mt-10 flex items-center justify-center gap-3">
-        <button
-          class="billing-toggle__label"
-          :class="{ 'is-active': !annual }"
-          @click="annual = false"
-        >
-          {{ $t('pricing.monthly', 'Monthly') }}
-        </button>
-        <button
-          class="billing-toggle"
-          :class="{ 'is-annual': annual }"
-          role="switch"
-          :aria-checked="annual"
-          :aria-label="t('pricing.toggleBilling', 'Toggle annual billing')"
-          @click="annual = !annual"
-        >
-          <span class="billing-toggle__thumb" />
-        </button>
-        <button
-          class="billing-toggle__label"
-          :class="{ 'is-active': annual }"
-          @click="annual = true"
-        >
-          {{ $t('pricing.annual', 'Annual') }}
-          <span class="billing-toggle__save">{{ $t('pricing.save20', 'Save 20%') }}</span>
-        </button>
-      </div>
-
-      <!-- Plans -->
-      <div class="mt-12 grid gap-6 lg:gap-8 lg:grid-cols-3 items-start">
-        <!-- Free -->
-        <div class="plan-card plan-card--free">
-          <div class="plan-card__head">
-            <h2 class="plan-card__name">{{ $t('pricing.free') }}</h2>
-            <p class="plan-card__desc">{{ $t('pricing.freeDesc', 'Try it out, no strings attached') }}</p>
-          </div>
-          <div class="plan-card__price">
-            <span class="plan-card__amount">$0</span>
-            <span class="plan-card__period">{{ $t('pricing.forever', 'forever') }}</span>
-          </div>
-          <NuxtLink to="/create" class="plan-card__cta plan-card__cta--ghost">
-            {{ $t('pricing.getStarted') }}
-            <span class="i-ph-arrow-right text-[14px]" />
-          </NuxtLink>
-          <div class="plan-card__divider" />
-          <ul class="plan-card__features">
-            <li><span class="plan-card__check" />{{ $t('pricing.f_free1', '10 music generations/month') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_free2', '20 image generations/month') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_free3', 'Basic quality output') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_free4', 'Community support') }}</li>
-          </ul>
-        </div>
-
-        <!-- Creator (Popular) -->
-        <div class="plan-card plan-card--popular">
-          <div class="plan-card__popular-badge">
-            <span class="i-ph-crown text-[12px]" />
-            {{ $t('pricing.popular') }}
-          </div>
-          <div class="plan-card__head">
-            <h2 class="plan-card__name">{{ $t('pricing.creator') }}</h2>
-            <p class="plan-card__desc">{{ $t('pricing.creatorDesc', 'For creators who want more') }}</p>
-          </div>
-          <div class="plan-card__price">
-            <span class="plan-card__amount">{{ annual ? '$7.99' : '$9.99' }}</span>
-            <span class="plan-card__period">{{ $t('pricing.perMonth') }}</span>
-          </div>
-          <p v-if="annual" class="plan-card__billed">{{ $t('pricing.billedAnnually', '{price} billed annually', { price: '$95.88' }) }}</p>
-          <NuxtLink to="/signup?plan=creator" class="plan-card__cta plan-card__cta--primary">
-            {{ $t('pricing.subscribe') }}
-            <span class="i-ph-arrow-right text-[14px]" />
-          </NuxtLink>
-          <div class="plan-card__divider" />
-          <ul class="plan-card__features">
-            <li><span class="plan-card__check" />{{ $t('pricing.f_creator1', '100 music generations/month') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_creator2', '200 image generations/month') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_creator3', 'HD quality, no watermark') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_creator4', 'Commercial license') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_creator5', 'Priority support') }}</li>
-          </ul>
-        </div>
-
-        <!-- Pro -->
-        <div class="plan-card plan-card--pro">
-          <div class="plan-card__head">
-            <h2 class="plan-card__name">{{ $t('pricing.pro') }}</h2>
-            <p class="plan-card__desc">{{ $t('pricing.proDesc', 'Maximum power for professionals') }}</p>
-          </div>
-          <div class="plan-card__price">
-            <span class="plan-card__amount">{{ annual ? '$15.99' : '$19.99' }}</span>
-            <span class="plan-card__period">{{ $t('pricing.perMonth') }}</span>
-          </div>
-          <p v-if="annual" class="plan-card__billed">{{ $t('pricing.billedAnnually', '{price} billed annually', { price: '$191.88' }) }}</p>
-          <NuxtLink to="/signup?plan=pro" class="plan-card__cta plan-card__cta--outline">
-            {{ $t('pricing.subscribe') }}
-            <span class="i-ph-arrow-right text-[14px]" />
-          </NuxtLink>
-          <div class="plan-card__divider" />
-          <ul class="plan-card__features">
-            <li><span class="plan-card__check" />{{ $t('pricing.f_pro1', '300 music generations/month') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_pro2', '500 image generations/month') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_pro3', 'HD quality, no watermark') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_pro4', 'API access') }}</li>
-            <li><span class="plan-card__check" />{{ $t('pricing.f_pro5', 'Dedicated support') }}</li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- Trust line -->
-      <div class="mt-12 text-center">
-        <p class="text-sm text-ink-400 flex items-center justify-center gap-4 flex-wrap">
-          <span class="flex items-center gap-1.5"><span class="i-ph-shield-check text-accent-soft" />{{ $t('pricing.trustSecure', 'Secure payment via PayPal') }}</span>
-          <span class="text-ink-600">·</span>
-          <span class="flex items-center gap-1.5"><span class="i-ph-arrow-counter-clockwise text-accent-soft" />{{ $t('pricing.trustCancel', 'Cancel anytime') }}</span>
-          <span class="text-ink-600">·</span>
-          <span class="flex items-center gap-1.5"><span class="i-ph-lightning text-accent-soft" />{{ $t('pricing.trustInstant', 'Instant activation') }}</span>
+  <div class="ck-pricing">
+    <div class="ck-wrap">
+      <!-- 标题 -->
+      <header class="ck-pricing__head">
+        <p class="ck-badge">
+          <span class="i-ph-wallet" /> Simple pricing
         </p>
+        <h1 class="ck-h1">Pay for the cards you actually make.</h1>
+        <p class="ck-lede">
+          Preview as many as you like. You only pay when a card is right, and
+          every card you make is yours to print and keep.
+        </p>
+      </header>
+
+      <!-- 三档 -->
+      <div class="ck-plans">
+        <!-- 免费 -->
+        <div class="ck-plan">
+          <h2 class="ck-plan__name">Free</h2>
+          <p class="ck-plan__desc">Try it out. No card needed.</p>
+          <p class="ck-plan__price">
+            <span class="ck-plan__amount">$0</span>
+          </p>
+          <p class="ck-plan__for">One card a day, with a small mark on it.</p>
+          <NuxtLink to="/cards" class="ck-btn ck-btn--ghost ck-btn--full">Start free</NuxtLink>
+          <ul class="ck-plan__list">
+            <li><span class="i-ph-check" /> 1 card per day</li>
+            <li><span class="i-ph-check" /> 1024 px downloads</li>
+            <li><span class="i-ph-check" /> Small mark on the file</li>
+            <li><span class="i-ph-check" /> Your photos stay private</li>
+          </ul>
+        </div>
+
+        <!-- 月付（主推） -->
+        <div class="ck-plan ck-plan--popular">
+          <span class="ck-plan__badge">Most popular</span>
+          <h2 class="ck-plan__name">Monthly</h2>
+          <p class="ck-plan__desc">For making a few through the year.</p>
+          <p class="ck-plan__price">
+            <span class="ck-plan__amount">$9.99</span>
+            <span class="ck-plan__per">/ month</span>
+          </p>
+          <p class="ck-plan__for">5 cards a month, then $2.00 for each extra one.</p>
+          <NuxtLink to="/signup?plan=creator" class="ck-btn ck-btn--primary ck-btn--full">
+            Get Monthly
+          </NuxtLink>
+          <ul class="ck-plan__list">
+            <li><span class="i-ph-check" /> 5 cards every month</li>
+            <li><span class="i-ph-check" /> Print-ready 300 DPI files</li>
+            <li><span class="i-ph-check" /> No mark on the file</li>
+            <li><span class="i-ph-check" /> Unused cards roll over</li>
+            <li><span class="i-ph-check" /> Cancel whenever you like</li>
+          </ul>
+        </div>
+
+        <!-- 买断 -->
+        <div class="ck-plan">
+          <h2 class="ck-plan__name">One-off pack</h2>
+          <p class="ck-plan__desc">For the person who makes three cards a year.</p>
+          <p class="ck-plan__price">
+            <span class="ck-plan__amount">$19.99</span>
+          </p>
+          <p class="ck-plan__for">20 cards. They never expire.</p>
+          <button class="ck-btn ck-btn--ghost ck-btn--full" disabled>
+            Pay once — coming soon
+          </button>
+          <ul class="ck-plan__list">
+            <li><span class="i-ph-check" /> 20 cards, no expiry</li>
+            <li><span class="i-ph-check" /> Print-ready 300 DPI files</li>
+            <li><span class="i-ph-check" /> No mark on the file</li>
+            <li><span class="i-ph-check" /> One payment, nothing recurring</li>
+          </ul>
+        </div>
       </div>
+
+      <!-- 信任 -->
+      <p class="ck-trust">
+        <span><span class="i-ph-lock-key" /> Secure payment via PayPal</span>
+        <span><span class="i-ph-arrow-counter-clockwise" /> Cancel anytime, keep what is left</span>
+        <span><span class="i-ph-lightning" /> Print file straight away</span>
+      </p>
+
+      <!-- 单张 -->
+      <section class="ck-single">
+        <div>
+          <h2 class="ck-h2">Just one card?</h2>
+          <p class="ck-sub">
+            A single card is <strong>$3.99</strong>. No account tricks, no
+            "upgrade" prompts — you pay for the card and you are done.
+          </p>
+        </div>
+        <NuxtLink to="/cards" class="ck-btn ck-btn--primary">Make one card</NuxtLink>
+      </section>
 
       <!-- FAQ -->
-      <div class="mt-20 max-w-3xl mx-auto">
-        <h2 class="font-display text-2xl font-700 text-white text-center mb-8">{{ $t('pricing.faq.title') }}</h2>
-        <div class="space-y-3">
-          <div v-for="(item, i) in faqItems" :key="i" class="faq-item" :class="{ 'is-open': openFaq === i }">
-            <button class="faq-item__q" @click="openFaq = openFaq === i ? null : i">
-              <span class="text-white font-medium text-sm">{{ item.q }}</span>
-              <span class="i-ph-caret-down text-ink-400 transition-transform faq-item__icon" :class="{ 'rotate-180': openFaq === i }" />
-            </button>
-            <Transition name="faq">
-              <div v-if="openFaq === i" class="faq-item__a">
-                <p class="text-ink-300 text-sm leading-relaxed">{{ item.a }}</p>
-              </div>
-            </Transition>
-          </div>
+      <section class="ck-faq-wrap">
+        <h2 class="ck-h2">The fine print, in plain words.</h2>
+        <div class="ck-faq">
+          <details v-for="f in faqs" :key="f.q" class="ck-faq__item">
+            <summary>
+              {{ f.q }}
+              <span class="i-ph-plus ck-faq__sign" />
+            </summary>
+            <p>{{ f.a }}</p>
+          </details>
         </div>
-      </div>
+      </section>
+
+      <!-- 承诺 -->
+      <section class="ck-promise">
+        <div v-for="p in promises" :key="p.title" class="ck-promise__item">
+          <span class="ck-promise__icon" :class="`i-${p.icon}`" />
+          <h3>{{ p.title }}</h3>
+          <p>{{ p.text }}</p>
+        </div>
+      </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
-const annual = ref(false)
-const openFaq = ref<number | null>(null)
-
-const faqItems = computed(() => [
-  { q: t('pricing.faq.commercial.q'), a: t('pricing.faq.commercial.a') },
-  { q: t('pricing.faq.payment.q'), a: t('pricing.faq.payment.a') },
-  { q: t('pricing.faq.cancel.q'), a: t('pricing.faq.cancel.a') },
-  { q: t('pricing.faq.switch.q', 'Can I switch plans later?'), a: t('pricing.faq.switch.a', 'Yes, upgrade or downgrade anytime. Changes take effect immediately.') },
-  { q: t('pricing.faq.free_generations.q', 'What counts as a generation?'), a: t('pricing.faq.free_generations.a', 'Each time you click Generate and receive output, that counts as one generation. Failed generations do not count.') },
-])
+definePageMeta({ layout: 'marketing' })
 
 useHead({
-  title: 'Pricing — CraftAI',
-  meta: [{ name: 'description', content: 'Simple pricing for CraftAI. Start free, upgrade to Creator for $9.99/month or save 20% with annual billing.' }],
-  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/pricing' }],
-  script: [{
-    type: 'application/ld+json',
-    innerHTML: JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: 'Can I use generated content commercially?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Yes! Creator and Pro plans include full commercial license. You own the content you create.' },
-        },
-        {
-          '@type': 'Question',
-          name: 'What payment methods do you accept?',
-          acceptedAnswer: { '@type': 'Answer', text: 'We accept PayPal for now. Stripe support coming soon.' },
-        },
-        {
-          '@type': 'Question',
-          name: 'Can I cancel anytime?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Yes, cancel anytime. Your subscription remains active until the end of the billing period.' },
-        },
-        {
-          '@type': 'Question',
-          name: 'Can I switch plans later?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Yes, upgrade or downgrade anytime. Changes take effect immediately.' },
-        },
-        {
-          '@type': 'Question',
-          name: 'What counts as a generation?',
-          acceptedAnswer: { '@type': 'Answer', text: 'Each time you click Generate and receive output, that counts as one generation. Failed generations do not count.' },
-        },
-      ],
-    }),
+  title: 'Pricing — Create Keepsakes',
+  meta: [{
+    name: 'description',
+    content: 'One card for $3.99. A monthly plan of $9.99 includes 5 print-ready cards. Cancel anytime.',
   }],
+  link: [{ rel: 'canonical', href: 'https://create.yozzytools.com/pricing' }],
 })
+
+const faqs = [
+  {
+    q: 'What exactly do I get for $9.99 a month?',
+    a: 'Five cards a month, at full print resolution — 300 DPI, sized for a 5 × 7 inch card — with no mark on the file. If you do not use all five, they roll over to the next month instead of disappearing.',
+  },
+  {
+    q: 'What happens if I need more than five?',
+    a: 'Each extra card is $2.00. You can add them whenever you want, and you will always see the price before you pay.',
+  },
+  {
+    q: 'Can I cancel?',
+    a: 'Yes, at any time, in one click, from your account page. You keep everything you have made, and your plan stays active until the end of the period you already paid for. We will not ask you to email anyone.',
+  },
+  {
+    q: 'Will you ever move me to a different plan automatically?',
+    a: 'No. We never change your plan or your price without you doing it yourself.',
+  },
+  {
+    q: 'What size file do I get?',
+    a: '5 × 7 inches at 300 DPI (1500 × 2100 pixels) as standard, plus 4 × 6 and A6. Wall prints come as 16 × 20 inches or A3 at 150 DPI, which is what print shops expect for a canvas.',
+  },
+  {
+    q: 'What happens to my photos?',
+    a: 'They stay in your account, are never published, and are never used to train anything. Delete them yourself whenever you like, and they are gone within 30 days.',
+  },
+  {
+    q: 'Is this a subscription trap?',
+    a: 'No. There is a one-off pack coming for people who only make a card or two a year, and it never expires. We would rather you pay once than cancel and ask for your money back.',
+  },
+]
+
+const promises = [
+  {
+    icon: 'ph-spell-check',
+    title: 'Names spelled right',
+    text: 'Every name, number and date is typeset by us, not painted by the picture. It comes out exactly as you typed it.',
+  },
+  {
+    icon: 'ph-lock-key',
+    title: 'Photos stay private',
+    text: 'Never published, never used to train anything, deleted within 30 days. We do not sell or share your pictures.',
+  },
+  {
+    icon: 'ph-printer',
+    title: 'Genuinely printable',
+    text: 'Real print dimensions at real resolution, not a phone screenshot. Take it to any print shop.',
+  },
+  {
+    icon: 'ph-arrow-counter-clockwise',
+    title: 'Refund if it is not right',
+    text: 'If a card is not what you wanted, tell us and we will make it right or refund you. No forms.',
+  },
+]
 </script>
 
 <style scoped>
-.pricing-page {
-  position: relative;
-  min-height: 100vh;
-}
+.ck-pricing {
+  --ck-bg: #fbf7f1;
+  --ck-cream: #f5ede1;
+  --ck-white: #fffdfa;
+  --ck-ink: #2a2420;
+  --ck-ink-2: #6b5f55;
+  --ck-line: rgba(58, 46, 38, 0.12);
+  --ck-coral: #c8543d;
+  --ck-coral-deep: #a53f2c;
+  --ck-serif: 'Playfair Display', Georgia, serif;
 
-.pricing-glow {
-  position: absolute;
-  top: -120px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 800px;
-  height: 400px;
-  background: radial-gradient(ellipse at center, rgba(139, 124, 255, 0.12), transparent 70%);
-  pointer-events: none;
+  background: var(--ck-bg);
+  color: var(--ck-ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+  padding: 3.5rem 0 5rem;
 }
+.ck-wrap { max-width: 70rem; margin: 0 auto; padding: 0 1.5rem; }
 
-.pricing-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.3rem 0.85rem;
-  border-radius: 999px;
-  background: rgba(139, 124, 255, 0.12);
-  border: 1px solid rgba(139, 124, 255, 0.25);
-  color: #b4a9ff;
-  font-size: 0.75rem;
+.ck-h1 {
+  font-family: var(--ck-serif);
+  font-size: clamp(2.1rem, 5vw, 3.2rem);
   font-weight: 600;
-  letter-spacing: 0.04em;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
 }
-
-/* —— Billing Toggle —— */
-.billing-toggle__label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.8rem;
-  border-radius: 999px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--muted);
-  font-size: 0.85rem;
+.ck-h2 {
+  font-family: var(--ck-serif);
+  font-size: clamp(1.6rem, 3.2vw, 2.2rem);
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
+  line-height: 1.2;
 }
+.ck-lede { margin-top: 1rem; font-size: 1.0625rem; line-height: 1.65; color: var(--ck-ink-2); max-width: 48ch; }
+.ck-sub { margin-top: 0.75rem; font-size: 1rem; line-height: 1.65; color: var(--ck-ink-2); max-width: 48ch; }
 
-.billing-toggle__label.is-active {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.billing-toggle__label:hover:not(.is-active) {
-  color: var(--ink-2, #d0cbe0);
-}
-
-.billing-toggle {
-  position: relative;
-  width: 52px;
-  height: 28px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-}
-
-.billing-toggle.is-annual {
-  background: var(--accent, #8b7cff);
-  border-color: var(--accent, #8b7cff);
-  box-shadow: 0 0 20px rgba(139, 124, 255, 0.3);
-}
-
-.billing-toggle__thumb {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.billing-toggle.is-annual .billing-toggle__thumb {
-  transform: translateX(24px);
-}
-
-.billing-toggle__save {
-  display: inline-flex;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  background: rgba(139, 124, 255, 0.2);
-  color: #b4a9ff;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-}
-
-.billing-toggle__label.is-active .billing-toggle__save {
-  background: var(--accent, #8b7cff);
-  color: #fff;
-}
-
-/* —— Plan Cards —— */
-.plan-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  padding: 2rem;
-  border-radius: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  background: rgba(18, 16, 26, 0.7);
-  backdrop-filter: blur(12px);
-  transition: all 0.3s ease;
-}
-
-.plan-card:hover {
-  border-color: rgba(255, 255, 255, 0.12);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 48px -24px rgba(0, 0, 0, 0.6);
-}
-
-.plan-card--popular {
-  border-color: rgba(139, 124, 255, 0.35);
-  background: linear-gradient(180deg, rgba(139, 124, 255, 0.08) 0%, rgba(18, 16, 26, 0.7) 40%);
-  box-shadow: 0 0 0 1px rgba(139, 124, 255, 0.15), 0 24px 56px -24px rgba(110, 92, 230, 0.35);
-  transform: scale(1.03);
-}
-
-.plan-card--popular:hover {
-  transform: scale(1.03) translateY(-4px);
-  box-shadow: 0 0 0 1px rgba(139, 124, 255, 0.25), 0 32px 64px -24px rgba(110, 92, 230, 0.45);
-}
-
-.plan-card__popular-badge {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%);
+.ck-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 1rem;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #8b7cff, #6e5ce6);
-  color: #fff;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(110, 92, 230, 0.4);
+  background: rgba(200, 84, 61, 0.1);
+  color: var(--ck-coral-deep);
+  font-size: 0.8125rem;
+  font-weight: 600;
 }
+.ck-pricing__head { text-align: center; max-width: 44rem; margin: 0 auto 3rem; }
+.ck-pricing__head .ck-lede { margin-left: auto; margin-right: auto; }
 
-.plan-card__head {
-  margin-bottom: 1.25rem;
-}
-
-.plan-card__name {
-  font-family: 'Sora', sans-serif;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.02em;
-}
-
-.plan-card__desc {
-  margin-top: 0.35rem;
-  font-size: 0.82rem;
-  color: var(--muted);
-  line-height: 1.4;
-}
-
-.plan-card__price {
-  display: flex;
-  align-items: baseline;
-  gap: 0.35rem;
-  margin-bottom: 0.35rem;
-}
-
-.plan-card__amount {
-  font-family: 'Sora', sans-serif;
-  font-size: 2.75rem;
-  font-weight: 800;
-  color: #fff;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-
-.plan-card__period {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.plan-card__billed {
-  font-size: 0.78rem;
-  color: var(--accent-soft);
-  margin-bottom: 1rem;
-  font-weight: 500;
-}
-
-.plan-card__cta {
-  display: flex;
+.ck-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  width: 100%;
-  height: 2.85rem;
+  padding: 0.85rem 1.6rem;
+  border: 1.5px solid transparent;
   border-radius: 999px;
-  font-size: 0.88rem;
+  font-size: 1rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
-  cursor: pointer;
-  transition: all 0.2s;
-  border: none;
-  margin-top: 1.25rem;
   text-decoration: none;
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease;
 }
+.ck-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.ck-btn--primary { background: var(--ck-coral); color: #fff; }
+.ck-btn--primary:hover:not(:disabled) { background: var(--ck-coral-deep); }
+.ck-btn--ghost { border-color: var(--ck-line); color: var(--ck-ink); background: transparent; }
+.ck-btn--ghost:hover:not(:disabled) { border-color: var(--ck-coral); color: var(--ck-coral-deep); }
+.ck-btn--full { width: 100%; }
 
-.plan-card__cta--primary {
-  background: linear-gradient(135deg, #8b7cff, #6e5ce6);
-  color: #fff;
-  box-shadow: 0 4px 20px -4px rgba(110, 92, 230, 0.5);
+/* ---------- 档位 ---------- */
+.ck-plans {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  align-items: start;
 }
+@media (max-width: 900px) { .ck-plans { grid-template-columns: 1fr; } }
 
-.plan-card__cta--primary:hover {
-  background: linear-gradient(135deg, #9b8cff, #7e6ce6);
-  box-shadow: 0 8px 28px -4px rgba(110, 92, 230, 0.6);
-  transform: translateY(-1px);
-}
-
-.plan-card__cta--outline {
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-}
-
-.plan-card__cta--outline:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.24);
-  transform: translateY(-1px);
-}
-
-.plan-card__cta--ghost {
-  background: transparent;
-  color: var(--ink-2, #d0cbe0);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.plan-card__cta--ghost:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-1px);
-}
-
-.plan-card__cta:active {
-  transform: scale(0.98);
-}
-
-.plan-card__divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
-  margin: 1.5rem 0 1.25rem;
-}
-
-.plan-card__features {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.ck-plan {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.7rem;
-  flex: 1;
+  gap: 0.55rem;
+  padding: 1.75rem 1.5rem;
+  border: 1.5px solid var(--ck-line);
+  border-radius: 1.1rem;
+  background: var(--ck-white);
 }
+.ck-plan--popular {
+  border-color: var(--ck-coral);
+  box-shadow: 0 20px 44px -26px rgba(200, 84, 61, 0.5);
+}
+.ck-plan__badge {
+  position: absolute;
+  top: -0.7rem;
+  left: 1.5rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  background: var(--ck-coral);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.ck-plan__name { font-family: var(--ck-serif); font-size: 1.4rem; font-weight: 600; }
+.ck-plan__desc { font-size: 0.875rem; color: var(--ck-ink-2); }
+.ck-plan__price { display: flex; align-items: baseline; gap: 0.35rem; margin-top: 0.35rem; }
+.ck-plan__amount { font-family: var(--ck-serif); font-size: 2.6rem; font-weight: 600; line-height: 1; }
+.ck-plan__per { font-size: 0.9375rem; color: var(--ck-ink-2); }
+.ck-plan__for { font-size: 0.875rem; color: var(--ck-ink-2); margin-bottom: 0.35rem; }
+.ck-plan__list { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.85rem 0 0; padding: 0; list-style: none; }
+.ck-plan__list li { display: flex; align-items: flex-start; gap: 0.45rem; font-size: 0.9375rem; color: var(--ck-ink); }
+.ck-plan__list .i-ph-check { flex: none; margin-top: 0.2rem; color: var(--ck-coral); }
 
-.plan-card__features li {
+.ck-trust {
   display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  font-size: 0.84rem;
-  color: var(--ink-2, #d0cbe0);
-  line-height: 1.4;
-}
-
-.plan-card__check {
-  display: inline-flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: rgba(139, 124, 255, 0.15);
-  color: var(--accent-soft);
-  font-size: 10px;
-  flex-shrink: 0;
-  margin-top: 2px;
+  gap: 0.6rem 1.75rem;
+  margin-top: 2.25rem;
+  font-size: 0.875rem;
+  color: var(--ck-ink-2);
 }
+.ck-trust span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.ck-trust .i-ph-lock-key, .ck-trust .i-ph-arrow-counter-clockwise, .ck-trust .i-ph-lightning { color: var(--ck-coral); }
 
-.plan-card__check::before {
-  content: '';
-  width: 10px;
-  height: 10px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b4a9ff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
+/* ---------- 单张 ---------- */
+.ck-single {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-top: 3.5rem;
+  padding: 2rem;
+  border-radius: 1.1rem;
+  background: var(--ck-cream);
 }
+.ck-single .ck-h2 { max-width: none; }
 
-/* —— FAQ —— */
-.faq-item {
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(18, 16, 26, 0.5);
-  overflow: hidden;
-  transition: border-color 0.2s;
-}
-
-.faq-item:hover {
-  border-color: rgba(255, 255, 255, 0.1);
-}
-
-.faq-item.is-open {
-  border-color: rgba(139, 124, 255, 0.2);
-}
-
-.faq-item__q {
+/* ---------- FAQ ---------- */
+.ck-faq-wrap { margin-top: 4rem; max-width: 52rem; }
+.ck-faq { margin-top: 1.75rem; }
+.ck-faq__item { border-bottom: 1px solid var(--ck-line); }
+.ck-faq__item summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  padding: 1.1rem 1.25rem;
-  background: transparent;
-  border: none;
+  gap: 1rem;
+  padding: 1.05rem 0;
   cursor: pointer;
-  text-align: left;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  list-style: none;
 }
+.ck-faq__item summary::-webkit-details-marker { display: none; }
+.ck-faq__sign { flex: none; color: var(--ck-coral); transition: transform 0.18s ease; }
+.ck-faq__item[open] .ck-faq__sign { transform: rotate(45deg); }
+.ck-faq__item p { padding-bottom: 1.1rem; font-size: 0.9375rem; line-height: 1.7; color: var(--ck-ink-2); max-width: 62ch; }
 
-.faq-item__icon {
-  transition: transform 0.25s ease;
-  flex-shrink: 0;
-  margin-left: 0.75rem;
+/* ---------- 承诺 ---------- */
+.ck-promise {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 1.25rem;
+  margin-top: 4rem;
 }
-
-.faq-item__a {
-  padding: 0 1.25rem 1.1rem;
+.ck-promise__item { padding: 1.4rem 1.25rem; border-radius: 1rem; background: var(--ck-cream); }
+.ck-promise__icon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.7rem;
+  background: rgba(200, 84, 61, 0.12);
+  color: var(--ck-coral-deep);
+  font-size: 1.25rem;
 }
-
-.faq-enter-active,
-.faq-leave-active {
-  transition: all 0.25s ease;
-  overflow: hidden;
-}
-
-.faq-enter-from,
-.faq-leave-to {
-  opacity: 0;
-  max-height: 0;
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
-/* —— Responsive —— */
-@media (max-width: 1024px) {
-  .plan-card--popular {
-    transform: scale(1);
-  }
-  .plan-card--popular:hover {
-    transform: translateY(-4px);
-  }
-}
+.ck-promise__item h3 { margin: 0.85rem 0 0.4rem; font-size: 1rem; font-weight: 700; }
+.ck-promise__item p { margin: 0; font-size: 0.875rem; line-height: 1.6; color: var(--ck-ink-2); }
 </style>

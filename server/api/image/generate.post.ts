@@ -9,6 +9,8 @@ import { createImageRecord, updateImage, processImageResult } from '../../utils/
 import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { optimizeImagePrompt } from '../../utils/minimax'
+import { buildSubjectReference, type SubjectReference } from '../../utils/image-reference'
+import { buildScenarioPrompt } from '../../../utils/imageScenarios'
 
 export default defineEventHandler(async (event) => {
   console.log("[Image Generate] === Start ===")
@@ -26,38 +28,63 @@ export default defineEventHandler(async (event) => {
   const body = await readBody(event)
   let prompt = String(body?.prompt || '').trim()
   const scene = body?.scene || 'general'
-  const model = body?.model === 'image-01-live' ? 'image-01-live' : 'image-01'
-  const mode = body?.subject_reference || body?.uploadId ? 'i2i' : 't2i'
+  // 客户端显式指定了模型才算「用户选择」；场景模式不传 model，服务端自己定
+  const modelExplicit = body?.model === 'image-01-live' || body?.model === 'image-01' ? body.model : ''
+  const model = modelExplicit === 'image-01-live' ? 'image-01-live' : 'image-01'
+  const mode = body?.uploadId ? 'i2i' : 't2i'
   const aspectRatio = body?.aspect_ratio || body?.aspectRatio || '1:1'
   const count = Math.min(4, Math.max(1, body?.n || 1))
   const deepOptimize = !!body?.deepOptimize
-  const usePromptOptimizer = body?.promptOptimizer !== false // 默认开启
+  // 客户端可以显式传 true/false；不传时 t2i 开、i2i 关（参考图会压制画风）
+  const promptOptimizerRaw = body?.promptOptimizer
+  const usePromptOptimizer = promptOptimizerRaw !== false
+
+  // 2.1 场景化生图：传了 scenario 就由服务端按「场景 + 画风 + 名字」拼 prompt，
+  //     客户端不写 prompt（中老年用户不会写）
+  let scenarioUsed = ''
+  if (body?.scenario) {
+    const built = buildScenarioPrompt(
+      String(body.scenario),
+      String(body?.style || ''),
+      String(body?.name || ''),
+      String(body?.extra || ''),
+    )
+    if (built) {
+      prompt = built.prompt
+      scenarioUsed = built.scenario.id
+    }
+  }
 
   if (!prompt) {
     throw createError({ statusCode: 400, statusMessage: 'prompt is required' })
   }
 
   // 3. 自动 Prompt 优化（深度优化走两步，普通优化走一步）
+  //    场景化生图的 prompt 已经按「场景+画风」拼好了，不能再被优化器改写，
+  //    否则会稀释用户选的画风（实测 watercolor/anime 会被压成照片风）
   let finalPrompt = prompt
   let optimizeNotes = ''
 
-  try {
-    if (deepOptimize) {
-      // 深度优化：M3 重写 + 场景增强
-      const optimized = await optimizeImagePrompt({
-        prompt,
-        scene,
-        aspectRatio,
-      })
-      finalPrompt = optimized.optimized
-      optimizeNotes = optimized.notes
-    } else if (usePromptOptimizer) {
-      // 普通优化：仅场景关键词注入 + MiniMax 内置 optimizer
-      finalPrompt = injectSceneKeywords(prompt, scene)
+  if (!scenarioUsed) {
+    try {
+      if (deepOptimize) {
+        // 深度优化：M3 重写 + 场景增强
+        const optimized = await optimizeImagePrompt({
+          prompt,
+          scene,
+          aspectRatio,
+        })
+        finalPrompt = optimized.optimized
+        optimizeNotes = optimized.notes
+      } else if (usePromptOptimizer && mode !== 'i2i') {
+        // 普通优化：仅场景关键词注入 + MiniMax 内置 optimizer
+        // i2i 时不注入通用场景词，避免和用户选的画风打架
+        finalPrompt = injectSceneKeywords(prompt, scene)
+      }
+    } catch (err) {
+      // 优化失败不阻断，用原始 prompt
+      console.warn('[Image Generate] Prompt optimization failed:', err)
     }
-  } catch (err) {
-    // 优化失败不阻断，用原始 prompt
-    console.warn('[Image Generate] Prompt optimization failed:', err)
   }
 
   // 4. 创建图片记录 + 任务
@@ -79,6 +106,17 @@ export default defineEventHandler(async (event) => {
     const apiKey = await getDecryptedApiKey()
     const baseUrl = getMiniMaxBaseUrl()
 
+    // i2i（主体参考）：参考图要转成 MiniMax 认的格式，且必须用 image-01-live
+    let subjectReference: SubjectReference[] | undefined
+    let finalModel = model
+    if (mode === 'i2i' && body?.uploadId) {
+      subjectReference = await buildSubjectReference(String(body.uploadId))
+      // image-01-live 才是 i2i 的主力模型（实测 subject_reference 在它上面稳定生效）。
+      // 高级模式里用户显式选了 image-01 就尊重用户选择（它支持自定义宽高，做打印尺寸用）；
+      // 场景模式不传 model，这里默认走 image-01-live。
+      finalModel = modelExplicit === 'image-01' ? 'image-01' : 'image-01-live'
+    }
+
     await updateJob(job.id, { status: 'processing' })
 
     console.log("[Image Generate] Calling MiniMax API...")
@@ -90,12 +128,16 @@ export default defineEventHandler(async (event) => {
       },
       body: JSON.stringify({
         prompt: finalPrompt,
-        model,
+        model: finalModel,
         aspect_ratio: aspectRatio,
         n: count,
         response_format: 'url',
-        prompt_optimizer: true, // ✅ 始终开启 MiniMax 内置优化
-        ...(mode === 'i2i' && body?.uploadId ? { subject_reference: body.uploadId } : {}),
+        // 参考图会强烈压制画风（实测：开优化器时 watercolor/anime 会被压成照片风），
+        // 所以 i2i 默认关掉优化器，让用户选的风格词占主导
+        prompt_optimizer: mode === 'i2i'
+          ? promptOptimizerRaw === true
+          : usePromptOptimizer,
+        ...(subjectReference ? { subject_reference: subjectReference } : {}),
       }),
     })
 
@@ -128,6 +170,7 @@ export default defineEventHandler(async (event) => {
       imageUrl: imagePaths[0] ? `/api/images/${image.id}/file` : null,
       promptFinal: finalPrompt,
       notes: optimizeNotes,
+      scenario: scenarioUsed || null,
     }
   } catch (err: any) {
     await updateImage(image.id, {

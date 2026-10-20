@@ -3,9 +3,9 @@
     <AuthEmailVerificationGuard />
     <aside class="studio-sidebar" :class="{ 'is-open': mobileNavOpen }">
       <div class="studio-sidebar__brand">
-        <NuxtLink to="/create" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
-          <img src="/logo.png" alt="Creator" class="h-9 w-9 rounded-[11px] object-contain" />
-          <span class="font-display text-[17px] font-700 tracking-tight text-white">Creator</span>
+        <NuxtLink to="/" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
+          <img src="/logo.png" alt="Create Keepsakes" class="h-9 w-9 rounded-[11px] object-contain" />
+          <span class="font-display text-[17px] font-700 tracking-tight text-white">Create Keepsakes</span>
         </NuxtLink>
       </div>
 
@@ -133,19 +133,21 @@ watch([user, authReady], async () => {
 }, { immediate: true })
 
 // 使用 computed 确保 i18n 切换时导航标签同步更新
+// 导航顺序 = 业务优先级：贺卡是第一主业，音乐站降级保留（不删，但不再占据主导航）
 const groups = computed(() => [
+  {
+    label: 'Make',
+    items: [
+      { to: localePath('/cards'), label: 'Create a Card', icon: 'i-ph-gift' },
+      { to: localePath('/image'), label: $t('nav.image'), icon: 'i-ph-image' },
+    ],
+  },
   {
     label: $t('nav.musicGroup'),
     items: [
       { to: localePath('/create'), label: $t('nav.create'), icon: 'i-ph-waveform' },
       { to: localePath('/cover'), label: $t('nav.cover'), icon: 'i-ph-arrows-clockwise' },
       { to: localePath('/library'), label: $t('nav.library'), icon: 'i-ph-music-notes' },
-    ],
-  },
-  {
-    label: $t('nav.imageGroup'),
-    items: [
-      { to: localePath('/image'), label: $t('nav.image'), icon: 'i-ph-image' },
     ],
   },
   {
@@ -163,10 +165,11 @@ const pageTitle = computed(() => {
     '/create': 'Create',
     '/cover': 'Cover',
     '/library': 'Library',
+    '/cards': 'Create a Card',
     '/image': $t('nav.imageGroup'),
   }
   if (route.path.startsWith('/song/')) return 'Track'
-  return map[route.path] || 'CraftAI'
+  return map[route.path] || 'Create Keepsakes'
 })
 
 watch(() => route.fullPath, () => {

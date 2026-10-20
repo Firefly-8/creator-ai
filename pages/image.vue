@@ -22,7 +22,118 @@
             @click="clearRemix"
           />
         </div>
-        <UiSegmented v-model="mode" :options="modes" equal />
+        <UiSegmented v-if="!scenarioMode" v-model="mode" :options="modes" equal />
+
+        <!-- 简单模式 / 高级模式 -->
+        <div class="flex gap-2">
+          <button
+            type="button"
+            class="flex-1 rounded-2xl border px-3 py-2.5 text-[14px] font-600 transition"
+            :class="scenarioMode ? 'border-accent/50 bg-accent-mute text-accent-soft' : 'border-white/[0.08] bg-white/[0.02] text-ink-300'"
+            @click="scenarioMode = true"
+          >
+            <span class="i-ph-hand-tap mr-1" />简单模式
+          </button>
+          <button
+            type="button"
+            class="flex-1 rounded-2xl border px-3 py-2.5 text-[14px] font-600 transition"
+            :class="!scenarioMode ? 'border-accent/50 bg-accent-mute text-accent-soft' : 'border-white/[0.08] bg-white/[0.02] text-ink-300'"
+            @click="scenarioMode = false"
+          >
+            <span class="i-ph-pencil-simple mr-1" />高级模式
+          </button>
+        </div>
+
+        <!-- ============ 简单模式：选场景 → 选画风 → 填称呼 ============ -->
+        <template v-if="scenarioMode">
+          <section
+            v-for="g in SCENARIO_GROUPS"
+            :key="g.id"
+            class="space-y-2"
+          >
+            <p class="field-label">
+              <span :class="`i-${g.icon} mr-1`" />{{ g.label }}
+            </p>
+            <div class="grid grid-cols-2 gap-2">
+              <button
+                v-for="s in scenariosOfGroup(g.id)"
+                :key="s.id"
+                type="button"
+                class="scenario-card"
+                :class="scenarioId === s.id ? 'is-active' : ''"
+                @click="selectScenario(s)"
+              >
+                <span :class="`i-${s.icon} scenario-card__icon`" />
+                <span class="scenario-card__label">{{ s.label }}</span>
+                <span class="scenario-card__desc">{{ s.desc }}</span>
+              </button>
+            </div>
+          </section>
+
+          <!-- 画风 -->
+          <section class="space-y-2">
+            <p class="field-label">
+              <span class="i-ph-palette mr-1" />画成什么样子
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="st in scenarioStyles"
+                :key="st.id"
+                type="button"
+                class="chip !text-[15px] !px-4 !py-2"
+                :class="styleId === st.id ? 'chip-active !border-accent/45' : ''"
+                @click="selectStyle(st.id)"
+              >
+                {{ st.label }}
+              </button>
+            </div>
+          </section>
+
+          <!-- 称呼 -->
+          <label v-if="currentScenario?.askName" class="block space-y-2">
+            <span class="field-label">{{ currentScenario?.id === 'hobby-poster' ? '活动名字' : '写上谁的名字' }}</span>
+            <input
+              v-model="scenarioName"
+              class="field !text-[16px]"
+              :placeholder="currentScenario?.inputHint || '比如：老妈'"
+            >
+          </label>
+
+          <!-- 补充描述（只有「随便画」用得到） -->
+          <label v-if="currentScenario?.id === 'free'" class="block space-y-2">
+            <span class="field-label">想画什么</span>
+            <input
+              v-model="scenarioExtra"
+              class="field !text-[16px]"
+              placeholder="比如：院子里的花猫"
+            >
+          </label>
+
+          <!-- 参考图（需要照片的场景） -->
+          <div
+            v-if="currentScenario?.needReference"
+            class="space-y-2 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4"
+          >
+            <span class="field-label">上传一张照片</span>
+            <p class="field-hint">选一张清晰的照片（正面、光线好），手机拍的会自动缩小再上传</p>
+            <input class="field" type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" @change="onRefFile">
+            <p v-if="refName" class="text-[13px] font-medium text-accent-soft">
+              <span class="i-ph-check-circle-fill mr-1 text-[14px]" />
+              {{ refName }}
+            </p>
+          </div>
+
+          <!-- prompt 预览（只读，给想看看的人） -->
+          <details class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
+            <summary class="cursor-pointer text-[13.5px] text-ink-300">
+              看看会怎么画（一般不用管）
+            </summary>
+            <p class="mt-2 text-[12.5px] leading-relaxed text-ink-400">{{ previewPrompt }}</p>
+          </details>
+        </template>
+
+        <!-- ============ 高级模式：原来的自由创作界面 ============ -->
+        <template v-else>
         <section class="space-y-2">
           <p class="field-label">{{ $t('image.scenePresets') }}</p>
           <div class="flex flex-wrap gap-2">
@@ -89,7 +200,10 @@
             {{ refName }}
           </p>
         </div>
+        </template>
 
+        <!-- 高级模式才显示模型/比例/张数等参数；简单模式由场景自动决定 -->
+        <template v-if="!scenarioMode">
         <!-- Model (icon buttons) -->
         <div class="space-y-2">
           <span class="field-label">{{ $t('image.model') }}</span>
@@ -168,6 +282,7 @@
             </button>
           </div>
         </div>
+        </template>
 
         <div class="flex flex-wrap items-center gap-3 border-t border-white/[0.06] pt-4">
           <UiButton
@@ -323,6 +438,13 @@ import {
   type ImageScene,
   type ImageScenePreset,
 } from '~/utils/imagePresets'
+import {
+  IMAGE_SCENARIOS,
+  IMAGE_STYLES,
+  SCENARIO_GROUPS,
+  buildScenarioPrompt,
+  type ImageScenarioDef,
+} from '~/utils/imageScenarios'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
@@ -352,6 +474,28 @@ const modes = [
 
 const scene = ref<ImageScene>('logo')
 const prompt = ref(IMAGE_SCENE_PRESETS[0].prompt)
+
+/* ---------------- 场景模式（给不擅长用 AI 工具的人） ---------------- */
+/** true = 简单模式（选场景 → 选画风 → 填称呼）；false = 高级模式（自己写 prompt） */
+const scenarioMode = ref(true)
+const scenarioId = ref('avatar')
+const styleId = ref('photo')
+/** 称呼 / 要写上的人 */
+const scenarioName = ref('')
+/** 补充描述（只有「随便画」用得到） */
+const scenarioExtra = ref('')
+
+const currentScenario = computed(() => IMAGE_SCENARIOS.find(s => s.id === scenarioId.value))
+const scenarioStyles = computed(() => {
+  const ids = currentScenario.value?.styles
+  return ids?.length ? IMAGE_STYLES.filter(s => ids.includes(s.id)) : IMAGE_STYLES
+})
+const scenariosOfGroup = (gid: string) => IMAGE_SCENARIOS.filter(s => s.group === gid)
+/** 场景模式下最终会发给服务端的 prompt（前端只做预览，真正拼装在服务端） */
+const previewPrompt = computed(() => {
+  const r = buildScenarioPrompt(scenarioId.value, styleId.value, scenarioName.value, scenarioExtra.value)
+  return r?.prompt || ''
+})
 const promptFinal = ref('')
 const optimizeNotes = ref('')
 const promptOptimizer = ref(true)
@@ -371,6 +515,11 @@ const statusText = ref('')
 
 const activeScene = computed(() => IMAGE_SCENE_PRESETS.find((p) => p.id === scene.value))
 const canGenerate = computed(() => {
+  if (scenarioMode.value) {
+    // 场景模式：需要参考图的场景必须先传照片
+    if (currentScenario.value?.needReference && !uploadId.value) return false
+    return true
+  }
   if (!prompt.value.trim()) return false
   if (mode.value === 'i2i' && !uploadId.value) return false
   return true
@@ -447,6 +596,31 @@ watch([authReady, user], ([ready, u]) => {
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
+/** 选场景：把画风/比例/张数/是否要参考图一次性切好 */
+function selectScenario(s: ImageScenarioDef) {
+  scenarioId.value = s.id
+  const allowed = s.styles?.length ? s.styles : IMAGE_STYLES.map(x => x.id)
+  if (!allowed.includes(styleId.value)) styleId.value = allowed[0]
+  aspectRatio.value = s.aspectRatio
+  count.value = s.count
+  if (s.needReference) {
+    mode.value = 'i2i'
+  } else {
+    mode.value = 't2i'
+    uploadId.value = null
+    refName.value = ''
+  }
+  promptFinal.value = ''
+  optimizeNotes.value = ''
+  errorText.value = ''
+  statusText.value = `已选：${s.label}`
+}
+
+function selectStyle(id: string) {
+  styleId.value = id
+  promptFinal.value = ''
+}
+
 function applyScene(preset: ImageScenePreset) {
   scene.value = preset.id
   prompt.value = preset.prompt
@@ -473,14 +647,39 @@ function styleIcon(style: string): string {
   return map[style] || 'i-ph-palette'
 }
 
+/**
+ * 上传前在浏览器里把图缩小 —— 手机拍的原图动辄 5~10MB，
+ * 缩小后既能秒传，也能塞进 MiniMax 的参考图体积限制。
+ */
+async function shrinkImage(file: File, maxSide = 1024, quality = 0.85): Promise<Blob> {
+  const bitmap = await createImageBitmap(file)
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
+  const w = Math.round(bitmap.width * scale)
+  const h = Math.round(bitmap.height * scale)
+  const canvas = document.createElement('canvas')
+  canvas.width = w
+  canvas.height = h
+  const ctx = canvas.getContext('2d')
+  if (!ctx) { bitmap.close(); return file }
+  ctx.drawImage(bitmap, 0, 0, w, h)
+  bitmap.close()
+  const blob = await new Promise<Blob | null>(res => canvas.toBlob(res, 'image/jpeg', quality))
+  return blob || file
+}
+
 async function onRefFile(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
   errorText.value = ''
   statusText.value = 'Uploading reference…'
   try {
+    let payload: Blob = file
+    if (file.size > 1024 * 1024) {
+      statusText.value = '正在压缩照片…'
+      payload = await shrinkImage(file)
+    }
     const form = new FormData()
-    form.append('file', file)
+    form.append('file', payload, payload instanceof File ? payload.name : 'reference.jpg')
     const res = await $fetch<{ uploadId: string; filename: string }>('/api/image/upload', {
       method: 'POST',
       body: form,
@@ -528,12 +727,18 @@ async function generate() {
   errorText.value = ''
   statusText.value = deepOptimize.value ? t('image.optimizingAndGenerating') : t('image.generating')
   try {
+    // 场景模式：prompt 由服务端按 scenario + style + name 拼，客户端不传
+    const useScenario = scenarioMode.value && !!currentScenario.value
     const res = await $fetch<{ images: ImagePublic[]; promptFinal: string }>('/api/image/generate', {
       method: 'POST',
       body: {
-        prompt: prompt.value,
+        prompt: useScenario ? '' : prompt.value,
+        scenario: useScenario ? scenarioId.value : undefined,
+        style: useScenario ? styleId.value : undefined,
+        name: useScenario ? scenarioName.value : undefined,
+        extra: useScenario ? scenarioExtra.value : undefined,
         scene: scene.value,
-        model: model.value,
+        model: useScenario ? undefined : model.value,
         mode: mode.value,
         aspectRatio: aspectRatio.value,
         n: count.value,
@@ -541,7 +746,7 @@ async function generate() {
         deepOptimize: deepOptimize.value,
         styleType: model.value === 'image-01-live' ? styleType.value : null,
         uploadId: mode.value === 'i2i' ? uploadId.value : null,
-        title: activeScene.value?.shortLabel,
+        title: useScenario ? currentScenario.value!.label : activeScene.value?.shortLabel,
       },
     })
     promptFinal.value = res.promptFinal
@@ -666,6 +871,52 @@ useHead({
 </script>
 
 <style scoped>
+/* 场景大卡片：给中老年用户，字大、点击区域大 */
+.scenario-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.85rem 0.9rem;
+  text-align: left;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+
+.scenario-card:hover {
+  border-color: rgba(139, 124, 255, 0.35);
+  background: rgba(139, 124, 255, 0.06);
+}
+
+.scenario-card:active {
+  transform: scale(0.98);
+}
+
+.scenario-card.is-active {
+  border-color: rgba(139, 124, 255, 0.6);
+  background: rgba(139, 124, 255, 0.12);
+}
+
+.scenario-card__icon {
+  font-size: 26px;
+  line-height: 1;
+  color: #b6a8ff;
+}
+
+.scenario-card__label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.scenario-card__desc {
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: rgba(255, 255, 255, 0.55);
+}
+
 .gallery-card {
   display: flex;
   flex-direction: column;

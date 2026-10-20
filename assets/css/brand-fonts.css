@@ -1,0 +1,67 @@
+/**
+ * 品牌字体 —— 自托管（不引 Google Fonts）
+ *
+ * ⚠️ 为什么不引外链：
+ *   1. GDPR / UK GDPR：引用 fonts.googleapis.com 会把用户 IP 传给 Google。
+ *      我们主打欧美（英国 + 欧盟），德国法院已多次判此类外链违法。
+ *   2. 性能：字体文件走自家 CDN，少一次 DNS + TLS 握手。
+ *   3. 隐私承诺：首页写「photos stay private」，同一标准也该管字体请求。
+ *
+ * 字体：Playfair Display（标题）/ Lora（正文）/ Caveat（手写签名）
+ * 许可：SIL Open Font License 1.1（见 public/fonts/OFL-*.txt）
+ */
+
+/* ---------- Playfair Display（衬线标题） ---------- */
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/PlayfairDisplay-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/PlayfairDisplay-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('/fonts/PlayfairDisplay-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- Lora（正文衬线） ---------- */
+@font-face {
+  font-family: 'Lora';
+  src: url('/fonts/Lora-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Lora';
+  src: url('/fonts/Lora-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- Caveat（手写签名） ---------- */
+@font-face {
+  font-family: 'Caveat';
+  src: url('/fonts/Caveat-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Caveat';
+  src: url('/fonts/Caveat-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}

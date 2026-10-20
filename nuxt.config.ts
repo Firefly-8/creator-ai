@@ -13,7 +13,7 @@ export default defineNuxtConfig({
     '~/components',
   ],
 
-  css: ['~/assets/css/tokens.css', '~/assets/css/main.css'],
+  css: ['~/assets/css/tokens.css', '~/assets/css/main.css', '~/assets/css/brand-fonts.css'],
 
   runtimeConfig: {
     encryptionMasterKey: process.env.ENCRYPTION_MASTER_KEY || '',
@@ -25,7 +25,7 @@ export default defineNuxtConfig({
     appSecret: process.env.APP_SECRET || '',
     
     public: {
-      appName: 'Creator',
+      appName: 'Create Keepsakes',
       appVersion: '1.0.0',
       firebaseApiKey: process.env.FIREBASE_API_KEY || 'AIzaSyAwoUulU3NBq7QsXr_wleNtvoHk534iwtM',
       firebaseAuthDomain: process.env.FIREBASE_AUTH_DOMAIN || 'creator-cab02.firebaseapp.com',
@@ -40,14 +40,14 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      title: 'CraftAI — AI Music & Image Studio',
+      title: 'Create Keepsakes — Personalised Cards & Canvas Prints',
       htmlAttrs: { lang: 'en' },
       meta: [
-        { name: 'description', content: 'Create AI music, images, and more — all in one studio. Powered by advanced AI models.' },
+        { name: 'description', content: 'Create personalised cards and canvas prints for the people you love. Choose an occasion, pick a style, add a photo and a message — no design skills needed.' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'robots', content: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' },
         { property: 'og:type', content: 'website' },
-        { property: 'og:site_name', content: 'CraftAI' },
+        { property: 'og:site_name', content: 'Create Keepsakes' },
         { property: 'og:image', content: 'https://creator.yozzytools.com/og-image.png' },
         { property: 'og:image:width', content: '1200' },
         { property: 'og:image:height', content: '630' },
@@ -59,9 +59,9 @@ export default defineNuxtConfig({
         innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'WebSite',
-          name: 'CraftAI',
+          name: 'Create Keepsakes',
           url: 'https://creator.yozzytools.com',
-          description: 'Create AI music, images, and more — all in one studio.',
+          description: 'Personalised cards and canvas prints for the people you love.',
           potentialAction: {
             '@type': 'SearchAction',
             target: 'https://creator.yozzytools.com/search?q={search_term_string}',
@@ -73,7 +73,7 @@ export default defineNuxtConfig({
         innerHTML: JSON.stringify({
           '@context': 'https://schema.org',
           '@type': 'Organization',
-          name: 'CraftAI',
+          name: 'Create Keepsakes',
           url: 'https://creator.yozzytools.com',
           logo: 'https://creator.yozzytools.com/logo.png',
           sameAs: []
