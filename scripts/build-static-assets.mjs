@@ -40,7 +40,20 @@ const FONTS = [
   { family: 'caveat', camel: 'Caveat', weight: 700, out: 'Caveat-Bold.ttf' },
   { family: 'lora', camel: 'Lora', weight: 400, out: 'Lora-Regular.ttf' },
   { family: 'lora', camel: 'Lora', weight: 600, out: 'Lora-SemiBold.ttf' },
+  // 全站正文/标题字体（原来从 Google Fonts 外链加载 —— GDPR 问题）
+  { family: 'manrope', camel: 'Manrope', weight: 400, out: 'Manrope-Regular.ttf' },
+  { family: 'manrope', camel: 'Manrope', weight: 500, out: 'Manrope-Medium.ttf' },
+  { family: 'manrope', camel: 'Manrope', weight: 600, out: 'Manrope-SemiBold.ttf' },
+  { family: 'manrope', camel: 'Manrope', weight: 700, out: 'Manrope-Bold.ttf' },
+  { family: 'sora', camel: 'Sora', weight: 500, out: 'Sora-Medium.ttf' },
+  { family: 'sora', camel: 'Sora', weight: 600, out: 'Sora-SemiBold.ttf' },
+  { family: 'sora', camel: 'Sora', weight: 700, out: 'Sora-Bold.ttf' },
+  { family: 'sora', camel: 'Sora', weight: 800, out: 'Sora-ExtraBold.ttf' },
 ]
+
+function existsFile(p) {
+  try { return existsSync(p) } catch { return false }
+}
 
 async function r2Put(key, file, contentType, cacheControl) {
   await exec('npx', [
@@ -67,26 +80,35 @@ async function buildFonts() {
     }
     // 实例化：可变字体 → 静态 ttf（librsvg / fontconfig 不吃可变轴）
     const outFile = path.join(OUT, 'fonts', f.out)
-    try {
-      await exec('python3', [
-        '-c', `
+    // 已经生成过就跳过（重跑只补缺失的）
+    if (existsFile(outFile)) {
+      console.log(`  - fonts/${f.out} 已存在`)
+      continue
+    }
+    const inst = (updateNames) => exec('python3', [
+      '-c', `
 import sys
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 f = TTFont(sys.argv[1])
-inst = instancer.instantiateVariableFont(f, {"wght": int(sys.argv[3])}, updateFontNames=True)
+inst = instancer.instantiateVariableFont(f, {"wght": int(sys.argv[3])}, updateFontNames=${updateNames})
 inst.save(sys.argv[2])
 `, varPath, outFile, String(f.weight),
-      ], { cwd: process.cwd() })
+    ], { cwd: process.cwd() })
+    try {
+      await inst('True')
       console.log(`  v fonts/${f.out}`)
     } catch (e) {
-      console.log(`  x fonts/${f.out}：实例化失败 ${e.message?.slice(0, 100)}`)
+      // ⚠️ 某些字重（如 Sora 500）在 updateFontNames=True 时会因 name 表冲突失败，
+      //    退一步不改名即可 —— 文件名/字体名对外是我们自己定的
+      try {
+        await inst('False')
+        console.log(`  v fonts/${f.out}（未改名）`)
+      } catch (e2) {
+        console.log(`  x fonts/${f.out}：实例化失败 ${String(e2.message || e2).slice(0, 100)}`)
+      }
     }
   }
-}
-
-function existsFile(p) {
-  try { return require('node:fs').statSync(p).isFile() } catch { return false }
 }
 
 async function buildSamples() {

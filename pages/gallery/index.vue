@@ -1,210 +1,304 @@
 <template>
-  <div class="content-page">
-    <div class="content-glow" />
+  <div class="ck-gallery">
+    <div class="ck-wrap">
+      <header class="ck-gallery__head">
+        <p class="ck-badge">
+          <span class="i-ph-squares-four" /> Made with Create Keepsakes
+        </p>
+        <h1 class="ck-h1">Cards people made</h1>
+        <p class="ck-lede">
+          Every one of these started with a photo, an occasion and a few
+          words. Have a look — then make one that is only yours.
+        </p>
+      </header>
 
-    <section class="relative py-20 sm:py-28">
-      <div class="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center max-w-2xl mx-auto">
-          <span class="content-badge">Gallery</span>
-          <h1 class="font-display text-4xl font-800 tracking-tight text-white sm:text-5xl mt-4">
-            Community Creations
-          </h1>
-          <p class="mx-auto mt-4 max-w-xl text-lg text-ink-300">
-            Explore amazing creations from our community. Get inspired and create your own.
+      <!-- 分类 -->
+      <div class="ck-filters">
+        <button
+          v-for="f in filters"
+          :key="f.id"
+          class="ck-filter"
+          :class="{ 'ck-filter--on': filter === f.id }"
+          @click="filter = f.id"
+        >
+          {{ f.label }}
+        </button>
+      </div>
+
+      <!-- 网格 -->
+      <div class="ck-grid">
+        <figure
+          v-for="c in visible"
+          :key="c.id"
+          class="ck-item"
+        >
+          <NuxtLink :to="c.to" class="ck-item__media">
+            <img
+              :src="c.image"
+              :alt="c.alt"
+              loading="lazy"
+              decoding="async"
+            />
+          </NuxtLink>
+          <figcaption class="ck-item__cap">
+            <span class="ck-item__tag">{{ c.tag }}</span>
+            <span class="ck-item__text">{{ c.caption }}</span>
+          </figcaption>
+        </figure>
+      </div>
+
+      <!-- 分享 CTA -->
+      <section class="ck-share">
+        <div class="ck-share__icon i-ph-hand-heart" />
+        <div>
+          <h2 class="ck-share__title">Made something lovely?</h2>
+          <p class="ck-share__text">
+            Share it with the people you love. Your photos stay private until
+            you decide otherwise — we never publish them on our own.
           </p>
         </div>
-
-        <!-- Filter -->
-        <div class="mt-10 flex justify-center gap-2">
-          <button
-            v-for="f in filters"
-            :key="f.id"
-            class="h-9 rounded-full px-4 text-sm font-medium transition-colors"
-            :class="filter === f.id
-              ? 'bg-accent text-white'
-              : 'bg-white/5 text-ink-300 hover:bg-white/10'"
-            @click="filter = f.id"
-          >
-            {{ f.label }}
-          </button>
-        </div>
-
-        <!-- Loading skeleton -->
-        <div v-if="pending" class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div v-for="i in 6" :key="i" class="panel overflow-hidden">
-            <div class="aspect-square animate-pulse bg-white/[0.06]" />
-            <div class="p-4 space-y-2">
-              <div class="h-4 w-2/3 rounded bg-white/[0.06]" />
-              <div class="h-3 w-full rounded bg-white/[0.04]" />
-              <div class="mt-3 h-5 w-16 rounded-full bg-white/[0.06]" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Gallery Grid -->
-        <div v-else class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <div
-            v-for="item in items"
-            :key="item.id"
-            class="gallery-item panel overflow-hidden group cursor-pointer"
-            @click="openItem(item)"
-          >
-            <!-- Image -->
-            <div v-if="item.type === 'image'" class="aspect-square overflow-hidden">
-              <img
-                v-if="item.imageUrl"
-                :src="item.imageUrl"
-                :alt="item.title"
-                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-            </div>
-            <!-- Music Cover -->
-            <div v-else class="aspect-square overflow-hidden relative">
-              <img
-                v-if="item.coverUrl"
-                :src="item.coverUrl"
-                :alt="item.title"
-                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div
-                v-else
-                class="h-full w-full"
-                :style="{ background: item.coverColor }"
-              />
-              <div class="absolute inset-0 flex items-center justify-center">
-                <div class="grid h-12 w-12 place-items-center rounded-full bg-black/40 backdrop-blur-sm">
-                  <span class="i-ph-music-notes text-xl text-white" />
-                </div>
-              </div>
-            </div>
-            <!-- Info -->
-            <div class="p-4">
-              <h3 class="text-sm font-medium text-white truncate">{{ item.title }}</h3>
-              <p class="mt-1 text-xs text-ink-400 truncate">{{ item.prompt }}</p>
-              <div class="mt-2 flex items-center gap-2">
-                <span class="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-[10px] font-semibold text-accent-soft capitalize">
-                  {{ item.type }}
-                </span>
-                <span class="text-[11px] text-ink-500">{{ formatDate(item.createdAt) }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Empty -->
-        <div v-if="!pending && items.length === 0" class="mt-12 text-center">
-          <p class="text-ink-400">No public creations yet. Be the first to share!</p>
-          <NuxtLink to="/create" class="btn-primary mt-4 inline-flex">Create & Share</NuxtLink>
-        </div>
-
-        <!-- Load More -->
-        <div v-if="pagination.hasMore && !pending" class="mt-10 flex justify-center">
-          <button class="btn-secondary !h-10 !px-6" :disabled="loadingMore" @click="loadMore">
-            {{ loadingMore ? 'Loading...' : 'Load More' }}
-          </button>
-        </div>
-      </div>
-    </section>
+        <NuxtLink to="/cards" class="ck-btn ck-btn--primary">
+          Make your own
+          <span class="i-ph-arrow-right" />
+        </NuxtLink>
+      </section>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-const filter = ref<'all' | 'music' | 'image'>('all')
-const page = ref(1)
-const loadingMore = ref(false)
-
-const filters = [
-  { id: 'all' as const, label: 'All' },
-  { id: 'music' as const, label: 'Music' },
-  { id: 'image' as const, label: 'Images' },
-]
-
-const { data, pending, refresh } = await useFetch('/api/gallery', {
-  query: { page: 1, limit: 12, type: 'all' },
-  key: 'gallery-all-1',
-})
-
-const items = computed(() => data.value?.items || [])
-const pagination = computed(() => data.value?.pagination || { hasMore: false })
-
-async function loadMore() {
-  loadingMore.value = true
-  page.value++
-  try {
-    const newData = await $fetch('/api/gallery', {
-      query: { page: page.value, limit: 12, type: filter.value },
-    })
-    if (newData.items) {
-      items.value.push(...newData.items)
-    }
-  } catch {
-    page.value--
-  } finally {
-    loadingMore.value = false
-  }
-}
-
-function openItem(item: any) {
-  if (item.type === 'music') {
-    navigateTo(`/song/${item.id}`)
-  } else {
-    navigateTo(`/image?remix=${item.id}`)
-  }
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  try {
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    })
-  } catch {
-    return dateStr
-  }
-}
-
-watch(filter, () => {
-  page.value = 1
-  refresh()
-})
+definePageMeta({ layout: 'marketing' })
 
 useHead({
-  title: 'Gallery — Community Creations | CraftAI',
-  meta: [
-    { name: 'description', content: 'Explore amazing AI-generated music and images from the CraftAI community. Get inspired and create your own.' },
-    { property: 'og:title', content: 'Community Creations Gallery | CraftAI' },
-    { property: 'og:description', content: 'Explore amazing AI-generated music and images from the CraftAI community.' },
-    { property: 'og:type', content: 'website' },
-  ],
-  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/gallery' }],
+  title: 'Cards people made — Create Keepsakes',
+  meta: [{
+    name: 'description',
+    content: 'A wall of finished cards — birthdays, thank you notes, wall art — all made with Create Keepsakes.',
+  }],
+  link: [{ rel: 'canonical', href: 'https://create.yozzytools.com/gallery' }],
 })
+
+const ASSET = 'https://assets.yozzytools.com/showcase'
+
+interface Card {
+  id: string
+  image: string
+  alt: string
+  tag: string
+  caption: string
+  cat: string
+  to: string
+}
+
+const CARDS: Card[] = [
+  {
+    id: 'hero-birthday', image: `${ASSET}/hero-birthday.webp`,
+    alt: 'A birthday card for Margaret with a cake and balloons',
+    tag: 'Birthday', caption: 'A cake, some balloons, and a name spelled right',
+    cat: 'birthday', to: '/cards?scenario=birthday',
+  },
+  {
+    id: 'person-grandma', image: `${ASSET}/person-grandma.webp`,
+    alt: 'A milestone birthday card with golden balloons and white roses',
+    tag: 'Milestone', caption: 'Eighty years of you, in gold and cream',
+    cat: 'birthday', to: '/cards?scenario=milestone',
+  },
+  {
+    id: 'person-mum', image: `${ASSET}/person-mum.webp`,
+    alt: 'A card of garden roses beside a cup of tea',
+    tag: 'For Mum', caption: 'Roses, a cup of tea, and a thank you',
+    cat: 'family', to: '/cards?scenario=parents-day',
+  },
+  {
+    id: 'person-dad', image: `${ASSET}/person-dad.webp`,
+    alt: 'A card showing a golf bag and a thermos of tea',
+    tag: 'For Dad', caption: 'A golf bag, a thermos, and a Sunday morning',
+    cat: 'family', to: '/cards?scenario=retirement',
+  },
+  {
+    id: 'person-grandpa', image: `${ASSET}/person-grandpa.webp`,
+    alt: 'A vintage postcard style card with a rocking chair on a porch',
+    tag: 'Milestone', caption: 'A rocking chair and seventy years young',
+    cat: 'birthday', to: '/cards?scenario=milestone',
+  },
+  {
+    id: 'person-friend', image: `${ASSET}/person-friend.webp`,
+    alt: 'A card of wildflowers and a warm cup of tea',
+    tag: 'Thank you', caption: 'For the friend who turned up when it mattered',
+    cat: 'thanks', to: '/cards?scenario=thank-you',
+  },
+  {
+    id: 'person-partner', image: `${ASSET}/person-partner.webp`,
+    alt: 'A card of white lace and soft roses',
+    tag: 'Anniversary', caption: 'Twenty-five years of you',
+    cat: 'family', to: '/cards?scenario=wedding',
+  },
+  {
+    id: 'person-teacher', image: `${ASSET}/person-teacher.webp`,
+    alt: 'A card of a school bell, books and a red apple',
+    tag: 'Thank you', caption: 'Thirty years of other people’s children',
+    cat: 'thanks', to: '/cards?scenario=retirement',
+  },
+  {
+    id: 'person-pet', image: `${ASSET}/person-pet.webp`,
+    alt: 'A watercolour portrait of a golden retriever in a party hat',
+    tag: 'For a pet', caption: 'The one who is really in charge',
+    cat: 'pets', to: '/cards?scenario=pet',
+  },
+  {
+    id: 'scene-christmas', image: `${ASSET}/scene-christmas.webp`,
+    alt: 'A Christmas card with a decorated tree glowing beside a red door',
+    tag: 'Christmas', caption: 'Snow, a warm window, and a tree that is properly decorated',
+    cat: 'holiday', to: '/cards?scenario=christmas',
+  },
+  {
+    id: 'scene-thankyou-parent', image: `${ASSET}/scene-thankyou-parent.webp`,
+    alt: 'A quiet get well soon card with spring flowers by a window',
+    tag: 'Get well soon', caption: 'Said gently, without fuss',
+    cat: 'thanks', to: '/cards?scenario=get-well',
+  },
+  {
+    id: 'scene-wallart', image: `${ASSET}/scene-wallart.webp`,
+    alt: 'An impressionist painting of a small village street',
+    tag: 'Wall art', caption: 'The village you grew up in, on a 16 × 20 canvas',
+    cat: 'wall', to: '/cards?scenario=hometown',
+  },
+]
+
+const filters = [
+  { id: 'all', label: 'Everything' },
+  { id: 'birthday', label: 'Birthdays' },
+  { id: 'family', label: 'Family' },
+  { id: 'thanks', label: 'Thank you' },
+  { id: 'holiday', label: 'Christmas' },
+  { id: 'wall', label: 'Wall art' },
+  { id: 'pets', label: 'Pets' },
+]
+
+const filter = ref('all')
+const visible = computed(() =>
+  filter.value === 'all' ? CARDS : CARDS.filter(c => c.cat === filter.value),
+)
 </script>
 
 <style scoped>
-.content-page {
-  position: relative;
-}
+.ck-gallery {
+  --ck-bg: #fbf7f1;
+  --ck-cream: #f5ede1;
+  --ck-white: #fffdfa;
+  --ck-ink: #2a2420;
+  --ck-ink-2: #6b5f55;
+  --ck-line: rgba(58, 46, 38, 0.12);
+  --ck-coral: #c8543d;
+  --ck-coral-deep: #a53f2c;
+  --ck-serif: 'Playfair Display', Georgia, serif;
 
-.content-glow {
-  pointer-events: none;
-  position: absolute;
-  inset: -5% -10% auto -10%;
-  height: 40%;
-  background: radial-gradient(ellipse at 50% 0%, rgba(139, 124, 255, 0.1), transparent 60%);
-  z-index: 0;
+  min-height: 70vh;
+  padding: 3.5rem 0 5rem;
+  background: var(--ck-bg);
+  color: var(--ck-ink);
+  font-family: 'Manrope', system-ui, sans-serif;
 }
+.ck-wrap { max-width: 74rem; margin: 0 auto; padding: 0 1.5rem; }
 
-.content-badge {
+.ck-h1 {
+  font-family: var(--ck-serif);
+  font-size: clamp(2.2rem, 5vw, 3.2rem);
+  font-weight: 600;
+  line-height: 1.1;
+}
+.ck-lede { margin-top: 0.9rem; font-size: 1.0625rem; line-height: 1.6; color: var(--ck-ink-2); max-width: 48ch; }
+
+.ck-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.4rem 1rem;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  border: 1px solid rgba(139, 124, 255, 0.2);
-  background: rgba(139, 124, 255, 0.08);
-  color: var(--accent-soft);
-  font-size: 0.78rem;
+  background: rgba(200, 84, 61, 0.1);
+  color: var(--ck-coral-deep);
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+}
+.ck-gallery__head { max-width: 44rem; margin-bottom: 2rem; }
+
+/* ---------- 筛选 ---------- */
+.ck-filters { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.75rem; }
+.ck-filter {
+  padding: 0.45rem 0.95rem;
+  border: 1px solid var(--ck-line);
+  border-radius: 999px;
+  background: var(--ck-white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ck-ink-2);
+  cursor: pointer;
+  transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+.ck-filter:hover { border-color: var(--ck-coral); color: var(--ck-coral-deep); }
+.ck-filter--on { background: var(--ck-ink); border-color: var(--ck-ink); color: #fff; }
+
+/* ---------- 网格 ---------- */
+.ck-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1.5rem;
+}
+.ck-item { margin: 0; display: flex; flex-direction: column; }
+.ck-item__media {
+  display: block;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: var(--ck-cream);
+  box-shadow: 0 18px 40px -24px rgba(58, 46, 38, 0.5);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ck-item__media:hover { transform: translateY(-4px); box-shadow: 0 26px 50px -24px rgba(58, 46, 38, 0.55); }
+.ck-item__media img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
+.ck-item__cap { display: flex; flex-direction: column; gap: 0.3rem; margin-top: 0.75rem; }
+.ck-item__tag {
+  align-self: flex-start;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(200, 84, 61, 0.1);
+  color: var(--ck-coral-deep);
+  font-size: 0.6875rem;
+  font-weight: 700;
+}
+.ck-item__text { font-size: 0.875rem; line-height: 1.5; color: var(--ck-ink-2); }
+
+/* ---------- 分享 CTA ---------- */
+.ck-share {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 4rem;
+  padding: 2.25rem 2rem;
+  border-radius: 1.25rem;
+  background: var(--ck-cream);
+}
+.ck-share__icon { font-size: 2.5rem; color: var(--ck-coral); }
+.ck-share__title { margin: 0; font-family: var(--ck-serif); font-size: 1.5rem; font-weight: 600; }
+.ck-share__text { margin: 0.4rem 0 0; max-width: 46ch; font-size: 0.9375rem; line-height: 1.6; color: var(--ck-ink-2); }
+.ck-share .ck-btn { margin-left: auto; }
+
+.ck-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.85rem 1.6rem;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.ck-btn--primary { background: var(--ck-coral); color: #fff; }
+.ck-btn--primary:hover { background: var(--ck-coral-deep); }
+
+@media (max-width: 700px) {
+  .ck-share .ck-btn { margin-left: 0; }
 }
 </style>

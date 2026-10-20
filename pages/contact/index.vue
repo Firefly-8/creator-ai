@@ -1,94 +1,187 @@
 <template>
-  <div class="content-page">
-    <!-- Glow -->
-    <div class="content-glow" />
+  <div class="ck-page">
+    <div class="ck-wrap ck-wrap--narrow">
+      <nav class="ck-page__crumb">
+        <NuxtLink to="/" class="ck-page__back">
+          <span class="i-ph-arrow-left" /> Home
+        </NuxtLink>
+      </nav>
 
-    <section class="relative py-20 sm:py-28">
-      <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-          <span class="content-badge">Contact</span>
-          <h1 class="font-display text-4xl font-800 tracking-tight text-white sm:text-5xl mt-4">
-            Get in Touch
-          </h1>
-          <p class="mx-auto mt-4 max-w-xl text-lg text-ink-300">
-            Have questions, feedback, or need help? We'd love to hear from you.
-          </p>
+      <h1 class="ck-h1">Get in touch</h1>
+      <p class="ck-page__lead">
+        Something not right, or a card you would like us to look at? We read
+        every message. It is a small team, so replies take a day or two — but
+        they come.
+      </p>
+
+      <div class="ck-page__body">
+        <h2>Email us</h2>
+        <div class="ck-ways">
+          <a class="ck-way" href="mailto:hello@yozzytools.com">
+            <span class="ck-way__icon i-ph-chat-circle-text" />
+            <span class="ck-way__body">
+              <span class="ck-way__label">General questions</span>
+              <span class="ck-way__value">hello@yozzytools.com</span>
+            </span>
+            <span class="i-ph-arrow-up-right ck-way__go" />
+          </a>
+          <a class="ck-way" href="mailto:privacy@yozzytools.com">
+            <span class="ck-way__icon i-ph-lock-key" />
+            <span class="ck-way__body">
+              <span class="ck-way__label">Privacy and your data</span>
+              <span class="ck-way__value">privacy@yozzytools.com</span>
+            </span>
+            <span class="i-ph-arrow-up-right ck-way__go" />
+          </a>
+          <a class="ck-way" href="mailto:refunds@yozzytools.com">
+            <span class="ck-way__icon i-ph-arrow-counter-clockwise" />
+            <span class="ck-way__body">
+              <span class="ck-way__label">Refunds and payments</span>
+              <span class="ck-way__value">refunds@yozzytools.com</span>
+            </span>
+            <span class="i-ph-arrow-up-right ck-way__go" />
+          </a>
         </div>
 
-        <div class="mt-12 panel p-8 sm:p-10">
-          <div class="space-y-6">
-            <div class="flex items-start gap-4">
-              <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent/15">
-                <span class="i-ph-envelope-simple text-lg text-accent-soft" />
-              </div>
-              <div>
-                <h3 class="font-display text-[15px] font-600 text-white">General Support</h3>
-                <a href="mailto:support@craftai.ai" class="mt-1 text-[14px] text-accent-soft hover:text-accent transition-colors">support@craftai.ai</a>
-              </div>
-            </div>
-            <div class="border-t border-white/[0.06]"></div>
-            <div class="flex items-start gap-4">
-              <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent/15">
-                <span class="i-ph-briefcase text-lg text-accent-soft" />
-              </div>
-              <div>
-                <h3 class="font-display text-[15px] font-600 text-white">Business Inquiries</h3>
-                <a href="mailto:business@craftai.ai" class="mt-1 text-[14px] text-accent-soft hover:text-accent transition-colors">business@craftai.ai</a>
-              </div>
-            </div>
-            <div class="border-t border-white/[0.06]"></div>
-            <div class="flex items-start gap-4">
-              <div class="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent/15">
-                <span class="i-ph-clock text-lg text-accent-soft" />
-              </div>
-              <div>
-                <h3 class="font-display text-[15px] font-600 text-white">Response Time</h3>
-                <p class="mt-1 text-[14px] text-ink-300">Usually within 24 hours.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <h2>Before you write</h2>
+        <p>These cover most of what people ask:</p>
+        <ul>
+          <li>
+            <strong>Can I get a refund?</strong>
+            Yes, if a card is not right. Tell us what went wrong and we will
+            either fix it or refund you — no forms.
+          </li>
+          <li>
+            <strong>Will my photo end up online?</strong>
+            No. Photos are private to your account, never published, never
+            sold, and deleted within 30 days of you deleting them. See the
+            <NuxtLink to="/privacy">privacy page</NuxtLink> for the detail.
+          </li>
+          <li>
+            <strong>The name on the card is wrong.</strong>
+            It should not be — we typeset the words rather than letting the
+            picture model paint them. If it is wrong anyway, tell us and we
+            will fix it.
+          </li>
+          <li>
+            <strong>Can I cancel my subscription?</strong>
+            Yes, from your account page, in one click. You keep what you have
+            made, and your plan runs to the end of the period you paid for.
+          </li>
+        </ul>
+
+        <h2>Where we are</h2>
+        <p>
+          We are a small, distributed team. There is no office address to
+          post to — email is genuinely the best way to reach us, and it means
+          you get a reply from the person who can actually fix the thing.
+        </p>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'marketing' })
+
 useHead({
-  title: 'Contact CraftAI — Get Support & Help',
-  meta: [
-    { name: 'description', content: 'Contact CraftAI support. Get help with your account, billing, or technical issues. Email us at support@craftai.ai.' },
-    { property: 'og:title', content: 'Contact CraftAI' },
-    { property: 'og:description', content: 'Get support, ask questions, or send feedback.' },
-  ],
-  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/contact' }],
+  title: 'Contact — Create Keepsakes',
+  meta: [{
+    name: 'description',
+    content: 'Email us about a card, a payment or your privacy. We read everything and we do reply.',
+  }],
+  link: [{ rel: 'canonical', href: 'https://create.yozzytools.com/contact' }],
 })
 </script>
 
 <style scoped>
-.content-page {
-  position: relative;
-}
+.ck-page {
+  --ck-bg: #fbf7f1;
+  --ck-cream: #f5ede1;
+  --ck-white: #fffdfa;
+  --ck-ink: #2a2420;
+  --ck-ink-2: #6b5f55;
+  --ck-line: rgba(58, 46, 38, 0.12);
+  --ck-coral: #c8543d;
+  --ck-coral-deep: #a53f2c;
+  --ck-serif: 'Playfair Display', Georgia, serif;
 
-.content-glow {
-  pointer-events: none;
-  position: absolute;
-  inset: -5% -10% auto -10%;
-  height: 40%;
-  background: radial-gradient(ellipse at 50% 0%, rgba(139, 124, 255, 0.1), transparent 60%);
-  z-index: 0;
+  min-height: 70vh;
+  padding: 2.5rem 0 5rem;
+  background: var(--ck-bg);
+  color: var(--ck-ink);
+  font-family: 'Manrope', system-ui, sans-serif;
 }
+.ck-wrap { max-width: 74rem; margin: 0 auto; padding: 0 1.5rem; }
+.ck-wrap--narrow { max-width: 46rem; }
 
-.content-badge {
+.ck-h1 {
+  font-family: var(--ck-serif);
+  font-size: clamp(2.1rem, 4.6vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.1;
+}
+.ck-page__crumb { margin-bottom: 1.5rem; }
+.ck-page__back {
   display: inline-flex;
   align-items: center;
-  padding: 0.4rem 1rem;
-  border-radius: 999px;
-  border: 1px solid rgba(139, 124, 255, 0.2);
-  background: rgba(139, 124, 255, 0.08);
-  color: var(--accent-soft);
-  font-size: 0.78rem;
+  gap: 0.35rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  color: var(--ck-ink-2);
+  text-decoration: none;
 }
+.ck-page__back:hover { color: var(--ck-coral-deep); }
+
+.ck-page__lead {
+  margin-top: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 0.8rem;
+  background: var(--ck-cream);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--ck-ink-2);
+}
+
+.ck-page__body { margin-top: 2.25rem; }
+.ck-page__body h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-family: var(--ck-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.ck-page__body p { margin: 0.9rem 0; font-size: 1rem; line-height: 1.75; color: #3f362f; }
+.ck-page__body ul { margin: 0.9rem 0; padding-left: 1.35rem; }
+.ck-page__body li { margin: 0.6rem 0; font-size: 1rem; line-height: 1.7; color: #3f362f; }
+.ck-page__body strong { font-weight: 700; color: var(--ck-ink); }
+.ck-page__body a { color: var(--ck-coral-deep); font-weight: 600; text-underline-offset: 3px; }
+
+.ck-ways { display: grid; gap: 0.75rem; margin: 1.25rem 0; }
+.ck-way {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--ck-line);
+  border-radius: 0.9rem;
+  background: var(--ck-white);
+  text-decoration: none;
+  transition: transform 0.14s ease, border-color 0.14s ease;
+}
+.ck-way:hover { transform: translateY(-2px); border-color: var(--ck-coral); }
+.ck-way__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.7rem;
+  background: rgba(200, 84, 61, 0.12);
+  color: var(--ck-coral-deep);
+  font-size: 1.2rem;
+}
+.ck-way__body { display: flex; flex-direction: column; gap: 0.1rem; }
+.ck-way__label { font-size: 0.8125rem; color: #a08f81; }
+.ck-way__value { font-size: 1rem; font-weight: 700; color: var(--ck-ink); }
+.ck-way__go { margin-left: auto; color: #a08f81; font-size: 1.1rem; }
 </style>

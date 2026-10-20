@@ -7,6 +7,13 @@
           <img src="/logo.png" alt="Create Keepsakes" class="h-9 w-9 rounded-[11px] object-contain" />
           <span class="font-display text-[17px] font-700 tracking-tight text-white">Create Keepsakes</span>
         </NuxtLink>
+        <NuxtLink to="/cards" class="studio-sidebar__note" @click="mobileNavOpen = false">
+          <span class="i-ph-gift" />
+          <span>
+            <strong>Make a card</strong>
+            <em>Back to the card maker</em>
+          </span>
+        </NuxtLink>
       </div>
 
       <nav class="studio-sidebar__nav">
@@ -101,7 +108,6 @@ import LanguageSwitcher from '~/components/ui/LanguageSwitcher.vue'
 import LocaleSuggestion from '~/components/ui/LocaleSuggestion.vue'
 
 const { t: $t } = useI18n()
-const localePath = useLocalePath()
 const route = useRoute()
 const mobileNavOpen = ref(false)
 const { user, authReady, logout } = useAuth()
@@ -138,24 +144,24 @@ const groups = computed(() => [
   {
     label: 'Make',
     items: [
-      { to: localePath('/cards'), label: 'Create a Card', icon: 'i-ph-gift' },
-      { to: localePath('/image'), label: $t('nav.image'), icon: 'i-ph-image' },
+      { to: '/cards', label: 'Create a Card', icon: 'i-ph-gift' },
+      { to: '/image', label: $t('nav.image'), icon: 'i-ph-image' },
     ],
   },
   {
     label: $t('nav.musicGroup'),
     items: [
-      { to: localePath('/create'), label: $t('nav.create'), icon: 'i-ph-waveform' },
-      { to: localePath('/cover'), label: $t('nav.cover'), icon: 'i-ph-arrows-clockwise' },
-      { to: localePath('/music-library'), label: 'Music library', icon: 'i-ph-music-notes' },
+      { to: '/create', label: $t('nav.create'), icon: 'i-ph-waveform' },
+      { to: '/cover', label: $t('nav.cover'), icon: 'i-ph-arrows-clockwise' },
+      { to: '/music-library', label: 'Music library', icon: 'i-ph-music-notes' },
     ],
   },
   {
     label: 'Discover',
     items: [
-      { to: localePath('/gallery'), label: 'Gallery', icon: 'i-ph-grid-four' },
-      { to: localePath('/blog'), label: 'Blog', icon: 'i-ph-newspaper' },
-      { to: localePath('/tools'), label: 'Tools', icon: 'i-ph-wrench' },
+      { to: '/gallery', label: 'Gallery', icon: 'i-ph-grid-four' },
+      { to: '/blog', label: 'Blog', icon: 'i-ph-newspaper' },
+      { to: '/tools', label: 'Tools', icon: 'i-ph-wrench' },
     ],
   },
 ])
@@ -200,5 +206,45 @@ watch(() => route.fullPath, () => {
   border-color: var(--border-strong);
   color: var(--ink);
   background: var(--fill-soft);
+}
+
+<style scoped>
+/* 「旧 AI 工具站」提示 —— 这套深色工作台是降级保留的老站，
+   顶部给一条明确出口，用户不该以为这里还是主站 */
+.studio-sidebar__note {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid rgba(139, 124, 255, 0.28);
+  border-radius: 0.7rem;
+  background: rgba(139, 124, 255, 0.1);
+  text-decoration: none;
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+.studio-sidebar__note:hover {
+  background: rgba(139, 124, 255, 0.18);
+  border-color: rgba(139, 124, 255, 0.45);
+}
+.studio-sidebar__note > span:first-child {
+  font-size: 1.1rem;
+  color: #b6aaff;
+  flex: none;
+}
+.studio-sidebar__note span span,
+.studio-sidebar__note strong,
+.studio-sidebar__note em {
+  display: block;
+}
+.studio-sidebar__note strong {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #fff;
+}
+.studio-sidebar__note em {
+  font-size: 0.6875rem;
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.55);
 }
 </style>

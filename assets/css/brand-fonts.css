@@ -54,6 +54,66 @@
   font-display: swap;
 }
 
+/* ---------- Manrope（全站正文，原先从 Google Fonts 外链加载） ---------- */
+@font-face {
+  font-family: 'Manrope';
+  src: url('https://assets.yozzytools.com/fonts/Manrope-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope';
+  src: url('https://assets.yozzytools.com/fonts/Manrope-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope';
+  src: url('https://assets.yozzytools.com/fonts/Manrope-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Manrope';
+  src: url('https://assets.yozzytools.com/fonts/Manrope-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ---------- Sora（旧工作台的 display 字体） ---------- */
+@font-face {
+  font-family: 'Sora';
+  src: url('https://assets.yozzytools.com/fonts/Sora-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sora';
+  src: url('https://assets.yozzytools.com/fonts/Sora-SemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sora';
+  src: url('https://assets.yozzytools.com/fonts/Sora-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Sora';
+  src: url('https://assets.yozzytools.com/fonts/Sora-ExtraBold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---------- Caveat（手写签名） ---------- */
 @font-face {
   font-family: 'Caveat';

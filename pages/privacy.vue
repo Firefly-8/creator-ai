@@ -1,109 +1,235 @@
 <template>
-  <div class="content-page">
-    <!-- Glow -->
-    <div class="content-glow" />
+  <div class="ck-legal">
+    <div class="ck-wrap ck-wrap--narrow">
+      <nav class="ck-legal__crumb">
+        <NuxtLink to="/" class="ck-legal__back">
+          <span class="i-ph-arrow-left" /> Home
+        </NuxtLink>
+      </nav>
 
-    <section class="relative py-20 sm:py-28">
-      <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <div class="text-center">
-          <span class="content-badge">Legal</span>
-          <h1 class="font-display text-4xl font-800 tracking-tight text-white sm:text-5xl mt-4">
-            Privacy Policy
-          </h1>
-          <p class="mt-3 text-sm text-ink-400">Last updated: August 2026</p>
-        </div>
+      <h1 class="ck-h1">Privacy</h1>
+      <p class="ck-legal__updated">Last updated: 20 October 2026</p>
 
-        <div class="mt-14 space-y-5">
-          <div class="panel p-7">
-            <h2 class="font-display text-lg font-600 text-white">1. Information We Collect</h2>
-            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">
-              We collect information you provide directly: email address (for account creation), and content you create using our AI tools (prompts, generated images, and audio files).
-            </p>
-          </div>
+      <p class="ck-legal__lead">
+        This page explains what we collect, what we do with it, and what you
+        can ask us to do about it. We have tried to write it in plain words.
+        If anything is unclear, please email us.
+      </p>
 
-          <div class="panel p-7">
-            <h2 class="font-display text-lg font-600 text-white">2. How We Use Your Information</h2>
-            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">
-              We use your information to provide and improve our services, process subscriptions, and communicate with you about your account. We do NOT use your prompts or creations to train AI models.
-            </p>
-          </div>
+      <div class="ck-legal__body">
+        <h2>Who we are</h2>
+        <p>
+          Create Keepsakes is a product of Yozzy Tools. We make tools for
+          making personalised greeting cards and prints. When you use this
+          site you are dealing with Yozzy Tools, and this policy applies to
+          the site and the pictures you make with it.
+        </p>
 
-          <div class="panel p-7">
-            <h2 class="font-display text-lg font-600 text-white">3. Data Security</h2>
-            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">
-              All sensitive data (prompts, lyrics, metadata) is encrypted at rest using AES-256-GCM. API keys are encrypted and decrypted only at runtime. We use Cloudflare's infrastructure for secure, global delivery.
-            </p>
-          </div>
+        <h2>What we collect</h2>
+        <h3>Information you give us</h3>
+        <ul>
+          <li><strong>Your email address</strong> — when you create an account, so we can log you in and, if you have asked for it, send you the occasional note about your cards.</li>
+          <li><strong>The pictures you upload</strong> — the photos you use as a starting point for a card.</li>
+          <li><strong>The words you write</strong> — the name, message and signature you put on a card.</li>
+          <li><strong>Your cards</strong> — the finished pictures we make for you, so you can come back and download them again.</li>
+        </ul>
 
-          <div class="panel p-7">
-            <h2 class="font-display text-lg font-600 text-white">4. Data Retention</h2>
-            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">
-              Your account data is retained as long as your account is active. Generated content is stored for your access and can be deleted at any time from your dashboard.
-            </p>
-          </div>
+        <h3>Information we collect automatically</h3>
+        <ul>
+          <li>Basic technical information such as your browser type and rough location (country level), used to keep the site working and to spot abuse.</li>
+          <li>A cookie that remembers whether you have accepted cookies, and one that remembers your language preference.</li>
+        </ul>
 
-          <div class="panel p-7">
-            <h2 class="font-display text-lg font-600 text-white">5. Third-Party Services</h2>
-            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">
-              We use PayPal for payment processing. We use MiniMax for AI model inference. These services have their own privacy policies governing their use of your data.
-            </p>
-          </div>
+        <h2>Your photos — the part that matters most</h2>
+        <p>
+          You are trusting us with photographs of people who did not choose to
+          be online. We take that seriously.
+        </p>
+        <ul>
+          <li><strong>We do not publish your photos.</strong> Nothing you upload appears in the gallery or anywhere else on the site unless you deliberately share it.</li>
+          <li><strong>We do not sell your photos.</strong> Not to anyone, not for any purpose.</li>
+          <li><strong>We do not use your photos to train AI models.</strong> Not ours, and not anyone else's. The image generation service we use processes a picture to make your card and does not keep it for training.</li>
+          <li><strong>Photos are deleted within 30 days</strong> of you deleting them, and automatically deleted from our systems if you delete your account.</li>
+          <li>Your card itself is private to you. If you delete your account, your cards go too.</li>
+        </ul>
+        <p>
+          In the course of making a card, a picture is processed by our image
+          generation provider. We send only the picture you chose and the
+          instructions needed to make your card.
+        </p>
 
-          <div class="panel p-7">
-            <h2 class="font-display text-lg font-600 text-white">6. Your Rights</h2>
-            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">
-              You can request deletion of your account and all associated data by emailing <a href="mailto:support@craftai.ai" class="text-accent-soft hover:text-accent">support@craftai.ai</a>. We will process your request within 30 days.
-            </p>
-          </div>
+        <h2>AI-generated content</h2>
+        <p>
+          The pictures on your cards are generated by an AI image model, from
+          the photo and description you provide. That means the output is a new
+          picture rather than a copy of the original, and it may not be exactly
+          what you expected. We show you the result before you use it, and you
+          can always make another one.
+        </p>
+        <p>
+          The words on a card are typeset by us, not painted by the model. That
+          is deliberate: it means names, numbers and dates come out exactly as
+          you typed them.
+        </p>
 
-          <div class="panel p-7">
-            <h2 class="font-display text-lg font-600 text-white">7. Contact</h2>
-            <p class="mt-2.5 text-[14.5px] leading-relaxed text-ink-300">
-              For privacy-related questions, contact us at <a href="mailto:privacy@craftai.ai" class="text-accent-soft hover:text-accent">privacy@craftai.ai</a>.
-            </p>
-          </div>
-        </div>
+        <h2>Who we share information with</h2>
+        <p>We use a small number of service providers, each of which sees only what it needs:</p>
+        <ul>
+          <li><strong>Cloudflare</strong> — hosting, the database and storage for your files.</li>
+          <li><strong>Firebase (Google)</strong> — signing you in and keeping your account secure.</li>
+          <li><strong>MiniMax</strong> — generating the picture on your card.</li>
+          <li><strong>PayPal</strong> — taking payment. PayPal handles your card details; we never see them.</li>
+        </ul>
+        <p>
+          We do not sell personal information. We have never sold it and we
+          will not start now without telling you first.
+        </p>
+
+        <h2>Cookies</h2>
+        <p>
+          We use a small number of cookies: one to remember that you accepted
+          them, one to remember your language, and one to keep you signed in.
+          We do not use advertising cookies and we do not use tracking pixels
+          for advertising. You can accept only the necessary ones — the site
+          still works.
+        </p>
+
+        <h2>How long we keep things</h2>
+        <ul>
+          <li>Your account and your cards: until you delete them or close your account.</li>
+          <li>Uploaded photos: up to 30 days after you delete them.</li>
+          <li>Payment records: as long as tax law requires, then no longer.</li>
+          <li>Technical logs: a few months, then they are deleted.</li>
+        </ul>
+
+        <h2>Your rights</h2>
+        <p>
+          If you are in the EU, the UK, Switzerland or California, you have
+          rights over your personal information. Depending on where you live,
+          these include:
+        </p>
+        <ul>
+          <li>To be told what we hold about you, and to get a copy.</li>
+          <li>To correct anything that is wrong.</li>
+          <li>To have your information deleted.</li>
+          <li>To get your information in a portable format.</li>
+          <li>To object to certain uses, and to restrict processing.</li>
+          <li>To complain to your data protection regulator.</li>
+        </ul>
+        <p>
+          We will not charge you for this, and we will not make you jump
+          through hoops. Email us and we will do it. If you are in California
+          you can also ask us not to sell or share your personal information —
+          we do not do either, so there is nothing to opt out of.
+        </p>
+
+        <h2>Children</h2>
+        <p>
+          This service is not for children under 13, and we do not knowingly
+          collect information from them. If you believe a child has given us
+          personal information, please email us and we will delete it.
+        </p>
+
+        <h2>Changes to this policy</h2>
+        <p>
+          If we change this policy in a way that affects you, we will update
+          the date at the top of this page and, for anything significant, email
+          you.
+        </p>
+
+        <h2>Contact us</h2>
+        <p>
+          Privacy questions, or a request about your data:
+          <a href="mailto:privacy@yozzytools.com">privacy@yozzytools.com</a>
+        </p>
+        <p>
+          You can also use our <NuxtLink to="/contact">contact page</NuxtLink>.
+        </p>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+definePageMeta({ layout: 'marketing' })
+
 useHead({
-  title: 'Privacy Policy — CraftAI',
-  meta: [
-    { name: 'description', content: 'CraftAI Privacy Policy. Learn how we collect, use, and protect your data. Your prompts and creations are encrypted and never used for training.' },
-    { property: 'og:title', content: 'Privacy Policy — CraftAI' },
-    { robots: 'index, follow' },
-  ],
-  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/privacy' }],
+  title: 'Privacy — Create Keepsakes',
+  meta: [{
+    name: 'description',
+    content: 'What we collect, what we do with your photos, and how to exercise your rights under GDPR, UK GDPR and CCPA.',
+  }],
+  link: [{ rel: 'canonical', href: 'https://create.yozzytools.com/privacy' }],
 })
 </script>
 
 <style scoped>
-.content-page {
-  position: relative;
+.ck-legal {
+  --ck-bg: #fbf7f1;
+  --ck-cream: #f5ede1;
+  --ck-white: #fffdfa;
+  --ck-ink: #2a2420;
+  --ck-ink-2: #6b5f55;
+  --ck-line: rgba(58, 46, 38, 0.12);
+  --ck-coral: #c8543d;
+  --ck-coral-deep: #a53f2c;
+  --ck-serif: 'Playfair Display', Georgia, serif;
+
+  min-height: 70vh;
+  padding: 2.5rem 0 5rem;
+  background: var(--ck-bg);
+  color: var(--ck-ink);
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+.ck-wrap { max-width: 74rem; margin: 0 auto; padding: 0 1.5rem; }
+.ck-wrap--narrow { max-width: 46rem; }
+
+.ck-h1 {
+  font-family: var(--ck-serif);
+  font-size: clamp(2.1rem, 4.6vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.1;
 }
 
-.content-glow {
-  pointer-events: none;
-  position: absolute;
-  inset: -5% -10% auto -10%;
-  height: 40%;
-  background: radial-gradient(ellipse at 50% 0%, rgba(139, 124, 255, 0.1), transparent 60%);
-  z-index: 0;
-}
-
-.content-badge {
+.ck-legal__crumb { margin-bottom: 1.5rem; }
+.ck-legal__back {
   display: inline-flex;
   align-items: center;
-  padding: 0.4rem 1rem;
-  border-radius: 999px;
-  border: 1px solid rgba(139, 124, 255, 0.2);
-  background: rgba(139, 124, 255, 0.08);
-  color: var(--accent-soft);
-  font-size: 0.78rem;
+  gap: 0.35rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  color: var(--ck-ink-2);
+  text-decoration: none;
 }
+.ck-legal__back:hover { color: var(--ck-coral-deep); }
+
+.ck-legal__updated { margin-top: 0.6rem; font-size: 0.8125rem; color: #a08f81; }
+.ck-legal__lead {
+  margin-top: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  border-radius: 0.8rem;
+  background: var(--ck-cream);
+  font-size: 1rem;
+  line-height: 1.65;
+  color: var(--ck-ink-2);
+}
+
+.ck-legal__body { margin-top: 2.25rem; }
+.ck-legal__body h2 {
+  margin: 2.5rem 0 0.75rem;
+  font-family: var(--ck-serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.ck-legal__body h3 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--ck-ink);
+}
+.ck-legal__body p { margin: 0.9rem 0; font-size: 1rem; line-height: 1.75; color: #3f362f; }
+.ck-legal__body ul { margin: 0.9rem 0; padding-left: 1.35rem; }
+.ck-legal__body li { margin: 0.5rem 0; font-size: 1rem; line-height: 1.7; color: #3f362f; }
+.ck-legal__body strong { font-weight: 700; color: var(--ck-ink); }
+.ck-legal__body a { color: var(--ck-coral-deep); font-weight: 600; text-underline-offset: 3px; }
 </style>
