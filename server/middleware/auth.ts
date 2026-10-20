@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   '/api/gallery',
   '/api/blog',
   '/api/health',
+  '/api/minimax/quota',
   '/api/robots',
   '/api/sitemap',
   '/api/upload',
