@@ -83,7 +83,7 @@
 import { formatDuration, type SongPublic } from '~/utils/types'
 import type { MoreMenuItem } from '~/components/ui/UiMoreMenu.vue'
 
-const { t } = useI18n()
+const { t } = useT()
 
 const props = withDefaults(
   defineProps<{

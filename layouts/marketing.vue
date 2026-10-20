@@ -67,6 +67,7 @@
             <p class="mk-foot__label">Company</p>
             <NuxtLink to="/about">About</NuxtLink>
             <NuxtLink to="/contact">Contact</NuxtLink>
+            <button type="button" class="mk-foot__feedback" @click="feedbackOpen = true">Give feedback</button>
           </div>
           <div>
             <p class="mk-foot__label">Legal</p>
@@ -81,16 +82,19 @@
     </footer>
 
     <AuthModal v-model="authModalOpen" :initial-mode="authModalMode" />
+    <FeedbackModal v-model="feedbackOpen" source="creator" />
     <CookieConsent />
   </div>
 </template>
 
 <script setup lang="ts">
 import CookieConsent from '~/components/ui/CookieConsent.vue'
+import FeedbackModal from '~/components/ui/FeedbackModal.vue'
 
 const { user, authReady, logout } = useAuth()
 const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
 const mobileOpen = ref(false)
+const feedbackOpen = ref(false)
 
 async function handleLogout() {
   await logout()
@@ -246,6 +250,21 @@ async function handleLogout() {
   text-decoration: none;
 }
 .mk-foot__links a:hover { color: var(--mk-coral-deep); }
+.mk-foot__feedback {
+  display: block;
+  margin-top: 8px;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  opacity: 0.72;
+  transition: opacity 0.15s ease;
+}
+.mk-foot__feedback:hover { opacity: 1; }
+
 .mk-foot__copy {
   max-width: 74rem;
   margin: 2rem auto 0;

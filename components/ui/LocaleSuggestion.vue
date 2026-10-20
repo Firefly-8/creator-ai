@@ -17,7 +17,10 @@
 </template>
 
 <script setup lang="ts">
-const { locale, setLocale } = useI18n()
+// ⚠️ 同 LanguageSwitcher：不要用 useI18n()，用全局 $i18n
+const { $i18n } = useNuxtApp()
+const locale = $i18n.locale
+const setLocale = (code: string) => $i18n.setLocale(code as any)
 const showBanner = ref(false)
 
 onMounted(() => {

@@ -29,11 +29,13 @@
 </template>
 
 <script setup lang="ts">
-// ⚠️ 不要用 useI18n() 的 t：auto-import 把它解析到了 vue-i18n 的原始实现
-// （见 .nuxt/imports.d.ts），客户端拿不到 instance 时 t 不是函数，
-// 组件一渲染就抛 "n.t is not a function"，整页 500。
-// locale / setLocale 来自 @nuxtjs/i18n 的包装，是安全的。
-const { locale, setLocale } = useI18n()
+// ⚠️ 整个组件都不要用 useI18n()：auto-import 把它解析到了 vue-i18n 的
+// 原始实现（见 .nuxt/imports.d.ts），客户端拿不到 instance 时返回的对象
+// 不对，组件一渲染就抛 "n.t is not a function" → 整页 500。
+// $i18n 是 @nuxtjs/i18n 注入的全局 composer，一定可靠。
+const { $i18n } = useNuxtApp()
+const locale = $i18n.locale
+const setLocale = (code: string) => $i18n.setLocale(code as any)
 const open = ref(false)
 
 const currentLocaleName = computed(() => {
