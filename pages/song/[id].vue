@@ -130,6 +130,16 @@ definePageMeta({ layout: 'default' })
 const route = useRoute()
 const id = computed(() => String(route.params.id))
 const showEditor = ref(false)
+
+const { data, pending, refresh } = await useFetch<{ song: SongPublic }>(() => `/api/songs/${id.value}`, {
+  watch: [id],
+})
+
+// ⚠️ 下面这些 computed 的 getter 会用到 song / data，而 useHead 会**同步求值**
+// 它们 —— 所以 song 必须定义在 useHead 之前，否则就是 TDZ，客户端直接抛
+// "Cannot access 's' before initialization" → 整页 500。
+const song = computed(() => data.value?.song || null)
+
 const pageTitle = computed(() => song.value ? `${song.value.title} — CraftAI` : 'Track — CraftAI')
 const pageDescription = computed(() => {
   if (!song.value) return 'Listen to this AI-generated track on CraftAI.'
@@ -149,14 +159,6 @@ useHead({
   link: [{ rel: 'canonical', href: `https://creator.yozzytools.com/song/${id.value}` }],
 })
 
-const { data, pending, refresh } = await useFetch<{ song: SongPublic }>(() => `/api/songs/${id.value}`, {
-  watch: [id],
-})
-
-// ⚠️ 必须定义在 pageTitle / pageDescription 之前：useHead 会同步求值
-// 这些 computed，而它们的 getter 里要用到 song —— 放在后面就是 TDZ，
-// 客户端直接抛 "Cannot access 's' before initialization" → 整页 500。
-const song = computed(() => data.value?.song || null)
 
 const player = usePlayerStore()
 import ConfirmModal from '~/components/ui/ConfirmModal.vue'

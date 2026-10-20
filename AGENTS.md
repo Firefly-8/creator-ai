@@ -57,20 +57,56 @@ firebaseApiKey: process.env.FIREBASE_API_KEY || 'fallback_value'
 
 ### 1. i18n v8 的 unhead 导入
 `@nuxtjs/i18n` v8.5.6 导入 `getActiveHead` 从 `unhead`，但 unhead v2 中该函数在 `unhead/legacy` 中。
-已通过 `postinstall` 脚本自动修复：`package.json` 中的 `postinstall` 脚本会 patch `node_modules/@nuxtjs/i18n/dist/runtime/composables/index.js`。
+修复方式：`scripts/patch-unhead.mjs` 会 patch `node_modules/@nuxtjs/i18n/dist/runtime/composables/index.js`。
+
+⚠️ **不要再只挂在 `postinstall` 上**（2026-10-20 教训）：
+Cloudflare Pages 会用构建缓存跳过 `npm install`，于是 `postinstall` 根本不执行，
+patch 没生效 → i18n runtime 在客户端加载即崩 → 整页 500。
+现在 `build` / `cf:build` 都是 `node scripts/patch-unhead.mjs && nuxt build`，与 postinstall 是否执行无关。
 
 ### 2. Nitro minify 导致 SSR 崩溃
 Nitro 的 minify（esbuild）会导致生产构建 SSR 渲染失败（`p9 is not a function`）。
 修复：`nuxt.config.ts` 中设置 `nitro.minify: false`。
 
-### 3. $t 在 script setup 中的用法
-i18n v8 不会通过 `useNuxtApp().$t` 暴露 `$t`。
-正确用法：`const { t: $t } = useI18n()`
+### 3. ⚠️ 组件里绝对不要用 `useI18n()`（2026-10-20 的 500 事故根因）
+Nuxt 的 auto-import 把 `useI18n` 解析到了 **vue-i18n 的原始实现**
+（见 `.nuxt/imports.d.ts`），不是 `@nuxtjs/i18n` 的 runtime 包装版。
+原始版在客户端、在**自动导入的组件**里拿不到 provide 下来的 i18n instance：
 
-### 4. locale 文件格式
+- 模板里 `t(...)` / `$t(...)` 一调就抛 `i.t is not a function` → **整页 500**
+- SSR 完全正常，只有 hydration 后炸 —— 极易误判
+- `error.vue` 的 h1 硬编码成 "404"，看起来像路由 404，实际 statusCode 是 500
+- 只要 `layouts/default.vue` 里挂了一个这样的组件，**9 个页面一起挂**
+
+**正确写法**：
+
+```vue
+<script setup lang="ts">
+// 翻译
+const { t: $t } = useT()          // composables/useT.ts → 内部走 useNuxtApp().$i18n.t
+// locale 切换
+const { $i18n } = useNuxtApp()
+const locale = $i18n.locale
+const setLocale = (code: string) => $i18n.setLocale(code as any)
+</script>
+```
+
+守卫：`tests/no-use-i18n-in-components.test.ts` 禁止 `components/` 下任何文件调用 `useI18n()`。
+
+⚠️ 注意 `$t` 只在 **script setup** 里这样绑定；模板里直接写 `t(...)` 也可以
+（前提是 script 里 `const { t } = useT()`），但绝不能靠 `useI18n()` 提供。
+
+### 4. useHead 传 computed 时的 TDZ 陷阱
+`useHead({ title: pageTitle })` 里的 computed 会在 setup 阶段被**同步求值**。
+如果它的 getter 用到的变量定义在 `useHead` **之后** → 客户端抛
+`Cannot access 'x' before initialization` → 整页 500。
+
+规则：**被 useHead 引用的 computed，其依赖必须在 useHead 之前定义。**
+
+### 5. locale 文件格式
 i18n v8 使用 `{ variable }` 插值语法，不是 `{{ variable }}`。
 
-### 5. 关键插件不能删除
+### 6. 关键插件不能删除
 以下插件是应用运行的基础：
 - `plugins/firebase.client.ts` — Firebase 初始化
 - `plugins/api-client.ts` — API 认证注入
