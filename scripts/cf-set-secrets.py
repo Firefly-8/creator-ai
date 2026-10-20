@@ -24,6 +24,7 @@ import argparse
 import json
 import os
 import sys
+import time
 import urllib.request
 
 API = "https://api.cloudflare.com/client/v4"
@@ -31,21 +32,54 @@ TOKEN = os.environ["CLOUDFLARE_API_TOKEN"]
 ACCOUNT = "9fb668990196a42386f3544fa69d5b76"
 
 
-def request(method, path, body=None):
+def request(method, path, body=None, retries=8):
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(
-        API + path, data=data, method=method,
-        headers={"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"},
-    )
-    with urllib.request.urlopen(req, timeout=60) as resp:
-        return json.loads(resp.read())
+    last_err = None
+    for attempt in range(retries):
+        req = urllib.request.Request(
+            API + path, data=data, method=method,
+            headers={"Authorization": f"Bearer {TOKEN}", "Content-Type": "application/json"},
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as e:
+            # 5xx 多为边缘节点瞬时抖动，退避重试
+            if e.code < 500:
+                raise
+            last_err = e
+            print(f"   … HTTP {e.code}，重试 {attempt + 1}/{retries}", file=sys.stderr)
+            time.sleep(2 + attempt * 2)
+        except Exception as e:  # 网络层抖动
+            last_err = e
+            print(f"   … {type(e).__name__}，重试 {attempt + 1}/{retries}", file=sys.stderr)
+            time.sleep(2 + attempt * 2)
+    raise last_err
 
 
 def encrypt(plaintext: str, master_key: str) -> str:
-    """与 server/utils/crypto.ts / scripts/generate-keys.mjs 相同的加密格式。"""
-    sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "server", "utils"))
-    from crypto import encrypt as encrypt_impl  # type: ignore
-    return encrypt_impl(plaintext, master_key)
+    """用仓库自己的 crypto.ts 加密，保证与运行时 decrypt() 完全兼容。"""
+    import subprocess
+    here = os.path.dirname(os.path.abspath(__file__))
+    out = subprocess.run(
+        ["npx", "tsx", os.path.join(here, "encrypt-key.ts"), plaintext, master_key],
+        capture_output=True, text=True, check=True, cwd=os.path.join(here, ".."),
+    )
+    data = json.loads(out.stdout)
+    if not data.get("verified"):
+        sys.exit("加密往返校验失败")
+    return data["encrypted"]
+
+
+def resolve_value(value: str) -> str:
+    """支持 KEY=@ENVNAME 形式：从环境变量取值，避免密钥出现在命令行/历史里。"""
+    if value.startswith("@"):
+        name = value[1:]
+        val = os.environ.get(name)
+        if not val:
+            sys.exit(f"环境变量 {name} 未设置")
+        return val
+    return value
 
 
 def main():
@@ -66,17 +100,18 @@ def main():
         if value == "":
             updates[key] = None  # 显式删除
         else:
-            updates[key] = {"type": "secret_text", "value": value}
+            updates[key] = {"type": "secret_text", "value": resolve_value(value)}
 
     for item in args.encrypt_from_plaintext:
         target, _, source = item.partition("=")
         if not args.master_key:
             sys.exit("--encrypt-from-plaintext 需要 --master-key")
-        plain = os.environ.get(source) or os.environ.get("PLAIN_" + source)
+        plain = resolve_value("@" + source) if source.startswith("@") else (os.environ.get(source) or "")
         if not plain:
             sys.exit(f"找不到明文来源变量 {source}（用环境变量传入）")
-        updates[target] = {"type": "secret_text", "value": encrypt(plain, args.master_key)}
-        print(f"已用主密钥加密 {source} → {target}")
+        enc = encrypt(plain, args.master_key)
+        updates[target] = {"type": "secret_text", "value": enc}
+        print(f"已用主密钥加密 {source} → {target} ({len(enc)} 字符)")
 
     if not updates:
         sys.exit("没有要写入的变量")
