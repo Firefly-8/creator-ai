@@ -15,6 +15,7 @@
     "d1:generate": "drizzle-kit generate",
     "d1:migrate": "wrangler d1 migrations apply craftai-db",
     "d1:migrate:local": "wrangler d1 migrations apply craftai-db --local",
+    "check:bindings": "node scripts/check-bindings.mjs",
     "cf:deploy:staging": "npm run cf:build && npx wrangler pages deploy dist --project-name craftai-staging --config=wrangler.staging.toml",
     "cf:migrate": "npx wrangler d1 migrations apply craftai-db --remote",
     "cf:migrate:staging": "npx wrangler d1 migrations apply craftai-db-staging --remote",
