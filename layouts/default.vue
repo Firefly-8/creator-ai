@@ -39,13 +39,8 @@
           <button class="btn-primary w-full text-sm" @click="openSignup">{{ 'Sign up' }}</button>
         </template>
         <template v-else-if="authReady && user">
-          <div class="flex items-center gap-2 mb-2">
-            <div class="h-8 w-8 rounded-full bg-accent/30 flex items-center justify-center text-xs font-bold text-white">
-              {{ user.email?.charAt(0).toUpperCase() || 'U' }}
-            </div>
-            <span class="text-xs text-ink-300 truncate">{{ user.email }}</span>
-          </div>
-          <button class="btn-secondary w-full text-sm" @click="handleLogout">{{ 'Sign out' }}</button>
+          <!-- 账号菜单（头像 + 名字，点开有登出）—— 侧栏里所有页面都在导航里了，菜单只放登出 -->
+          <UserMenu tone="dark" align="left" :user="user" :links="[]" />
         </template>
       </div>
 
@@ -119,14 +114,9 @@ import LocaleSuggestion from '~/components/ui/LocaleSuggestion.vue'
 
 const route = useRoute()
 const mobileNavOpen = ref(false)
-const { user, authReady, logout } = useAuth()
+const { user, authReady } = useAuth()
 const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
 const { isOpen: feedbackOpen, openFeedback } = useFeedback()
-
-async function handleLogout() {
-  await logout()
-  await navigateTo('/')
-}
 
 // 检查管理员权限
 const isAdmin = ref(false)

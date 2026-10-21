@@ -354,7 +354,11 @@ const STEP_COPY = [
   },
 ]
 
-const stepHeadline = computed(() => STEP_COPY[step.value - 1]?.headline || STEP_COPY[0].headline)
+const stepHeadline = computed(() => {
+  // 从「My cards」打开旧卡时，第 4 步不是「挑一张」，而是「继续做这张」
+  if (step.value === 4 && route.query.from) return 'Your card, ready to finish.'
+  return STEP_COPY[step.value - 1]?.headline || STEP_COPY[0].headline
+})
 const stepLede = computed(() => STEP_COPY[step.value - 1]?.lede || STEP_COPY[0].lede)
 
 /** 能不能继续：第 1 步必须先选了场合 */
@@ -649,6 +653,28 @@ async function askAI() {
   }
 }
 
+/**
+ * 从「My cards」点某张卡进来的：/cards?from=<imageId>
+ * ⚠️ 以前这个参数**根本没人读** —— 点「My cards」里的卡片只是开了一张新卡，
+ *    用户以为在编辑旧卡，其实从头来过。
+ * 现在把那张图放回编辑区（能改字、能再下载一次）。
+ */
+async function loadFromCard() {
+  const id = String(route.query.from || '')
+  if (!id) return
+  try {
+    const res = await api.get<{ images: { id: string; imageUrl: string | null }[] }>('/api/images')
+    const hit = (res.images || []).find(i => i.id === id)
+    if (!hit?.imageUrl) return
+    candidates.value = [{ id: hit.id, url: hit.imageUrl }]
+    picked.value = hit.id
+    step.value = 4
+    maxReached.value = 4
+  } catch {
+    // 没登录 / 找不到 / 没权限 → 正常走「做一张新卡」的流程
+  }
+}
+
 // 额度：进入页面就读一次（未登录会失败，忽略即可 —— 生成时服务端会要求登录）
 onMounted(() => {
   loadUsage()
@@ -658,6 +684,8 @@ onMounted(() => {
     step.value = q
     maxReached.value = q
   }
+  // 从「My cards」过来的 → 直接把旧卡打开
+  loadFromCard()
 })
 
 // 步骤写进 URL —— 刷新和浏览器后退都保持在同一步

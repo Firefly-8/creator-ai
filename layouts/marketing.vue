@@ -20,10 +20,7 @@
             <button class="mk-btn mk-btn--ghost" @click="openLogin">Log in</button>
             <button class="mk-btn mk-btn--primary" @click="openSignup">Start free</button>
           </template>
-          <template v-else-if="authReady && user">
-            <NuxtLink to="/my-cards" class="mk-btn mk-btn--ghost">My cards</NuxtLink>
-            <button class="mk-btn mk-btn--ghost" @click="handleLogout">Log out</button>
-          </template>
+          <UserMenu v-else-if="authReady && user" :user="user" :links="menuLinks" />
         </div>
 
         <button class="mk-burger" aria-label="Menu" @click="mobileOpen = !mobileOpen">
@@ -41,6 +38,8 @@
           <button class="mk-btn mk-btn--ghost w-full" @click="openLogin(); mobileOpen = false">Log in</button>
           <button class="mk-btn mk-btn--primary w-full" @click="openSignup(); mobileOpen = false">Start free</button>
         </template>
+        <!-- 登录后：移动端也给出账号 + 登出入口（原来这里什么都没有，登不出去） -->
+        <UserMenu v-else-if="authReady && user" align="left" class="mt-2" :user="user" :links="[]" />
       </div>
     </header>
 
@@ -99,16 +98,16 @@ import CookieConsent from '~/components/ui/CookieConsent.vue'
 import FeedbackModal from '~/components/ui/FeedbackModal.vue'
 import { AUDIENCES } from '~/utils/audiences'
 
-const { user, authReady, logout } = useAuth()
+const { user, authReady } = useAuth()
 const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
 const mobileOpen = ref(false)
 const feedbackOpen = ref(false)
 const audiences = AUDIENCES
 
-async function handleLogout() {
-  await logout()
-  await navigateTo('/')
-}
+/** 账号菜单里的站内链接 */
+const menuLinks = [
+  { to: '/my-cards', label: 'My cards', icon: 'i-ph-images' },
+]
 </script>
 
 <style scoped>
