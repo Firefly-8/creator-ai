@@ -115,15 +115,47 @@ i18n v8 使用 `{ variable }` 插值语法，不是 `{{ variable }}`。
 ## 构建命令
 
 ```bash
-# 本地开发
+# 本地开发（UI 迭代用这个 —— 热更新，改完立刻能看到）
 npx nuxt dev --port 5175
 
-# 生产构建
+# 生产构建（只在准备交付时才跑）
 npm run build
 
 # 本地预览生产构建
 npx wrangler pages dev dist --port 5175
 ```
+
+## ⚠️ 验证流程纪律（2026-10-21 立规）
+
+**核心原则：不要为了「验证」反复跑全量构建。**
+
+一次 `npm run build` 在这个沙箱里要 **4~5 分钟**（3G 内存，vite build 很吃），
+一天改 10 处就等于 50 分钟纯等编译，还经常被 OOM 杀掉重来。
+
+**正确的验证顺序**：
+
+1. **改代码**（一次改完，别改一处验一次）
+2. **单元测试**（秒级）—— `npx vitest run`
+3. **UI 迭代期** → `npx nuxt dev` + Playwright 截图验收（启动 ~30s，热更新）
+4. **准备交付时** → `npm run build` 跑**一次**，本地 `wrangler pages dev dist` 验一遍
+5. **push** → CF 云端构建 → 线上 Playwright 验收
+
+**本地全量 build 的唯一合理用途**：上线前的最后一道关。
+其余情况一律用 dev server 或线上验证。
+
+### 沙箱工程纪律（3G 内存）
+- 构建前必做：`pkill -9 -f node` → 确认 `free -m` available > 2.5G
+  （有个 `node dbg.mjs` 一个人能吃 2.5G，残留 workerd 会让 vite build OOM）
+- **构建期间不要同时起 `wrangler pages dev`**（争内存）
+- 长命令用后台任务跑；**日志文件为空 = 进程被杀**，不是构建失败
+- `wrangler pages dev` 端口冲突会**静默连到旧实例** —— 看到 500/404 先换端口，
+  别对着旧代码白调半天
+
+### 排查纪律
+- **先验证假设再改代码**：查产物 CSS（`grep` dist）比读框架源码快几个数量级
+- 「线上坏、本地好」先比差异面：构建命令 / node 版本 / 缓存 / 环境变量
+- 拿到 `window.__NUXT__.error` 的 **statusCode + message + stack** 再动手
+  （stack 里的 `/_nuxt/xxx.js:行:列` → curl 那个 chunk → 直接定位到组件）
 
 
 ---
