@@ -150,6 +150,13 @@ describe('定价页不能有假承诺', () => {
     expect(paidFeatures).toContain('300 DPI')
   })
 
+  it('价格里的 $ 要单独渲染（Playfair 的 $ 带长竖笔，跟数字同字号会浮着）', () => {
+    const src = read('pages/pricing.vue')
+    expect(src).toContain('ck-plan__currency')
+    // 大数字里不能再夹着 $ 符号
+    expect(src).not.toMatch(/ck-plan__amount[^>]*>\s*\{\{\s*money\(/)
+  })
+
   it('PayPal 按钮的备用按钮样式必须写在组件里（父页面的 scoped CSS 进不去）', () => {
     // ⚠️ 踩过的坑：.ck-btn 写在 pages/pricing.vue 的 scoped 样式里，
     //    但 PayPalButton 内部的 <button> 拿不到父组件的 scope 属性

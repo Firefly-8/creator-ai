@@ -25,7 +25,9 @@
           <h2 class="ck-plan__name">{{ p.name }}</h2>
 
           <p class="ck-plan__price">
-            <span class="ck-plan__amount">{{ money(p.price) }}</span>
+            <!-- $ 单独一个小号符号：Playfair 的 $ 带长竖笔，跟数字同字号会「浮」着 -->
+            <span class="ck-plan__currency">$</span>
+            <span class="ck-plan__amount">{{ amount(p.price) }}</span>
             <span v-if="p.interval" class="ck-plan__per">/ {{ p.interval }}</span>
           </p>
 
@@ -146,6 +148,11 @@ const singlePlan = PLANS.single
 /** $0 不要写成 $0.00 */
 function money(n: number): string {
   return n ? `$${n.toFixed(2)}` : '$0'
+}
+
+/** 卡片里的大数字（$ 符号单独渲染） */
+function amount(n: number): string {
+  return n ? n.toFixed(2) : '0'
 }
 
 function requireLogin() {
@@ -339,8 +346,19 @@ const promises = [
 .ck-plan__price {
   display: flex;
   align-items: baseline;
-  gap: 0.4rem;
+  gap: 0.12rem;
   margin-top: 0.75rem;
+}
+/* 货币符号：比数字小一号，顶到数字的上沿 —— 同一个字号时
+   Playfair 的 $ 竖笔会冲出数字行，看着像浮在半空 */
+.ck-plan__currency {
+  align-self: flex-start;
+  margin-top: 0.42rem;
+  font-family: var(--ck-serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ck-ink);
 }
 .ck-plan__amount {
   font-family: var(--ck-serif);
@@ -348,6 +366,7 @@ const promises = [
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
 }
 .ck-plan__per { font-size: 0.9375rem; color: var(--ck-ink-2); }
 .ck-plan__desc {
