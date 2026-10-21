@@ -177,6 +177,18 @@ export async function consumeDailyQuota(
   const limit = quota.limit ?? 0
 
   if (used > limit) {
+    // ⚠️ 这一次的自增必须退回去 —— 用户没拿到图，不能白扣额度。
+    //   （UPSERT 已经加过了，这里减回来，净效果是「没通过检查就不计数」）
+    await db
+      .prepare(
+        `UPDATE daily_usage SET ${col} = CASE WHEN ${col} > 0 THEN ${col} - 1 ELSE 0 END,
+         updated_at = datetime('now')
+         WHERE user_id = ? AND usage_date = ?`,
+      )
+      .bind(uid, date)
+      .run()
+      .catch(() => {})
+
     console.warn(`[daily-usage] DENY uid=${uid} kind=${kind} used=${used} limit=${limit}`)
     throw createError({
       statusCode: 429,
@@ -185,7 +197,7 @@ export async function consumeDailyQuota(
         code: 'DAILY_LIMIT_REACHED',
         kind,
         limit,
-        used: used - 1,
+        used: limit,
         remaining: 0,
         upgrade: true,
       },
