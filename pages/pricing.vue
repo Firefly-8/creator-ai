@@ -365,7 +365,11 @@ const promises = [
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums;
+  /* ⚠️ lining-nums 不能少：Playfair 的**默认数字是 oldstyle（高度可变）**，
+     「1」只到 x-height、「9」是全高 —— 价格里出现会高低不齐，像渲染坏了。
+     加上 tabular-nums 让三张卡的数字宽度一致。 */
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: 'lnum' 1, 'tnum' 1;
 }
 .ck-plan__per { font-size: 0.9375rem; color: var(--ck-ink-2); }
 .ck-plan__desc {

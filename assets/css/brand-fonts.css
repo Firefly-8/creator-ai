@@ -129,3 +129,22 @@
   font-style: normal;
   font-display: swap;
 }
+
+/* ---------- 数字统一用等高（lining）figures ---------- */
+/**
+ * ⚠️ Playfair Display 的**默认数字是 oldstyle（高度可变）**：
+ *    「1」只到 x-height、「9」是全高 —— 标题里出现数字会高低不齐，
+ *    价格里更明显（看着像渲染 bug）。实测：Playfair 默认 = 1 矮一截，
+ *    lining-nums 才是等高的。
+ *  → 标题统一开 lining-nums；**正文不强制**（oldstyle 在正文里反而更协调）。
+ */
+h1,
+h2,
+h3,
+h4,
+.ck-h1,
+.ck-h2,
+.ck-h3 {
+  font-variant-numeric: lining-nums;
+  font-feature-settings: 'lnum' 1;
+}

@@ -150,6 +150,14 @@ describe('定价页不能有假承诺', () => {
     expect(paidFeatures).toContain('300 DPI')
   })
 
+  it('价格必须用等高数字（Playfair 默认是 oldstyle，「1」会比「9」矮一截）', () => {
+    const src = read('pages/pricing.vue')
+    expect(src).toMatch(/font-variant-numeric:[^;]*lining-nums/)
+    // 全站标题也一样：标题里出现数字同样会高低不齐
+    const fonts = read('assets/css/brand-fonts.css')
+    expect(fonts).toMatch(/font-variant-numeric:[^;]*lining-nums/)
+  })
+
   it('价格里的 $ 要单独渲染（Playfair 的 $ 带长竖笔，跟数字同字号会浮着）', () => {
     const src = read('pages/pricing.vue')
     expect(src).toContain('ck-plan__currency')
