@@ -60,11 +60,25 @@ await page.goto(`${BASE}/cards`, { waitUntil: 'domcontentloaded', timeout: 60000
 await page.waitForSelector('.ck-scene', { timeout: 30000 })
 await page.waitForTimeout(1000)
 
-await page.locator('.ck-scene').first().click()
-await page.waitForTimeout(300)
-await page.locator('.ck-nav__inner button', { hasText: 'Continue' }).first().click()
+// 线上有 cookie 同意条 —— 它 z-100，会挡住底部的「Make」按钮，先关掉
+const cookieBtn = page.locator('.ck-cookie__btn--primary')
+if (await cookieBtn.count() && await cookieBtn.first().isVisible().catch(() => false)) {
+  await cookieBtn.first().click()
+  await page.waitForTimeout(500)
+  console.log('· 已关掉 cookie 同意条')
+}
+
+// 点第一个场景（页面还在 hydration 的话第一次点击不生效 → 重试）
+const continueBtn = page.locator('.ck-nav__inner button', { hasText: 'Continue' }).first()
+for (let i = 0; i < 20; i++) {
+  await page.locator('.ck-scene').first().click().catch(() => {})
+  await page.waitForTimeout(300)
+  if (await continueBtn.isEnabled().catch(() => false)) break
+}
+check('选了场合后「Continue」可点', await continueBtn.isEnabled())
+await continueBtn.click()
 await page.waitForTimeout(500)
-await page.locator('.ck-nav__inner button', { hasText: 'Continue' }).first().click()
+await continueBtn.click()
 await page.waitForTimeout(700)
 
 // 1. 点 Make → 弹登录框
