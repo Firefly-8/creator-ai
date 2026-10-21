@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Create</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">描述风格、写好歌词，生成完整歌曲。</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">Describe the style, write lyrics, and generate a complete song.</p>
       </div>
     </template>
 
@@ -35,7 +35,7 @@
           <textarea
             v-model="prompt"
             class="field min-h-24"
-            placeholder="例：忧郁独立流行，柔和钢琴与远处电吉他延音，亲密人声，约 72 BPM…"
+            placeholder="e.g. melancholic indie pop, soft piano with distant electric guitar reverb, intimate vocals, around 72 BPM…"
           />
         </label>
 
@@ -91,7 +91,7 @@
           <span v-if="errorText" class="status-pill !border-danger/30 !text-danger">{{ errorText }}</span>
           <span v-else-if="lyricsLoading" class="status-pill">
             <span class="i-ph-circle-fill text-[8px] text-accent-soft animate-pulse" />
-            歌词生成中…
+            Generating lyrics…
           </span>
           <span v-else-if="statusText && !isGenerating" class="status-pill">
             <span class="i-ph-circle-fill text-[8px] text-accent-soft" />
@@ -122,23 +122,49 @@
           :pending="songsPending"
           :active-id="activeSong?.id"
           :busy-id="busyId"
-          empty-title="{{ $t('create.noSongs') }}"
-          empty-hint="{{ $t('create.noSongsHint') }}"
+          :empty-title="$t('create.noSongs')"
+          :empty-hint="$t('create.noSongsHint')"
           @remix="loadFromSong"
           @regenerate="regenerate"
           @download="downloadSong"
           @delete="removeSong"
           @open="openSong"
         />
+        <div v-if="songs.length > 0 && !isGenerating" class="flex justify-center pt-2">
+          <button class="btn-secondary !h-9 !px-5 text-sm" @click="scrollToOps">
+            <span class="i-ph-plus-circle text-[14px]" />
+            Generate More
+          </button>
+        </div>
       </div>
     </template>
+  <ConfirmModal
+      v-model="confirmOpen"
+      :title="t('create.deleteConfirm', { title: confirmTarget?.title ?? '' })"
+      message="This action cannot be undone."
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      danger
+      @confirm="onConfirmDelete"
+      @cancel="confirmOpen = false"
+    />
   </StudioWorkspace>
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+// ⚠️ 不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，客户端拿到的
+// t 不是函数 → 整页 500。用 useT()（内部走 useNuxtApp().$i18n.t）。
+const { t } = useT()
+const requireAuth = useRequireAuth()
+const { trackGenerateStart, trackGenerateSuccess } = useAnalytics()
+const { notifyGenerationComplete } = useNotification()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
 import { LYRIC_TAGS, type SongPublic } from '~/utils/types'
 import { SONG_PRESETS, type SongPreset } from '~/utils/presets'
+import { useAnalytics } from '~/composables/useAnalytics'
+import { useNotification } from '~/composables/useNotification'
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 
 definePageMeta({ layout: "default", middleware: ["auth"] })
 
@@ -164,6 +190,20 @@ const statusText = ref('')
 const activeSong = ref<SongPublic | null>(null)
 const jobId = ref<string | null>(null)
 const { job } = useJobStream(jobId)
+
+// Delete confirmation modal
+const confirmOpen = ref(false)
+const confirmTarget = ref<SongPublic | null>(null)
+function onConfirmDelete() {
+  if (!confirmTarget.value) return
+  removeSong(confirmTarget.value)
+  confirmOpen.value = false
+  confirmTarget.value = null
+}
+function promptDelete(song: SongPublic) {
+  confirmTarget.value = song
+  confirmOpen.value = true
+}
 const route = useRoute()
 const router = useRouter()
 let presetRequestId = 0
@@ -199,8 +239,8 @@ watch(job, async (j) => {
   if (j.status === 'done') {
     statusText.value = 'Ready'
     await refreshSongs().catch(() => {})
-    const id = j.songId || activeSong.value?.id
-    if (id) navigateTo(`/song/${id}`)
+    notifyGenerationComplete('music')
+    // 自动跳转打断心流 — 改为在结果 rail 中展示新歌曲，保持用户在创作页面
   }
 })
 
@@ -214,13 +254,13 @@ function applyPreset(preset: SongPreset) {
   if (preset.mode === 'instrumental') {
     mode.value = 'instrumental'
     lyrics.value = ''
-    statusText.value = `已套用预设：${preset.label}`
+    statusText.value = `Preset applied: ${preset.label}`
     return
   }
 
   mode.value = 'custom'
   lyrics.value = ''
-  statusText.value = `已套用预设：${preset.label}，正在按官方流程生成歌词…`
+  statusText.value = `Preset applied: ${preset.label}, generating lyrics…`
   void preparePresetLyrics(preset)
 }
 
@@ -240,21 +280,32 @@ async function preparePresetLyrics(preset: SongPreset) {
     if (res.title) title.value = res.title
     lyrics.value = res.lyrics
     mode.value = 'custom'
-    statusText.value = `预设就绪：${preset.label}，歌词已生成，可直接 Generate`
+    statusText.value = `Preset ready: ${preset.label}, lyrics generated, ready to Generate`
   } catch (e: any) {
     if (reqId !== presetRequestId) return
-    errorText.value = e?.data?.statusMessage || e?.message || '预设歌词生成失败'
-    statusText.value = `已套用编曲描述：${preset.label}（歌词未生成，可手动点 Generate lyrics）`
+    errorText.value = e?.data?.statusMessage || e?.message || 'Failed to generate preset lyrics'
+    statusText.value = `Style applied: ${preset.label}(lyrics not generated, you can manually click Generate lyrics)`
   } finally {
     if (reqId === presetRequestId) lyricsLoading.value = false
   }
 }
 
 onMounted(() => {
+  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+  }
   const presetId = typeof route.query.preset === 'string' ? route.query.preset : ''
   if (!presetId) return
   const found = SONG_PRESETS.find((p) => p.id === presetId)
   if (found) applyPreset(found)
+})
+
+// Auth guard watcher: 处理 auth 状态在 mount 之后才就绪的情况
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
 })
 
 function insertTag(tag: string) {
@@ -282,7 +333,7 @@ async function genLyrics() {
       method: 'POST',
       body: {
         mode: lyrics.value.trim() ? 'edit' : 'write_full_song',
-        prompt: lyricsHint.value || prompt.value || '一首有画面感的现代中文流行歌',
+        prompt: lyricsHint.value || prompt.value || 'a vivid modern pop song',
         lyrics: lyrics.value || undefined,
         title: title.value || undefined,
       },
@@ -301,6 +352,7 @@ async function genLyrics() {
 
 async function submit() {
   if (!requireAuth()) return
+  trackGenerateStart('music')
   submitting.value = true
   errorText.value = ''
   statusText.value = 'Starting…'
@@ -385,8 +437,14 @@ function openSong(song: SongPublic) {
   navigateTo(`/song/${song.id}`)
 }
 
+function scrollToOps() {
+  if (import.meta.client) {
+    document.querySelector('.workspace__ops')?.scrollTo?.({ top: 0, behavior: 'smooth' })
+  }
+}
+
 async function removeSong(song: SongPublic) {
-  if (!confirm(`${t('create.deleteConfirm', { title: song.title })}`)) return
+  promptDelete(song)
   busyId.value = song.id
   errorText.value = ''
   try {
@@ -419,5 +477,16 @@ async function hydrateRemixFromQuery() {
 
 onMounted(() => {
   hydrateRemixFromQuery()
+})
+
+useHead({
+  title: 'Create AI Music — Free AI Music Generator | CraftAI',
+  meta: [
+    { name: 'description', content: 'Create AI music for free. Describe your song style and generate complete tracks with vocals and instruments. No musical experience needed.' },
+    { property: 'og:title', content: 'Create AI Music — Free AI Music Generator' },
+    { property: 'og:description', content: 'Describe your song and AI generates it in seconds. Free to start.' },
+    { property: 'og:type', content: 'website' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/create' }],
 })
 </script>

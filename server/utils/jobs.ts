@@ -262,6 +262,7 @@ export function publicSong(song: SongRow) {
     audioUrl: song.audio_path ? `/api/audio/${song.id}` : null,
     downloadUrl: song.audio_path ? `/api/audio/${song.id}?download=1` : null,
     meta: safeJson(song.meta_json),
+    isPublic: !!song.is_public,
     createdAt: song.created_at,
     updatedAt: song.updated_at,
   }

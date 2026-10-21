@@ -36,3 +36,4 @@ data/*.sqlite-*
 
 # OS
 Thumbs.db
+.assets/

@@ -7,19 +7,30 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { getHeader } from 'h3'
 
 export default defineEventHandler(async (event) => {
+  console.log('[Sync] === Start ===')
   // 验证 Token
   const authHeader = getHeader(event, 'authorization')
   const token = typeof authHeader === 'string' ? authHeader.replace('Bearer ', '') : ''
   
+  console.log(`[Sync] Request received. Has token: ${!!token}, token length: ${token?.length}`)
+  if (token) {
+    console.log(`[Sync] Token preview: ${token.substring(0, 20)}...${token.substring(token.length - 10)}`)
+  }
+  
   if (!token) {
+    console.log('[Sync] FAIL: No token provided')
     throw createError({ statusCode: 401, statusMessage: 'Missing token' })
   }
 
+  console.log('[Sync] Verifying Firebase token...')
   const { verifyFirebaseToken } = await import('../../utils/firebase-verify')
   const payload = await verifyFirebaseToken(token)
   if (!payload) {
+    console.log('[Sync] FAIL: Token verification returned null')
     throw createError({ statusCode: 401, statusMessage: 'Invalid token' })
   }
+
+  console.log(`[Sync] Token verified OK. uid=${payload.sub}, email=${payload.email}`)
 
   const uid = payload.sub
   const email = payload.email || ''
@@ -28,8 +39,10 @@ export default defineEventHandler(async (event) => {
   const emailVerified = payload.email_verified || false
 
   // 获取 D1 binding
+  console.log('[Sync] Getting D1 database...')
   const { getDB } = await import('../../utils/db-runtime')
   const d1 = getDB(event)
+  console.log('[Sync] D1 result:', d1 ? 'DB found' : 'DB is null/undefined')
   if (!d1) throw createError({ statusCode: 500, statusMessage: 'DB not available' })
 
   const now = new Date().toISOString()

@@ -57,20 +57,56 @@ firebaseApiKey: process.env.FIREBASE_API_KEY || 'fallback_value'
 
 ### 1. i18n v8 的 unhead 导入
 `@nuxtjs/i18n` v8.5.6 导入 `getActiveHead` 从 `unhead`，但 unhead v2 中该函数在 `unhead/legacy` 中。
-已通过 `postinstall` 脚本自动修复：`package.json` 中的 `postinstall` 脚本会 patch `node_modules/@nuxtjs/i18n/dist/runtime/composables/index.js`。
+修复方式：`scripts/patch-unhead.mjs` 会 patch `node_modules/@nuxtjs/i18n/dist/runtime/composables/index.js`。
+
+⚠️ **不要再只挂在 `postinstall` 上**（2026-10-20 教训）：
+Cloudflare Pages 会用构建缓存跳过 `npm install`，于是 `postinstall` 根本不执行，
+patch 没生效 → i18n runtime 在客户端加载即崩 → 整页 500。
+现在 `build` / `cf:build` 都是 `node scripts/patch-unhead.mjs && nuxt build`，与 postinstall 是否执行无关。
 
 ### 2. Nitro minify 导致 SSR 崩溃
 Nitro 的 minify（esbuild）会导致生产构建 SSR 渲染失败（`p9 is not a function`）。
 修复：`nuxt.config.ts` 中设置 `nitro.minify: false`。
 
-### 3. $t 在 script setup 中的用法
-i18n v8 不会通过 `useNuxtApp().$t` 暴露 `$t`。
-正确用法：`const { t: $t } = useI18n()`
+### 3. ⚠️ 组件里绝对不要用 `useI18n()`（2026-10-20 的 500 事故根因）
+Nuxt 的 auto-import 把 `useI18n` 解析到了 **vue-i18n 的原始实现**
+（见 `.nuxt/imports.d.ts`），不是 `@nuxtjs/i18n` 的 runtime 包装版。
+原始版在客户端、在**自动导入的组件**里拿不到 provide 下来的 i18n instance：
 
-### 4. locale 文件格式
+- 模板里 `t(...)` / `$t(...)` 一调就抛 `i.t is not a function` → **整页 500**
+- SSR 完全正常，只有 hydration 后炸 —— 极易误判
+- `error.vue` 的 h1 硬编码成 "404"，看起来像路由 404，实际 statusCode 是 500
+- 只要 `layouts/default.vue` 里挂了一个这样的组件，**9 个页面一起挂**
+
+**正确写法**：
+
+```vue
+<script setup lang="ts">
+// 翻译
+const { t: $t } = useT()          // composables/useT.ts → 内部走 useNuxtApp().$i18n.t
+// locale 切换
+const { $i18n } = useNuxtApp()
+const locale = $i18n.locale
+const setLocale = (code: string) => $i18n.setLocale(code as any)
+</script>
+```
+
+守卫：`tests/no-use-i18n-in-components.test.ts` 禁止 `components/` 下任何文件调用 `useI18n()`。
+
+⚠️ 注意 `$t` 只在 **script setup** 里这样绑定；模板里直接写 `t(...)` 也可以
+（前提是 script 里 `const { t } = useT()`），但绝不能靠 `useI18n()` 提供。
+
+### 4. useHead 传 computed 时的 TDZ 陷阱
+`useHead({ title: pageTitle })` 里的 computed 会在 setup 阶段被**同步求值**。
+如果它的 getter 用到的变量定义在 `useHead` **之后** → 客户端抛
+`Cannot access 'x' before initialization` → 整页 500。
+
+规则：**被 useHead 引用的 computed，其依赖必须在 useHead 之前定义。**
+
+### 5. locale 文件格式
 i18n v8 使用 `{ variable }` 插值语法，不是 `{{ variable }}`。
 
-### 5. 关键插件不能删除
+### 6. 关键插件不能删除
 以下插件是应用运行的基础：
 - `plugins/firebase.client.ts` — Firebase 初始化
 - `plugins/api-client.ts` — API 认证注入
@@ -79,15 +115,47 @@ i18n v8 使用 `{ variable }` 插值语法，不是 `{{ variable }}`。
 ## 构建命令
 
 ```bash
-# 本地开发
+# 本地开发（UI 迭代用这个 —— 热更新，改完立刻能看到）
 npx nuxt dev --port 5175
 
-# 生产构建
+# 生产构建（只在准备交付时才跑）
 npm run build
 
 # 本地预览生产构建
 npx wrangler pages dev dist --port 5175
 ```
+
+## ⚠️ 验证流程纪律（2026-10-21 立规）
+
+**核心原则：不要为了「验证」反复跑全量构建。**
+
+一次 `npm run build` 在这个沙箱里要 **4~5 分钟**（3G 内存，vite build 很吃），
+一天改 10 处就等于 50 分钟纯等编译，还经常被 OOM 杀掉重来。
+
+**正确的验证顺序**：
+
+1. **改代码**（一次改完，别改一处验一次）
+2. **单元测试**（秒级）—— `npx vitest run`
+3. **UI 迭代期** → `npx nuxt dev` + Playwright 截图验收（启动 ~30s，热更新）
+4. **准备交付时** → `npm run build` 跑**一次**，本地 `wrangler pages dev dist` 验一遍
+5. **push** → CF 云端构建 → 线上 Playwright 验收
+
+**本地全量 build 的唯一合理用途**：上线前的最后一道关。
+其余情况一律用 dev server 或线上验证。
+
+### 沙箱工程纪律（3G 内存）
+- 构建前必做：`pkill -9 -f node` → 确认 `free -m` available > 2.5G
+  （有个 `node dbg.mjs` 一个人能吃 2.5G，残留 workerd 会让 vite build OOM）
+- **构建期间不要同时起 `wrangler pages dev`**（争内存）
+- 长命令用后台任务跑；**日志文件为空 = 进程被杀**，不是构建失败
+- `wrangler pages dev` 端口冲突会**静默连到旧实例** —— 看到 500/404 先换端口，
+  别对着旧代码白调半天
+
+### 排查纪律
+- **先验证假设再改代码**：查产物 CSS（`grep` dist）比读框架源码快几个数量级
+- 「线上坏、本地好」先比差异面：构建命令 / node 版本 / 缓存 / 环境变量
+- 拿到 `window.__NUXT__.error` 的 **statusCode + message + stack** 再动手
+  （stack 里的 `/_nuxt/xxx.js:行:列` → curl 那个 chunk → 直接定位到组件）
 
 
 ---
@@ -181,3 +249,122 @@ curl -s -X POST -H "Authorization: Bearer $CF_API_TOKEN" \
 ### 测试环境配置修复
 - **问题**：craftai-staging 项目 D1 绑定指向生产库，缺少 nodejs_compat
 - **修复**：通过 CF API 更新 deployment_configs
+
+---
+
+## 推送前检查流程（必须执行）
+
+**每次推送前必须运行 `bash scripts/pre-push-check.sh`，通过后才允许推送。**
+
+检查项：
+1. **构建检查** — `npm run build` 必须通过
+2. **SSR 渲染检查** — 本地 wrangler 预览首页必须返回 HTTP 200（不是 500）
+3. **插件上下文检查** — async 插件中不得调用 composable（useI18n/useCookie/useAuthModal 等）
+4. **i18n key 检查** — 模板中使用的 key 必须存在于 en.json
+
+### 常见陷阱（已踩坑记录）
+
+| 陷阱 | 原因 | 修复 |
+|------|------|------|
+| `useI18n()` 在 async 插件中报错 | async 破坏 setup 上下文 | 移除 async 或用 nuxtApp.$i18n |
+| `localePath is not a function` | useI18n() 不返回 localePath | 使用 `useLocalePath()` composable |
+| SSR 500 `"message":"26"` | i18n 插件冲突 | 移除自定义 locale 同步，依赖内置 cookie 检测 |
+| staging 500 | CF Pages 配置被覆盖（D1/KV 指向生产） | 推送后检查 CF API 配置 |
+| auth 401 循环 | token 未刷新 | `getIdToken(true)` 强制刷新 |
+
+### 推送流程
+1. 完成代码修改
+2. 运行 `bash scripts/pre-push-check.sh`
+3. 确认所有检查通过
+4. 告知用户变更摘要
+5. 等待用户确认"推送"
+6. 执行 git push
+7. 验证 staging 环境（curl -I https://staging.creator.yozzytools.com）
+
+---
+
+## 静态资源约定（2026-10-20 起）⚠️
+
+**静态资源（字体 / 品牌成品图 / 样例图 / 社交图）不放 `public/`，一律走 R2 直链。**
+
+| 项 | 值 |
+|---|---|
+| 公开桶 | `craftai-assets`（**独立于私有桶 `craftai-storage`**） |
+| 域名 | `https://assets.yozzytools.com`（R2 自定义域） |
+| 常量 | `utils/assets.ts` → `ASSET_BASE` / `assetUrl()` |
+| 目录 | `fonts/` `showcase/` `samples/` `source/` `og-image.jpg` |
+| CORS | 桶级规则 `Access-Control-Allow-Origin: *`（**跨域 @font-face 必须有**） |
+| 缓存 | 字体 `max-age=31536000, immutable`；图片 `max-age=604800` |
+
+**为什么**：
+1. 放进应用包 → 每次部署重传 3.3MB，占 Pages 文件配额
+2. 这些资源跨环境共享（与生产/预发布无关），只需上传一次
+3. R2 可单独配 cache-control 和 CORS
+
+**⚠️ 绝对不能**把用户生成的内容放进 `craftai-assets`（那是公开桶）——
+用户图片只在私有桶 `craftai-storage`。
+
+**例外：应用图标类资源留在 `public/`**（`logo.png` / `logo-512.png` / `favicon.ico`）。
+favicon 必须同源才可靠，logo 要被 `og:image` 和导航栏引用，体积只有几十 KB ——
+这类属于「应用本身」，不属于「内容资源」。
+
+**改文案/换图后的重建流程**：
+```bash
+node scripts/build-assets.mjs         # 底图 → 叠排版 → WebP → 上传 showcase/
+node scripts/build-static-assets.mjs  # 字体实例化 + 样例 + 社交图 → 上传
+```
+两个脚本都支持 `--dry-run`（只构建到 `.assets/` 不上传）。
+底图（无文字的生成图）在 R2 的 `source/` 下，仓库不存。
+
+**换 R2 域名时**要同时改三处：`utils/assets.ts`、
+`assets/css/brand-fonts.css`（@font-face 的 url() 里不能用 CSS 变量，只能写死）、
+`pages/index.vue` 的 preload link。
+
+---
+
+## 成品卡片排版规范（2026-10-20）
+
+**图上字下**。详见 `docs/implementation-notes-cards.md`，关键三条：
+1. **模型一个字都不许画** —— prompt 自动带 `NO_TEXT_CLAUSE`（实测会写出 "Happy 70th Runthdscket"）
+2. 有参考图（i2i）时只给 `i2iSafe` 画风（强画风会改写主体特征）
+3. sharp 合成：`text` 无 `size` 参数（靠 `dpi = 字号 × 6`），**不能同时给 width 和 height**
+
+---
+
+## ⚠️ 三个让排查绕远路的坑（2026-10-20 全部踩过）
+
+### 1. `useI18n()` 的 `t` 在客户端可能不是函数
+Nuxt 的 auto-import 把 `useI18n` 解析到了 **vue-i18n 原始实现**
+（`.nuxt/imports.d.ts`），不是 @nuxtjs/i18n 的 runtime 包装版。
+原始版在客户端、尤其在**自动导入的 UI 组件**里拿不到 provide 的 i18n instance，
+返回的 `t` 不是函数 → 组件一渲染就抛 `n.t is not a function` → **整页 500**。
+
+- **SSR 完全正常**，只在 hydration 后炸 ⇒ 极难查
+- `error.vue` 的 h1 是**硬编码的 "404"**，看起来像路由 404，实际 statusCode 是 500
+- ✅ 一律用 `composables/useT.ts`（内部走 `useNuxtApp().$i18n.t`，全局 composer，一定可靠）
+- ❌ 不要在 `components/ui/*` 这类自动导入组件里用 `useI18n().t`
+
+### 2. 改 `.vue` 的 style 块时别用 `str.replace("</style>", ...)`
+Python 的 `str.replace` 会**替换所有出现**，把文件里唯一的 `</style>` 换掉 →
+原有 style 块没闭合 → 后面的 `<script setup>` 全被当成 CSS → 组件脚本不执行 → 500。
+**用带锚点的正则或按行插入。** 已有 `tests/nuxt-templates.test.ts` 守住标签配对。
+
+### 3. `useHead()` 只能在 setup 顶层调用
+它依赖 `inject` 拿 head 实例，写在 `onMounted` 回调里同样会炸。
+
+---
+
+## 🔍 验证 prod 行为：跑构建产物，别等部署
+
+```bash
+npm run cf:build
+npx wrangler pages dev dist --port 3222 --ip 127.0.0.1
+# 然后用 playwright 访问 http://127.0.0.1:3222/<route>
+```
+**为什么重要**：`nuxt dev` 正常、prod bundle 炸的情况很常见
+（auto-import 解析、minify、tree-shaking 只在 build 产物里才现形）。
+跑产物 1 分钟就能复现，比 push + 等部署 + 等 CDN 缓存快 5 分钟以上。
+
+配套工具：
+- `scripts/audit-pages.mjs` —— 逐页截图 + 提取风格信号（背景色/是否新风格/标题）
+- `scripts/shot-auth-modal.mjs` —— 弹窗类组件的截图验收

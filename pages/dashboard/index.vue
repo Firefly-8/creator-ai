@@ -15,17 +15,53 @@
         <div class="panel p-6">
           <p class="text-sm text-ink-400">{{ $t('dashboard.musicGenerated') }}</p>
           <p class="mt-1 text-2xl font-700 text-white">{{ stats.music }}</p>
-          <p class="mt-1 text-xs text-ink-500">{{ musicRemaining }} {{ $t('dashboard.remaining') }}</p>
+          <p class="mt-1 text-xs text-ink-500">{{ musicRemaining }} left today</p>
         </div>
         <div class="panel p-6">
           <p class="text-sm text-ink-400">{{ $t('dashboard.imagesGenerated') }}</p>
           <p class="mt-1 text-2xl font-700 text-white">{{ stats.image }}</p>
-          <p class="mt-1 text-xs text-ink-500">{{ imageRemaining }} {{ $t('dashboard.remaining') }}</p>
+          <p class="mt-1 text-xs text-ink-500">{{ imageRemaining }} {{ imageQuotaSuffix }}</p>
         </div>
         <div class="panel p-6">
           <p class="text-sm text-ink-400">{{ $t('dashboard.currentPlan') }}</p>
           <p class="mt-1 text-2xl font-700 text-white capitalize">{{ plan }}</p>
           <NuxtLink to="/pricing" class="mt-1 inline-block text-xs text-accent-soft hover:text-accent">{{ $t('dashboard.upgrade') }}</NuxtLink>
+        </div>
+      </div>
+
+      <!-- Daily Free Claim -->
+      <div class="mb-8 panel p-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="font-display text-lg font-600 text-white">
+              {{ isPaid ? 'Your plan' : 'Daily Free Generation' }}
+            </h2>
+            <p class="mt-1 text-sm text-ink-400">
+              <template v-if="isPaid">
+                Each card you make is print-ready: 2K, no mark on the file.
+              </template>
+              <template v-else>
+                Free generations reset every day. Upgrade for no-watermark 2K prints.
+              </template>
+            </p>
+          </div>
+          <div class="flex items-center gap-3">
+            <div v-if="dailyStreak > 0" class="text-center">
+              <p class="text-2xl font-700 text-accent-soft">{{ dailyStreak }}</p>
+              <p class="text-[11px] text-ink-400">day streak</p>
+            </div>
+            <!-- 额度现在是服务端自动扣的，不需要「领取」—— 直接显示还剩多少 -->
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-white/[0.06] px-3 py-1.5 text-sm text-ink-300">
+                <span class="font-700 text-white">{{ dailyImageRemaining }}</span>
+                <template v-if="isPaid"> cards left on your plan</template>
+                <template v-else> images left today</template>
+              </span>
+              <span class="rounded-full bg-white/[0.06] px-3 py-1.5 text-sm text-ink-300">
+                <span class="font-700 text-white">{{ dailyMusicRemaining }}</span> songs left today
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -56,15 +92,30 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+// ⚠️ 组件/页面里不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，
+// 客户端拿到的 t 不是函数 → 整页 500。用 useT()。
+const { t: $t } = useT()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
+const route = useRoute()
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const { get } = useApi()
 
 const stats = ref({ music: 0, image: 0 })
+// 每日额度（真实的每日剩余数，服务端强制）
+const dailyImageRemaining = ref<number | string>(0)
+const dailyMusicRemaining = ref<number | string>(0)
+const dailyImageClaimed = ref(false)
+const dailyMusicClaimed = ref(false)
+const dailyStreak = ref(0)
 const plan = ref('free')
 const musicRemaining = ref('∞')
 const imageRemaining = ref('∞')
+/** 有没有付费权益（付费档显示的是「还剩几张卡」） */
+const isPaid = ref(false)
+/** 图片额度后面跟的那句话 —— 付费档和免费档说法不一样 */
+const imageQuotaSuffix = ref('remaining this month')
 const recentItems = ref<Array<{ id: string; title: string; type: string; date: string; status: string }>>([])
 
 // 加载用户数据
@@ -75,11 +126,16 @@ async function loadDashboard() {
     stats.value.image = data.stats?.images || 0
     plan.value = data.subscription?.plan || 'free'
     
-    // 免费模式无限额度
-    const quotas = data.quotas?.free
+    // 每日额度（服务端强制的真实计数，不是「总数减已用」）
+    const quotas = data.quotas
     if (quotas) {
-      musicRemaining.value = quotas.music - stats.value.music > 0 ? String(quotas.music - stats.value.music) : '0'
-      imageRemaining.value = quotas.image - stats.value.image > 0 ? String(quotas.image - stats.value.image) : '0'
+      isPaid.value = !!data.quotas?.paid || !!data.subscription?.plan && data.subscription.plan !== 'free'
+      musicRemaining.value = quotas.music?.unlimited ? '∞' : String(quotas.music?.remaining ?? 0)
+      imageRemaining.value = quotas.image?.unlimited ? '∞' : String(quotas.image?.remaining ?? 0)
+      dailyImageRemaining.value = quotas.image?.unlimited ? '∞' : (quotas.image?.remaining ?? 0)
+      dailyMusicRemaining.value = quotas.music?.unlimited ? '∞' : (quotas.music?.remaining ?? 0)
+      imageQuotaSuffix.value =
+        quotas.image?.mode === 'credit' ? 'cards left on your plan' : 'free left today'
     }
   } catch (err) {
     console.error('[Dashboard] Failed to load:', err)
@@ -103,9 +159,50 @@ async function loadRecent() {
   }
 }
 
+async function loadDailyFree() {
+  try {
+    const data = await $fetch('/api/user/daily-free')
+    dailyMusicClaimed.value = data.music?.claimed || false
+    dailyImageClaimed.value = data.image?.claimed || false
+    dailyMusicRemaining.value = data.music?.unlimited ? '∞' : (data.music?.remaining ?? 0)
+    dailyImageRemaining.value = data.image?.unlimited ? '∞' : (data.image?.remaining ?? 0)
+    dailyStreak.value = data.streakDays || 0
+  } catch {
+    // ignore
+  }
+}
+
+async function claimDaily(type: 'music' | 'image') {
+  try {
+    const data = await $fetch<{ streakDays: number }>('/api/user/daily-free', {
+      method: 'POST',
+      body: { type },
+    })
+    if (type === 'music') dailyMusicClaimed.value = true
+    else dailyImageClaimed.value = true
+    dailyStreak.value = data.streakDays || dailyStreak.value
+  } catch (err: any) {
+    if (err?.statusCode !== 409) {
+      console.error('[Daily Free] Claim failed:', err)
+    }
+  }
+}
+
 onMounted(() => {
+  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+    return
+  }
   loadDashboard()
   loadRecent()
+  loadDailyFree()
+})
+
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
 })
 
 useHead({ title: 'Dashboard — CraftAI' })

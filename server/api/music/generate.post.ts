@@ -1,21 +1,25 @@
 /**
  * 音乐生成 API — D1 + MiniMax 实际调用
- * Phase 2: 接通 MiniMax + 用户同步 + 额度检查
+ * 登录用户即可使用
  */
 
-import { defineEventHandler, readBody, createError, getHeader } from 'h3'
-import { nanoid } from 'nanoid'
-import { encryptForStorage } from '../../utils/db'
-import { checkQuota } from '../../utils/quota'
+import { defineEventHandler, readBody, createError } from 'h3'
 import { createJob, createSongDraft, updateJob, updateSong } from '../../utils/jobs'
-import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
+import { generateMusic } from '../../utils/minimax'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
+import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 export default defineEventHandler(async (event) => {
   // 1. 认证
-  n  // 1.5 速率检查n  await rateLimitMiddleware(event, 'generate')n
   const auth = event.context.auth
   if (!auth?.uid) throw createError({ statusCode: 401 })
+
+  // 1.5 速率检查
+  await rateLimitMiddleware(event, 'generate')
+
+  // 每日免费额度（服务端强制）
+  await consumeDailyQuota(event, auth.uid, 'music')
 
   // 2. 解析参数
   const body = await readBody(event)
@@ -29,13 +33,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'prompt or lyrics is required' })
   }
 
-  // 3. 额度检查（免费版）
-  const quota = checkQuota('free', 'music', 0) // TODO: 从 DB 获取已使用量
-  if (!quota.allowed) {
-    throw createError({ statusCode: 402, statusMessage: 'Quota exceeded. Please upgrade.' })
-  }
-
-  // 4. 创建歌曲记录 + 任务
+  // 3. 创建歌曲记录 + 任务
   const song = await createSongDraft(auth.uid, {
     title: title || 'Untitled Track',
     prompt,
@@ -48,48 +46,33 @@ export default defineEventHandler(async (event) => {
     prompt, lyrics, model, mode,
   }, song.id)
 
-  // 5. 调用 MiniMax API
+  // 4. 调用 MiniMax API
   try {
-    const apiKey = await getDecryptedApiKey()
-    const baseUrl = getMiniMaxBaseUrl()
-
     await updateJob(job.id, { status: 'processing' })
 
-    const res = await fetch(`${baseUrl}/v1/music_generation`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        prompt,
-        lyrics: mode === 'instrumental' ? undefined : lyrics,
-        model,
-      }),
+    // ⚠️ 走 generateMusic（内部会检查 base_resp.status_code），
+    //   否则「额度耗尽」会走成 HTTP 200 + 空数据 的静默失败。
+    const result = await generateMusic({
+      prompt,
+      lyrics: mode === 'instrumental' ? undefined : lyrics,
+      model,
     })
 
-    if (!res.ok) {
-      const errText = await res.text()
-      throw new Error(`MiniMax error: ${res.status} ${errText}`)
-    }
-
-    const result = await res.json() as any
-
-    // 6. 处理结果
+    // 5. 处理结果
     const audioUrl = result?.data?.audio_url || result?.data?.url
     if (!audioUrl) {
       throw new Error('No audio URL in response')
     }
 
     // 下载音频到 R2
-    const { writeFile, inferContentType } = await import('../../utils/storage')
+    const { writeFile } = await import('../../utils/storage')
     const audioRes = await fetch(audioUrl)
     if (!audioRes.ok) throw new Error('Failed to download audio')
     const audioBlob = await audioRes.blob()
     const filename = `${song.id}.mp3`
     await writeFile('audio', filename, audioBlob, 'audio/mpeg')
 
-    // 7. 更新状态
+    // 6. 更新状态
     await updateSong(song.id, {
       status: 'ready',
       audio_path: filename,
@@ -109,7 +92,13 @@ export default defineEventHandler(async (event) => {
       audioUrl: `/api/audio/${song.id}`,
     }
   } catch (err: any) {
-    // 失败处理
+    // 失败流水 + 多用户失败告警判定
+    await recordGenerationFailure(event, {
+      userId: auth.uid,
+      endpoint: 'music/generate',
+      error: err,
+    }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
+
     await updateSong(song.id, {
       status: 'failed',
       error_message: err.message?.slice(0, 500) || 'Generation failed',

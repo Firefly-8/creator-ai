@@ -14,3 +14,4 @@ if (c.includes('from "unhead"')) {
 } else {
   console.log('[patch] Already patched or no changes needed')
 }
+

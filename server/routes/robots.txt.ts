@@ -18,5 +18,8 @@ export default defineEventHandler((event) => {
     'Disallow:',
     'Allow: /',
     '',
+    // 告诉爬虫 sitemap 在哪
+    'Sitemap: https://create.yozzytools.com/sitemap.xml',
+    '',
   ].join('\n')
 })

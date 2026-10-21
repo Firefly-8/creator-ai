@@ -23,7 +23,7 @@
     </div>
 
     <div v-else-if="!items.length" class="admin-empty">
-      <span class="i-ph-inbox text-3xl text-ink-500" />
+      <span class="i-ph-envelope-simple text-3xl text-ink-500" />
       <p>No feedback yet</p>
     </div>
 

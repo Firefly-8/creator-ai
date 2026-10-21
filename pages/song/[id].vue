@@ -8,7 +8,21 @@
       </div>
     </div>
   </div>
-  <div v-else-if="!song" class="panel p-10 text-center text-ink-300">Track not found.</div>
+  <div v-else-if="!song" class="panel p-12 text-center">
+      <div class="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.06]">
+        <span class="i-ph-music-notes-simple text-3xl text-ink-400" />
+      </div>
+      <h2 class="mb-2 font-display text-xl font-700 text-white">Track not found</h2>
+      <p class="mb-6 text-sm text-ink-400">This track may have been deleted or is not available.</p>
+      <div class="flex items-center justify-center gap-3">
+        <button class="btn btn--secondary" @click="navigateTo('/music-library')">
+          <span class="i-ph-arrow-left mr-1.5" />Back to Library
+        </button>
+        <button class="btn btn--primary" @click="navigateTo('/create')">
+          <span class="i-ph-plus mr-1.5" />Create New
+        </button>
+      </div>
+    </div>
   <div v-else class="space-y-6">
     <header class="flex flex-wrap items-start justify-between gap-4">
       <div class="flex gap-4">
@@ -35,6 +49,17 @@
             >{{  statusLabel(song.status)  }}</span>
           </p>
           <p v-if="song.errorMessage" class="mt-2 text-sm text-danger">{{  song.errorMessage  }}</p>
+          <div class="mt-3 flex items-center gap-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                :checked="isPublic"
+                class="accent-[#8b7cff] h-4 w-4"
+                @change="togglePublic"
+              />
+              <span class="text-xs text-ink-300">Show in Gallery</span>
+            </label>
+          </div>
         </div>
       </div>
       <div class="flex flex-wrap gap-2">
@@ -57,6 +82,7 @@
         <UiButton variant="ghost" class="!text-danger hover:!bg-danger/10" @click="remove">
           Delete
         </UiButton>
+        <ShareMenu :url="`/song/${song.id}`" :title="song.title" />
       </div>
     </header>
 
@@ -80,6 +106,18 @@
       />
     </ClientOnly>
   </div>
+    <Teleport to="body">
+      <ConfirmModal
+        v-model="confirmOpen"
+        title="Delete Track"
+        message="This action cannot be undone."
+        confirm-label="Delete"
+        cancel-label="Cancel"
+        danger
+        @confirm="onConfirmDelete"
+        @cancel="confirmOpen = false"
+      />
+    </Teleport>
 </template>
 
 <script setup lang="ts">
@@ -97,17 +135,71 @@ const { data, pending, refresh } = await useFetch<{ song: SongPublic }>(() => `/
   watch: [id],
 })
 
+// ⚠️ 下面这些 computed 的 getter 会用到 song / data，而 useHead 会**同步求值**
+// 它们 —— 所以 song 必须定义在 useHead 之前，否则就是 TDZ，客户端直接抛
+// "Cannot access 's' before initialization" → 整页 500。
 const song = computed(() => data.value?.song || null)
+
+const pageTitle = computed(() => song.value ? `${song.value.title} — CraftAI` : 'Track — CraftAI')
+const pageDescription = computed(() => {
+  if (!song.value) return 'Listen to this AI-generated track on CraftAI.'
+  const prompt = song.value.prompt
+  if (prompt && prompt.length > 160) return `${prompt.slice(0, 157)}…`
+  return prompt || 'Listen to this AI-generated track on CraftAI.'
+})
+
+useHead({
+  title: pageTitle,
+  meta: [
+    { name: 'description', content: pageDescription },
+    { property: 'og:title', content: pageTitle },
+    { property: 'og:description', content: pageDescription },
+    { property: 'og:type', content: 'music.song' },
+  ],
+  link: [{ rel: 'canonical', href: `https://creator.yozzytools.com/song/${id.value}` }],
+})
+
+
 const player = usePlayerStore()
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
+const isPublic = ref(false)
+
+// Delete confirmation modal
+const confirmOpen = ref(false)
+function onConfirmDelete() {
+  confirmOpen.value = false
+  removeConfirmed()
+}
+function promptDelete() {
+  confirmOpen.value = true
+}
+
+async function togglePublic() {
+  try {
+    await $fetch(`/api/songs/${id.value}/public`, {
+      method: 'PATCH',
+      body: { isPublic: !isPublic.value },
+    })
+    isPublic.value = !isPublic.value
+  } catch (err) {
+    console.error('Failed to toggle public:', err)
+  }
+}
+
+watch(song, (s) => {
+  if (s) isPublic.value = !!(s as any).isPublic
+}, { immediate: true })
 
 function play() {
   if (song.value) player.playSong(song.value)
 }
 
 async function remove() {
-  if (!confirm('Delete this track?')) return
+  promptDelete()
+}
+async function removeConfirmed() {
   await $fetch(`/api/songs/${id.value}`, { method: 'DELETE' })
-  navigateTo('/library')
+  navigateTo('/music-library')
 }
 
 function onSaved() {
@@ -115,7 +207,7 @@ function onSaved() {
 }
 
 function statusLabel(status: string) {
-  if (status === 'generating') return '制作中'
+  if (status === 'generating') return 'In progress'
   if (status === 'ready') return 'Ready'
   if (status === 'failed') return 'Failed'
   return status

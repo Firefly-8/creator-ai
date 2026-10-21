@@ -6,6 +6,8 @@
  * 不加密字段：id, status, created_at 等（用于查询和索引）
  */
 
+import { DB_BINDING_NAME, resolveDB } from './db-runtime'
+
 // ============ 类型定义 ============
 
 export interface ImageRow {
@@ -23,6 +25,7 @@ export interface ImageRow {
   status: string
   error_message: string | null
   meta_json: string
+  is_public: number
   created_at: string
   updated_at: string
 }
@@ -48,6 +51,7 @@ export interface SongRow {
   parent_id: string | null
   user_id: string
   meta_json: string
+  is_public: number
   created_at: string
   updated_at: string
 }
@@ -79,19 +83,23 @@ export function setD1Database(db: D1Database) {
 }
 
 /**
- * 获取 D1 数据库实例（从 CF Workers binding）
+ * 获取 D1 数据库实例
+ *
+ * 统一走 server/utils/db-runtime.ts 的解析逻辑，
+ * 避免这里再维护一套平行实现（历史上两套路径不一致导致线上取不到 DB）。
  */
 function getD1(): D1Database {
   if (d1Instance) return d1Instance
-  
-  // CF Workers 环境：从 globalThis 获取 DB binding
-  const d1 = (globalThis as any).DB
-  if (d1) {
-    d1Instance = d1
-    return d1
+
+  const { db, source } = resolveDB()
+  if (!db) {
+    throw new Error(
+      `D1 database not available (binding "${DB_BINDING_NAME}" missing). ` +
+      'Check Cloudflare Pages → Settings → Functions → D1 database bindings.'
+    )
   }
-  
-  throw new Error('D1 database not available. Ensure DB binding is configured in wrangler.toml')
+  d1Instance = db
+  return d1Instance
 }
 
 // ============ 异步查询接口 ============

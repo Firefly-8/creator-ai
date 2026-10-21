@@ -46,13 +46,14 @@ export function useAuth() {
   // 同步用户到 D1
   async function syncUser(firebaseUser: User) {
     try {
-      const token = await firebaseUser.getIdToken()
+      // 强制刷新 token，避免过期导致 401
+      const token = await firebaseUser.getIdToken(true)
       await $fetch('/api/auth/sync', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       })
-    } catch (err) {
-      console.error('[Auth] Sync failed:', err)
+    } catch {
+      // 同步失败不阻断用户体验，静默处理
     }
   }
 
@@ -168,7 +169,7 @@ export function useAuth() {
 
   // 获取 ID Token
   async function getIdToken(): Promise<string | null> {
-    return user.value?.getIdToken() || null
+    return user.value?.getIdToken(true) || null
   }
 
   return {

@@ -244,8 +244,109 @@ ${sceneHint}`,
   const cleaned = text.replace(/^```[\s\S]*?\n|```$/g, '').trim()
   return {
     optimized: cleaned.slice(0, 1500) || input.prompt,
-    notes: '已用对话模型润色提示词',
+    notes: 'Prompt polished with chat model',
   }
+}
+
+
+/**
+ * 批量需求拆解 — 将一句话需求拆解为 4 个不同风格的结构化 prompt
+ * 沿用 optimizeImagePrompt 的结构化规范，确保每个 prompt 高质量
+ */
+export async function decomposePromptToBatch(input: {
+  prompt: string
+  scene?: string
+  aspectRatio?: string
+}): Promise<{ prompts: Array<{ style: string; prompt: string; colorMood: string }>; notes: string }> {
+  const sceneHint = sceneSystemHint(input.scene)
+  const { apiKey, baseUrl } = await getConfig()
+
+  const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'MiniMax-M3',
+      temperature: 0.7,
+      messages: [
+        {
+          role: 'system',
+          content: `You are an expert creative director and prompt engineer for MiniMax image-01.
+The user gives a rough requirement. Your job: DECOMPOSE it into 4 DISTINCT visual directions.
+Each direction must be a COMPLETE, STRUCTURED image prompt that produces a high-quality result.
+
+Prompt structure (each prompt MUST include):
+- Subject: main element and what it represents
+- Composition: layout, placement, framing, background
+- Style: specific art style (cartoon, pixel, flat vector, 3d render, hand-drawn, watercolor etc.)
+- Lighting: light direction, intensity, mood
+- Materials/Surface: texture, finish, material qualities
+- Camera/View: angle, perspective, depth of field
+- Quality: professional, high detail, sharp focus
+
+Rules:
+- Prefer clear English (MiniMax image-01 works best with detailed English).
+- Each prompt 200-800 characters — detailed but concise.
+- Each prompt SELF-CONTAINED — fully understandable alone.
+- 4 styles must be VISUALLY DISTINCT (different art directions, not just color changes).
+- Output JSON only, no markdown, no extra text.
+${sceneHint}
+
+Output format:
+{"prompts":[{"style":"中文风格名(如:卡通冒险风)","prompt":"full structured English prompt","colorMood":"warm/cool/vibrant/muted/pastel/dark etc"},...4 items...],"notes":"一句话总结这4个方向的特点"}`,
+        },
+        {
+          role: 'user',
+          content: `Aspect ratio: ${input.aspectRatio || '1:1'}\nScene: ${input.scene || 'general'}\nUser requirement:\n${input.prompt}`,
+        },
+      ],
+    }),
+  })
+
+  const json = (await res.json().catch(() => ({}))) as any
+  const apiCode = json?.base_resp?.status_code
+  if (typeof apiCode === 'number' && apiCode !== 0) {
+    throw new MiniMaxError(apiCode, json?.base_resp?.status_msg || 'Chat decompose failed')
+  }
+  if (!res.ok) {
+    throw new MiniMaxError(res.status, json?.error?.message || json?.base_resp?.status_msg || 'Chat decompose failed')
+  }
+
+  const text = String(json?.choices?.[0]?.message?.content || '').trim()
+  const parsed = parseBatchJson(text)
+  if (parsed) return parsed
+
+  // Fallback: return original as single direction
+  return {
+    prompts: [{ style: '默认', prompt: input.prompt, colorMood: 'neutral' }],
+    notes: '使用原始需求生成（拆解服务暂不可用）',
+  }
+}
+
+/**
+ * 解析批量拆解 JSON 输出
+ */
+function parseBatchJson(text: string): { prompts: Array<{ style: string; prompt: string; colorMood: string }>; notes: string } | null {
+  const match = text.match(/\{[\s\S]*\}/)
+  if (!match) return null
+  try {
+    const obj = JSON.parse(match[0])
+    if (Array.isArray(obj.prompts) && obj.prompts.length >= 1) {
+      return {
+        prompts: obj.prompts.map((p: any) => ({
+          style: String(p.style || '风格').trim(),
+          prompt: String(p.prompt || '').trim().slice(0, 1500),
+          colorMood: String(p.colorMood || 'neutral').trim(),
+        })).slice(0, 4),
+        notes: String(obj.notes || '已生成多种风格方案').trim(),
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return null
 }
 
 // ============ Cover 翻唱 ============
@@ -305,7 +406,7 @@ function parseOptimizeJson(text: string): { optimized: string; notes: string } |
     if (typeof obj.optimized === 'string' && obj.optimized.trim()) {
       return {
         optimized: String(obj.optimized).trim().slice(0, 1500),
-        notes: String(obj.notes || '提示词已优化').trim(),
+        notes: String(obj.notes || 'Prompt optimized').trim(),
       }
     }
   } catch {
@@ -336,15 +437,15 @@ export function extractAudioPayload(result: MusicResult): { url?: string; hex?: 
 
 export function mapMiniMaxErrorMessage(code: number, msg: string): string {
   const map: Record<number, string> = {
-    1002: '请求过于频繁，请约 1 分钟后再试',
-    1004: 'API 鉴权失败，请检查 Key 是否正确',
-    1008: 'MiniMax 账户余额不足，请充值或切换按量付费 Key',
-    1026: '内容触发安全审核，请修改提示词后重试',
-    2013: '请求参数无效',
-    2049: 'API Key 无效或与区域不匹配',
-    2056: 'Token Plan 额度已用尽',
+    1002: 'Too many requests, please try again in about 1 minute',
+    1004: 'API authentication failed, please check your API key',
+    1008: 'MiniMax account balance insufficient, please top up or switch to pay-as-you-go key',
+    1026: 'Content triggered safety review, please modify your prompt and try again',
+    2013: 'Invalid request parameters',
+    2049: 'API key invalid or does not match region',
+    2056: 'Token plan quota exhausted',
   }
-  return map[code] || msg || `MiniMax 错误 ${code}`
+  return map[code] || msg || `MiniMax error ${code}`
 }
 
 export async function resolveMiniMaxUserMessage(code: number, msg: string): Promise<string> {

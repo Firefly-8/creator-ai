@@ -1,0 +1,107 @@
+/**
+ * AI 写贺卡祝词
+ *
+ * 场景：用户点了「Write it for me」但不想自己动笔。
+ * 约束：
+ *   - 英文，1~2 句，温暖口语化（写给中老年收卡人，不要太正式）
+ *   - 必须正确使用用户输入的名字（我们会把 name 原样给它）
+ *   - 不用 emoji、不用 markdown、不加引号
+ *   - 长度控制在 140 字符内，贺卡上放得下
+ */
+import { defineEventHandler, readBody, createError } from 'h3'
+import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
+import { MiniMaxError } from '../../utils/minimax'
+import { getScenario } from '../../../utils/imageScenarios'
+import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+import { recordGenerationFailure } from '../../utils/failure-monitor'
+
+export default defineEventHandler(async (event) => {
+  const auth = event.context.auth
+  if (!auth?.uid) throw createError({ statusCode: 401 })
+
+  // 写文案也烧 MiniMax 额度 —— 单独一档（text），不跟图片生成抢额度
+  await consumeDailyQuota(event, auth.uid, 'text')
+
+  const body = await readBody(event).catch(() => ({}) as any)
+  const scenarioId = String(body?.scenario || '')
+  const name = String(body?.name || '').trim().slice(0, 60)
+  const extra = String(body?.extra || '').trim().slice(0, 200)
+
+  const scenario = getScenario(scenarioId)
+  if (!scenario) {
+    throw createError({ statusCode: 400, statusMessage: 'Unknown scenario' })
+  }
+
+  const apiKey = await getDecryptedApiKey()
+  if (!apiKey) {
+    throw createError({ statusCode: 503, statusMessage: 'Message service is not configured' })
+  }
+  const baseUrl = await getMiniMaxBaseUrl()
+
+  const system = [
+    'You write short messages for greeting cards.',
+    'Rules:',
+    '- Write in English only.',
+    '- One or two sentences, warm and personal, like a family member would say.',
+    '- Use the person\'s name naturally if it fits. NEVER misspell or change the name.',
+    '- No emoji, no markdown, no quotation marks, no signature.',
+    '- Maximum 140 characters.',
+    '- Output ONLY the message text.',
+  ].join('\n')
+
+  const userParts = [`Occasion: ${scenario.label} (${scenario.desc}).`]
+  if (name) userParts.push(`Their name (use exactly): ${name}`)
+  if (extra) userParts.push(`A detail about them: ${extra}`)
+  userParts.push('Write the message.')
+
+  let message = ''
+  try {
+    const res = await fetch(`${baseUrl}/v1/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'MiniMax-M3',
+        temperature: 0.8,
+        max_tokens: 120,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: userParts.join('\n') },
+        ],
+      }),
+    })
+    const json = (await res.json().catch(() => ({}))) as any
+    const code = json?.base_resp?.status_code
+    if (typeof code === 'number' && code !== 0) {
+      // 用 MiniMaxError 带上准确的错误码 —— 告警要靠它区分
+      // 「用户 prompt 违规」和「上游挂了 / 额度耗尽」
+      throw new MiniMaxError(code, json?.base_resp?.status_msg || 'Message service error')
+    }
+    message = String(json?.choices?.[0]?.message?.content || '').trim()
+  } catch (e) {
+    console.error('[image/message] MiniMax 调用失败', e)
+    // 失败流水 + 多用户失败告警判定
+    // ⚠️ 这里有兜底文案，用户不会看到报错 —— 但上游确实挂了，必须记下来
+    await recordGenerationFailure(event, {
+      userId: auth.uid,
+      endpoint: 'image/message',
+      error: e,
+    }).catch((err) => console.error('[failure-monitor] 记录失败出错:', err))
+    // 兜底：给一条安全的预置祝词，别让用户对着空白
+    message = scenario.presetMessages?.[0] || 'Thinking of you today. Have a wonderful day.'
+    // 兜底文案不算真的生成了 → 把额度退回去
+    await refundDailyQuota(event, auth.uid, 'text')
+  }
+
+  // 清理模型可能带上的引号/markdown/多余空白
+  message = message
+    .replace(/^```[\s\S]*?\n|```$/g, '')
+    .replace(/^["'“”\s]+|["'“”\s]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 200)
+
+  return { message, scenario: scenario.id }
+})

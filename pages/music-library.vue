@@ -2,7 +2,7 @@
   <StudioWorkspace single>
     <template #header>
       <div>
-        <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Library</h1>
+        <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Music library</h1>
         <p class="mt-1 text-[13.5px] text-ink-300">{{ $t('library.subtitle') }}</p>
       </div>
       <div class="flex flex-wrap items-center gap-2">
@@ -31,8 +31,8 @@
         :songs="filtered"
         :pending="pending"
         :busy-id="busyId"
-        empty-title="{{ $t('library.emptyTitle') }}"
-        empty-hint="{{ $t('library.emptyHint') }}"
+        :empty-title="$t('library.emptyTitle')"
+        :empty-hint="$t('library.emptyHint')"
         @remix="remixSong"
         @regenerate="regenerate"
         @download="downloadSong"
@@ -40,21 +40,37 @@
         @open="openSong"
       />
     </template>
+  <ConfirmModal
+      v-model="confirmOpen"
+      :title="t('library.deleteConfirm', { title: confirmTarget?.title ?? '' })"
+      message="This action cannot be undone."
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      danger
+      @confirm="deleteSongConfirmed"
+      @cancel="confirmOpen = false"
+    />
   </StudioWorkspace>
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+// ⚠️ 不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，客户端拿到的
+// t 不是函数 → 整页 500。用 useT()（内部走 useNuxtApp().$i18n.t）。
+const { t } = useT()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
+const route = useRoute()
 import type { SongPublic } from '~/utils/types'
+import ConfirmModal from '~/components/ui/ConfirmModal.vue'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
 
 const filter = ref<'all' | 'ready' | 'generating' | 'failed'>('all')
 const filters = [
-  { id: 'all' as const, label: 't("library.all")' },
-  { id: 'ready' as const, label: 't("library.ready")' },
-  { id: 'generating' as const, label: 't("library.generating")' },
-  { id: 'failed' as const, label: 't("library.failed")' },
+  { id: 'all' as const, label: t('library.all') },
+  { id: 'ready' as const, label: t('library.ready') },
+  { id: 'generating' as const, label: t('library.generating') },
+  { id: 'failed' as const, label: t('library.failed') },
 ]
 
 const busyId = ref<string | null>(null)
@@ -104,8 +120,15 @@ function openSong(song: SongPublic) {
   navigateTo(`/song/${song.id}`)
 }
 
-async function removeSong(song: SongPublic) {
-  if (!confirm(`${t('library.deleteConfirm', { title: song.title })}`)) return
+function promptDeleteSong(song: SongPublic) {
+  confirmTarget.value = song
+  confirmOpen.value = true
+}
+async function deleteSongConfirmed() {
+  const song = confirmTarget.value
+  if (!song) return
+  confirmOpen.value = false
+  confirmTarget.value = null
   busyId.value = song.id
   actionError.value = ''
   try {
@@ -117,4 +140,29 @@ async function removeSong(song: SongPublic) {
     busyId.value = null
   }
 }
+
+useHead({
+  title: 'My Library — CraftAI',
+  meta: [
+    { name: 'description', content: 'Your AI music library. Access, manage, and download all your generated tracks and covers.' },
+    { property: 'og:title', content: 'My Library — CraftAI' },
+    { property: 'og:description', content: 'Access and manage your AI-generated music.' },
+    { property: 'og:type', content: 'website' },
+    { name: 'robots', content: 'noindex' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/library' }],
+})
+
+// Auth guard: 未登录时弹出登录框，登录后跳回当前页
+onMounted(() => {
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+  }
+})
+
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
+})
 </script>

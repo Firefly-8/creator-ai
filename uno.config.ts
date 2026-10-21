@@ -7,55 +7,22 @@ import {
   transformerDirectives,
 } from 'unocss'
 import { SONG_PRESETS } from './utils/presets'
+import ICON_SAFELIST_DATA from './utils/icon-safelist.json'
+
+const ICON_SAFELIST: string[] = ICON_SAFELIST_DATA.safelist
 
 const require = createRequire(import.meta.url)
 const phIcons = require('@iconify-json/ph/icons.json')
 
-/** Static + dynamic Phosphor icons used across the app */
-const ICON_SAFELIST = [
-  ...SONG_PRESETS.map((p) => `i-${p.icon}`),
-  'i-ph-sparkle',
-  'i-ph-waveform',
-  'i-ph-arrows-clockwise',
-  'i-ph-magic-wand',
-  'i-ph-vinyl-record',
-  'i-ph-scissors',
-  'i-ph-circle-fill',
-  'i-ph-skip-back-fill',
-  'i-ph-skip-forward-fill',
-  'i-ph-play-fill',
-  'i-ph-pause-fill',
-  'i-ph-speaker-high',
-  'i-ph-speaker-low',
-  'i-ph-speaker-slash',
-  'i-ph-speaker-high-fill',
-  'i-ph-image',
-  'i-ph-text-aa',
-  'i-ph-user-focus',
-  'i-ph-app-window',
-  'i-ph-devices',
-  'i-ph-layout',
-  'i-ph-package',
-  'i-ph-caret-down',
-  'i-ph-caret-up',
-  'i-ph-list',
-  'i-ph-music-notes',
-  'i-ph-x',
-  'i-ph-ear',
-  'i-ph-download-simple',
-  'i-ph-arrow-clockwise',
-  'i-ph-music-notes',
-  'i-ph-check-circle-fill',
-  'i-ph-scan',
-  'i-ph-pencil-simple',
-  'i-ph-piano-keys',
-  'i-ph-lightning',
-  'i-ph-sliders-horizontal',
-  'i-ph-dots-three',
-  'i-ph-trash',
-  'i-ph-eye',
-]
-
+/**
+ * 图标 safelist —— **自动生成**，不要手写。
+ *
+ * ⚠️ 为什么必须自动生成（2026-10-21）：
+ *   presetIcons 只扫源码里的**字面量**类名。动态拼接的图标名扫不到：
+ *     <span :class="`i-${a.icon}`" />   →  首页 8 个受众入口的图标全都不显示
+ *   之前手写了一份 40 个的 safelist 兜底，项目实际用到 90+ 个 —— 必然漏。
+ *   现在跑 `node scripts/gen-icon-safelist.mjs` 全量收集。
+ */
 export default defineConfig({
   presets: [
     presetUno(),

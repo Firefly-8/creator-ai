@@ -91,6 +91,10 @@
 </template>
 
 <script setup lang="ts">
+
+// ⚠️ 用 useT() 而不是 useI18n()：auto-import 的 useI18n 解析到 vue-i18n
+// 原始实现，客户端拿到的 t 不是函数，组件一渲染就抛 "n.t is not a function" → 整页 500
+const { t: $t } = useT()
 import { ref, reactive } from 'vue'
 
 const props = defineProps<{
@@ -180,7 +184,7 @@ watch(() => props.modelValue, (val) => {
 .feedback-overlay {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 110;
   display: flex;
   align-items: center;
   justify-content: center;

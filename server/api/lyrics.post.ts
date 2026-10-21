@@ -1,5 +1,12 @@
 
+import { consumeDailyQuota, refundDailyQuota } from '../utils/daily-usage'
+import { recordGenerationFailure } from '../utils/failure-monitor'
+
 export default defineEventHandler(async (event) => {
+  const auth = event.context.auth
+  if (!auth?.uid) throw createError({ statusCode: 401 })
+
+  await consumeDailyQuota(event, auth.uid, 'text')
   assertAppSecret(event)
   const body = await readBody(event)
 
@@ -20,6 +27,13 @@ export default defineEventHandler(async (event) => {
       lyrics: result.lyrics || '',
     }
   } catch (err: any) {
+    // 失败流水 + 多用户失败告警判定
+    await recordGenerationFailure(event, {
+      userId: auth.uid,
+      endpoint: 'lyrics',
+      error: err,
+    }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
+
     if (err instanceof MiniMaxError) {
       throw createError({
         statusCode: 502,

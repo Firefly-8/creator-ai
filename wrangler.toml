@@ -1,10 +1,36 @@
+# ⚠️ Cloudflare Pages 部署配置源 —— 改动前先读这段
+#
+# 0) 这份是 **master（生产）分支** 的版本 → 指向生产库 craftai-db / 生产 KV。
+#    test 分支上的同名文件指向预发布库 —— 合并时别把两份搞混了。
+#    改完跑：npm run check:bindings --branch=master
+#
+# 1) CF Pages 的 Git 集成把仓库根目录的 wrangler.toml 当作 "source of truth"：
+#    每个环境用「自己那次部署所在分支」上的那份文件。Dashboard 上能看到的
+#    绑定字段只是只读镜像，真正生效的是这里。
+#
+# 2) 因此两个分支必须各自指向对应的库：
+#      master 分支的 wrangler.toml → craftai-db          (生产)
+#      test   分支的 wrangler.toml → craftai-db-staging  (预发布)
+#
+#    对应关系：
+#      craftai          production ← master 分支（本文件在 master 上是生产配置）
+#      craftai          preview    ← test 分支
+#      craftai-staging  production ← test 分支（本文件）
+#      craftai-staging  preview    ← 其它分支
+#
+# 3) 合并分支时务必保留 master 的 wrangler.toml，否则生产会连到预发布库。
+#    提交前跑一遍：npm run check:bindings
+#
+# 4) 这个文件缺少 pages_build_output_dir 会让 CF 部署阶段直接失败，不要删。
+
 name = "craftai"
 compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
 
 # Cloudflare Pages 配置
 pages_build_output_dir = "dist"
 
-# D1 数据库绑定
+# D1 数据库绑定（生产库）
 [[d1_databases]]
 binding = "DB"
 database_name = "craftai-db"

@@ -1,7 +1,7 @@
 {
   "meta": {
-    "title": "Creator — AI 音乐与图像工作室",
-    "description": "用 AI 创作音乐、图像等 — 尽在一站式工作室。免费开始，无需信用卡。"
+    "title": "CraftAI — AI 音乐与图像工作室",
+    "description": "一个平台搞定 AI 音乐、图像等创作。免费开始，无需信用卡。"
   },
   "nav": {
     "create": "创作",
@@ -9,53 +9,55 @@
     "blog": "博客",
     "login": "登录",
     "signup": "注册",
-    "dashboard": "控制台",
-    "cover": "Cover",
-    "library": "Library",
-    "image": "Image",
-    "logout": "Sign Out",
-    "tagline": "AI Music & Image Studio",
-    "musicGroup": "Music",
-    "imageGroup": "Image",
+    "dashboard": "仪表盘",
+    "cover": "翻唱",
+    "library": "曲库",
+    "image": "图像",
+    "logout": "退出登录",
+    "tagline": "AI 音乐与图像工作室",
+    "musicGroup": "音乐",
+    "imageGroup": "图像",
     "admin": "管理"
   },
   "hero": {
-    "title": "AI 音乐与图像创作",
-    "titleHighlight": "片刻即成",
+    "title": "创作 AI 音乐与图像",
+    "titleHighlight": "只需数秒",
     "subtitle": "用 AI 生成歌曲、艺术作品和创意内容。无需信用卡 — 免费开始创作。",
-    "cta": "免费开始",
+    "cta": "免费开始创作",
     "ctaSecondary": "查看定价",
-    "noSignup": "前 10 次生成无需注册"
+    "noSignup": "前 10 次生成无需注册",
+    "badge": "AI 音乐与图像工作室"
   },
   "features": {
     "title": "创作所需，一应俱全",
-    "subtitle": "满足你所有 AI 内容创作需求的一站式平台",
+    "subtitle": "一个平台满足所有 AI 内容创作需求",
     "music": {
       "title": "AI 音乐生成器",
-      "description": "通过文字描述创作完整歌曲。可选择不同流派、情绪和风格。",
-      "cta": "试用音乐生成器"
+      "description": "通过文字描述创作完整歌曲。选择不同流派、情绪和风格。",
+      "cta": "试试音乐生成"
     },
     "image": {
       "title": "AI 图像生成器",
-      "description": "通过文字生成精美作品。适用于社交媒体、缩略图等场景。",
-      "cta": "试用图像生成器"
+      "description": "通过文字生成精美艺术作品。适合社交媒体、缩略图等。",
+      "cta": "试试图像生成"
     },
     "lyrics": {
-      "title": "AI 歌词创作器",
-      "description": "以任意风格生成歌词。编辑打磨直到完美。",
-      "cta": "试用歌词创作器"
-    }
+      "title": "AI 歌词创作",
+      "description": "创作任何风格的歌词。编辑和润色直到完美。",
+      "cta": "试试歌词创作"
+    },
+    "badge": "功能特点"
   },
   "cta": {
     "title": "准备好创作了吗？",
-    "subtitle": "加入数千创作者的行列，用 Creator 打造你的内容。",
-    "button": "免费开始"
+    "subtitle": "加入数千名使用 CraftAI 的创作者。",
+    "button": "免费开始使用"
   },
   "pricing": {
     "title": "简单透明的定价",
     "subtitle": "免费开始，需要更多时再升级。",
-    "free": "免费版",
-    "creator": "创作者版",
+    "free": "免费",
+    "creator": "创作者",
     "pro": "专业版",
     "popular": "热门",
     "perMonth": "/月",
@@ -64,51 +66,95 @@
     "faq": {
       "title": "常见问题",
       "commercial": {
-        "q": "生成的内容可以用于商业用途吗？",
-        "a": "可以！创作者版和专业版包含完整商业授权。你创作的作品归你所有。"
+        "q": "我可以商业使用生成的内容吗？",
+        "a": "可以！创作者版和专业版包含完整商业许可。你创建的内容归你所有。"
       },
       "payment": {
-        "q": "支持哪些支付方式？",
+        "q": "你们接受哪些支付方式？",
         "a": "目前支持 PayPal，即将支持 Stripe。"
       },
       "cancel": {
-        "q": "可以随时取消吗？",
-        "a": "是的，随时可取消。订阅在计费周期结束前保持有效。"
+        "q": "我可以随时取消吗？",
+        "a": "是的，随时取消。订阅在账单周期结束前保持有效。"
+      },
+      "switch": {
+        "q": "以后可以切换套餐吗？",
+        "a": "是的，随时升级或降级，变更立即生效。"
+      },
+      "free_generations": {
+        "q": "什么算一次生成？",
+        "a": "每次点击生成并获得输出计为一次生成。失败的生成不计入。"
       }
-    }
+    },
+    "badge": "简单定价",
+    "monthly": "月付",
+    "annual": "年付",
+    "save20": "省 20%",
+    "forever": "永久",
+    "freeDesc": "免费试用，无任何限制",
+    "creatorDesc": "为需要更多创作的创作者准备",
+    "proDesc": "专业人士的终极选择",
+    "billedAnnually": "每年 {price}",
+    "trustSecure": "PayPal 安全支付",
+    "trustCancel": "随时取消",
+    "trustInstant": "即时激活",
+    "f_free1": "每月 10 次音乐生成",
+    "f_free2": "每月 20 次图像生成",
+    "f_free3": "基础画质输出",
+    "f_free4": "社区支持",
+    "f_creator1": "每月 100 次音乐生成",
+    "f_creator2": "每月 200 次图像生成",
+    "f_creator3": "高清画质，无水印",
+    "f_creator4": "商业许可",
+    "f_creator5": "优先支持",
+    "f_pro1": "每月 300 次音乐生成",
+    "f_pro2": "每月 500 次图像生成",
+    "f_pro3": "高清画质，无水印",
+    "f_pro4": "API 访问",
+    "f_pro5": "专属支持"
   },
   "auth": {
     "login": {
       "tab": "登录",
       "title": "欢迎回来",
-      "subtitle": "登录你的账号",
+      "subtitle": "登录你的账户",
       "google": "使用 Google 继续",
       "submit": "登录",
       "loading": "登录中..."
     },
     "signup": {
       "tab": "注册",
-      "title": "创建账号",
-      "subtitle": "免费开始使用 AI 创作",
+      "title": "创建账户",
+      "subtitle": "免费开始 AI 创作",
       "google": "使用 Google 继续",
-      "submit": "创建账号",
+      "submit": "创建账户",
       "loading": "创建中..."
     },
     "email": "邮箱",
-    "emailPlaceholder": "请输入邮箱",
+    "emailPlaceholder": "输入你的邮箱",
     "password": "密码",
-    "passwordPlaceholder": "输入密码",
+    "passwordPlaceholder": "输入你的密码",
     "minChars": "至少 8 个字符",
     "forgotPassword": "忘记密码？",
     "forgotPasswordComingSoon": "密码重置功能即将推出",
     "orEmail": "或使用邮箱继续",
-    "noAccount": "还没有账号？",
-    "haveAccount": "已有账号？"
+    "noAccount": "还没有账户？",
+    "haveAccount": "已有账户？",
+    "verifyTitle": "验证你的邮箱",
+    "verifyDesc": "我们已向",
+    "verifyDesc2": "发送了验证邮件。请查收并点击验证链接完成注册。",
+    "sending": "发送中...",
+    "resendIn": "重新发送",
+    "resendEmail": "重新发送验证邮件",
+    "checking": "检查中...",
+    "verified": "我已验证，刷新状态",
+    "logout": "退出登录",
+    "verifySent": "验证邮件已发送，请查收"
   },
   "dashboard": {
-    "title": "控制台",
-    "subtitle": "管理你的创作和账号",
-    "createNew": "新建作品",
+    "title": "仪表盘",
+    "subtitle": "管理你的创作和账户",
+    "createNew": "新建创作",
     "musicGenerated": "已生成音乐",
     "imagesGenerated": "已生成图像",
     "currentPlan": "当前套餐",
@@ -122,63 +168,72 @@
     "product": "产品",
     "company": "公司",
     "legal": "法律",
-    "about": "关于我们",
+    "about": "关于",
     "privacy": "隐私政策",
     "terms": "服务条款",
     "contact": "联系我们",
-    "copyright": "© 2026 Creator. 保留所有权利。"
+    "copyright": "© 2026 CraftAI. 保留所有权利。"
   },
   "create": {
     "remixedFrom": "已载入「{ title }」",
-    "remixHint": "修改风格/歌词后生成新版本（原作保留）。",
+    "remixHint": "修改风格/歌词，然后生成新版本（保留原始版本）。",
     "lyricsGenerating": "歌词生成中…",
     "generateLyrics": "生成歌词",
     "lyricsWait": "歌词生成中，请稍候…",
-    "resultsHint": "制作中与曲库作品",
-    "noSongs": "还没有歌曲",
-    "noSongsHint": "在左侧生成后，作品会出现在这里",
+    "resultsHint": "生成的歌曲会显示在这里",
     "lyricsFailed": "歌词生成失败",
-    "generateFailed": "启动生成失败",
-    "regenerating": "重新生成中…",
-    "regenerateFailed": "重新生成失败",
-    "unnamed": "未命名",
-    "loadedParams": "参数已载入，可调整后生成",
-    "deleteConfirm": "删除「{ title }」？此操作不可恢复。",
-    "deleteFailed": "删除失败"
+    "presetApplied": "已套用预设：{label}",
+    "presetGenerating": "已套用预设：{label}，正在按官方流程生成歌词…",
+    "presetReady": "预设就绪：{label}，歌词已生成，可直接 Generate",
+    "presetLyricsFailed": "预设歌词生成失败",
+    "presetReadyNoLyrics": "已套用编曲描述：{label}（歌词未生成，可手动点 Generate lyrics）",
+    "defaultLyricsHint": "一首有画面感的现代流行歌"
   },
   "image": {
     "remixedFrom": "已载入「{ title }」",
-    "remixHint": "修改提示词/比例/场景后生成新图（原图保留）。",
+    "remixHint": "修改提示词/比例/场景以生成新图像（保留原始版本）。",
     "scenePresets": "场景预设",
     "prompt": "提示词",
     "promptPlaceholder": "描述主体、构图、风格、光线…",
     "optimizePrompt": "优化提示词",
     "optimizing": "优化中…",
-    "promptOptimizer": "API prompt_optimizer",
-    "deepOptimize": "生成前再优化一轮",
+    "promptOptimizer": "API 提示词优化器",
+    "deepOptimize": "生成前再次优化",
     "willUse": "将使用：",
-    "referenceImage": "参考图（图生图）",
-    "referenceHint": "仅支持人物主体，单人正面效果最好。",
+    "referenceImage": "参考图像（图生图）",
+    "referenceHint": "仅支持人物参考，正面照效果最佳。",
     "model": "模型",
-    "aspectRatio": "宽高比",
+    "aspectRatio": "比例",
     "count": "数量",
-    "styleType": "画风（live）",
-    "generateFailed": "图片生成失败",
-    "noImages": "还没有图片",
-    "noImagesHint": "在左侧生成后，图片会出现在这里",
-    "deleteConfirm": "删除「{ title }」？此操作不可恢复。",
+    "styleType": "风格（live）",
+    "generateFailed": "图像生成失败",
+    "noImages": "还没有图像",
+    "noImagesHint": "在左侧生成，图像会显示在这里",
+    "deleteConfirm": "删除这张图像？此操作不可撤销。",
     "deleteFailed": "删除失败",
     "download": "下载",
-    "fullscreen": "全屏查看",
+    "fullscreen": "全屏",
     "regenerate": "重新生成",
     "adjustParams": "调整参数",
-    "textToImage": "Text-to-Image",
-    "refReady": "Reference image ready",
-    "optimizingAndGenerating": "Optimizing prompt & generating…",
-    "generating": "Generating…",
-    "restoredRef": "Reference restored (from last generation)",
-    "generic": "general",
-    "style": "style"
+    "textToImage": "文生图",
+    "refReady": "参考图像就绪",
+    "optimizingAndGenerating": "优化提示词并生成中…",
+    "generating": "生成中…",
+    "restoredRef": "已恢复参考图像（来自上次生成）",
+    "generic": "通用",
+    "style": "风格",
+    "emptyHint": "还没有图像。在左侧配置后点击生成。",
+    "collapse": "收起",
+    "details": "详情",
+    "styleComic": "漫画",
+    "sceneApplied": "已套用场景：{label}",
+    "promptOptimized": "提示词已优化",
+    "promptReady": "提示词已优化，可直接生成",
+    "generatedCount": "已生成 {count} 张",
+    "regenerating": "重新生成中…",
+    "regeneratedCount": "已重新生成 {count} 张",
+    "regenerateFailed": "重新生成失败",
+    "unnamed": "未命名"
   },
   "cover": {
     "remixedFrom": "已载入「{ title }」",
@@ -190,29 +245,42 @@
     "extractLyrics": "提取歌词",
     "editLyrics": "编辑歌词",
     "structure": "结构",
-    "featureReady": "特征就绪 · 约24小时有效",
-    "generateFailed": "生成翻唱失败",
+    "featureReady": "功能就绪 · 有效期约 24 小时",
+    "generateFailed": "翻唱生成失败",
     "preprocessFailed": "预处理失败",
-    "stylePlaceholder": "Jazz, smooth, late night lounge, saxophone…",
-    "runExtractFirst": "Run extract first…"
+    "stylePlaceholder": "爵士、丝滑、深夜 lounge、萨克斯…",
+    "runExtractFirst": "请先运行提取…",
+    "description": "上传参考音频，快速翻唱或进阶改词。",
+    "progressTitle": "翻唱进度与曲库",
+    "emptyTitle": [
+      "还没有翻唱作品"
+    ],
+    "emptyHint": "生成翻唱后会出现在这里",
+    "regenerating": "重新生成中…",
+    "regenerateFailed": "重新生成失败",
+    "restoredRef": "已恢复参考音频（来自上次生成）",
+    "unnamed": "未命名",
+    "loadedParams": "已载入参数，可调整后生成",
+    "deleteConfirm": "删除「{title}」？此操作不可撤销。",
+    "deleteFailed": "删除失败"
   },
   "library": {
     "all": "全部",
     "ready": "已完成",
-    "generating": "制作中",
+    "generating": "生成中",
     "failed": "失败",
     "items": "个项目",
-    "emptyTitle": "曲库还是空的",
-    "emptyHint": "去创作生成第一首歌",
-    "deleteConfirm": "删除「{ title }」？此操作不可恢复。",
+    "emptyTitle": "曲库为空",
+    "emptyHint": "去创作页面生成你的第一首歌曲",
+    "deleteConfirm": "删除「{ title }」？此操作不可撤销。",
     "deleteFailed": "删除失败",
     "regenerateFailed": "重新生成失败",
-    "subtitle": "All generated tracks and covers"
+    "subtitle": "所有生成的歌曲和翻唱"
   },
   "feedback": {
     "title": "发送反馈",
-    "typeBug": "问题",
-    "typeFeature": "建议",
+    "typeBug": "Bug",
+    "typeFeature": "功能建议",
     "typeContent": "内容",
     "typeOther": "其他",
     "subject": "主题",
@@ -223,5 +291,25 @@
     "sending": "发送中...",
     "thanks": "感谢你的反馈！",
     "done": "完成"
+  },
+  "presets": {
+    "title": "灵感预设",
+    "hint": "点击填入 · 悬停暂停滚动"
+  },
+  "songResultRail": {
+    "emptyTitle": "暂无作品",
+    "emptyHint": "生成后会显示在这里",
+    "adjustParams": "调整参数",
+    "regenerate": "重新生成",
+    "download": "下载",
+    "viewDetails": "查看详情",
+    "delete": "删除",
+    "making": "制作中"
+  },
+  "ui": {
+    "refresh": "刷新",
+    "refreshList": "刷新列表",
+    "moreActions": "更多操作",
+    "language": "语言"
   }
 }

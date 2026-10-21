@@ -3,7 +3,7 @@
     <template #header>
       <div>
         <h1 class="font-display text-2xl font-700 text-white md:text-3xl">Cover</h1>
-        <p class="mt-1 text-[13.5px] text-ink-300">上传参考音频，快速翻唱或进阶改词。</p>
+        <p class="mt-1 text-[13.5px] text-ink-300">Upload a reference track to create a cover or rewrite lyrics.</p>
       </div>
     </template>
 
@@ -13,7 +13,7 @@
           <div>
             <p class="ui-ops-banner__title">{{ $t('cover.remixedFrom', { title: remixFrom }) }}</p>
             <p class="ui-ops-banner__hint">
-              可改风格 / 歌词。参考音频需重新上传（若本地上传仍可用会自动带上）。
+              You can change style/lyrics. Reference audio must be re-uploaded (previously uploaded files will be auto-attached if still available).
             </p>
           </div>
           <UiIconButton
@@ -45,7 +45,7 @@
           <textarea
             v-model="prompt"
             class="field min-h-24"
-            placeholder="{{ $t('cover.stylePlaceholder') }}"
+            :placeholder="$t('cover.stylePlaceholder')"
           />
         </label>
 
@@ -65,9 +65,17 @@
             <span class="i-ph-scan text-[14px]" />
             {{ $t('cover.extractLyrics') }}
           </UiButton>
+          <UiButton
+            v-if="preprocessing"
+            variant="ghost"
+            size="sm"
+            @click="cancelPreprocess"
+          >
+            {{ $t('cover.cancel', 'Cancel') }}
+          </UiButton>
           <label class="block space-y-2">
             <span class="field-label">{{ $t('cover.editLyrics') }}</span>
-            <textarea v-model="lyrics" class="field lyric-editor !min-h-40" placeholder="{{ $t('cover.runExtractFirst') }}" />
+            <textarea v-model="lyrics" class="field lyric-editor !min-h-40" :placeholder="$t('cover.runExtractFirst')" />
           </label>
           <p v-if="featureId" class="field-hint">{{ $t('cover.featureReady') }}</p>
           <div v-if="structurePreview.length" class="rounded-xl border border-white/10 bg-ink-950/50 p-3">
@@ -109,7 +117,7 @@
     <template #results-header>
       <div>
         <h2 class="font-display text-[16px] font-650 text-white">Results</h2>
-        <p class="text-[12px] text-ink-400">翻唱进度与曲库</p>
+        <p class="text-[12px] text-ink-400">Cover Progress & Library</p>
       </div>
       <UiRefreshButton :loading="songsPending" @click="refreshSongs" />
     </template>
@@ -127,21 +135,37 @@
           :pending="songsPending"
           :active-id="activeSong?.id"
           :busy-id="busyId"
-          empty-title="还没有翻唱作品"
-          empty-hint="生成 cover 后会出现在这里"
+          empty-title="No covers yet"
+          empty-hint="Generated covers will appear here"
           @remix="loadFromSong"
           @regenerate="regenerate"
           @download="downloadSong"
-          @delete="removeSong"
+          @delete="promptDelete"
           @open="openSong"
         />
       </div>
     </template>
+  <ConfirmModal
+      v-model="confirmOpen"
+      title="Delete Song"
+      :message="deleteMessage"
+      :confirm-label="t('common.delete')"
+      :cancel-label="t('common.cancel')"
+      danger
+      @confirm="deleteSongConfirmed"
+      @cancel="confirmOpen = false"
+    />
   </StudioWorkspace>
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+// ⚠️ 不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，客户端拿到的
+// t 不是函数 → 整页 500。用 useT()（内部走 useNuxtApp().$i18n.t）。
+const { t } = useT()
+const requireAuth = useRequireAuth()
+const { user, authReady } = useAuth()
+const { openLoginWithRedirect } = useAuthModal()
+const route = useRoute()
 import type { SongPublic } from '~/utils/types'
 
 definePageMeta({ layout: 'default', middleware: ['auth'] })
@@ -160,6 +184,7 @@ const uploadName = ref('')
 const featureId = ref<string | null>(null)
 const structurePreview = ref<{ label: string; start: number; end: number }[]>([])
 const preprocessing = ref(false)
+const preprocessCancelled = ref(false)
 const submitting = ref(false)
 const busyId = ref<string | null>(null)
 const remixFrom = ref<string | null>(null)
@@ -168,7 +193,33 @@ const statusText = ref('')
 const activeSong = ref<SongPublic | null>(null)
 const jobId = ref<string | null>(null)
 const { job } = useJobStream(jobId)
-const route = useRoute()
+
+// Delete confirmation modal
+const confirmOpen = ref(false)
+const confirmTarget = ref<SongPublic | null>(null)
+const deleteMessage = computed(() =>
+  confirmTarget.value ? `Delete "${confirmTarget.value.title}"? This action cannot be undone.` : ''
+)
+function promptDelete(song: SongPublic) {
+  confirmTarget.value = song
+  confirmOpen.value = true
+}
+async function deleteSongConfirmed() {
+  const song = confirmTarget.value
+  if (!song) return
+  confirmOpen.value = false
+  confirmTarget.value = null
+  busyId.value = song.id
+  try {
+    await $fetch(`/api/songs/${song.id}`, { method: 'DELETE' })
+    if (activeSong.value?.id === song.id) activeSong.value = null
+    await refreshSongs()
+  } catch (err: any) {
+    errorText.value = err?.data?.statusMessage || err?.message || 'Delete failed'
+  } finally {
+    busyId.value = null
+  }
+}
 const router = useRouter()
 
 const { data: songsData, pending: songsPending, refresh: refreshSongs } = await useFetch<{ songs: SongPublic[] }>('/api/songs', {
@@ -233,19 +284,30 @@ async function onFile(e: Event) {
 async function runPreprocess() {
   if (!uploadId.value) return
   preprocessing.value = true
+  preprocessCancelled.value = false
   errorText.value = ''
   statusText.value = 'Preprocessing…'
+  const MAX_PREPROCESS_MS = 5 * 60 * 1000 // 5 minutes
+  const startTime = Date.now()
   try {
     const res = await $fetch<{ job: any }>('/api/cover/preprocess', {
       method: 'POST',
       body: { audio_upload_id: uploadId.value },
     })
     let done = res.job
-    while (done.status !== 'done' && done.status !== 'error') {
+    while (done.status !== 'done' && done.status !== 'error' && !preprocessCancelled.value) {
+      if (Date.now() - startTime > MAX_PREPROCESS_MS) {
+        throw new Error('Preprocessing timed out after 5 minutes, please try again')
+      }
       await new Promise((r) => setTimeout(r, 800))
       const poll = await $fetch<{ job: any }>(`/api/jobs/${res.job.id}`)
       done = poll.job
       statusText.value = done.progress
+    }
+    if (preprocessCancelled.value) {
+      statusText.value = ''
+      preprocessing.value = false
+      return
     }
     if (done.status === 'error') throw new Error(done.errorMessage || 'Preprocess failed')
     featureId.value = done.result?.cover_feature_id
@@ -262,6 +324,10 @@ async function runPreprocess() {
   } finally {
     preprocessing.value = false
   }
+}
+
+function cancelPreprocess() {
+  preprocessCancelled.value = true
 }
 
 async function submit() {
@@ -305,7 +371,7 @@ async function submit() {
 async function regenerate(song: SongPublic) {
   busyId.value = song.id
   errorText.value = ''
-  statusText.value = '重新生成中…'
+  statusText.value = 'Regenerating…'
   activeSong.value = null
   try {
     const res = await $fetch<{ job: any }>(`/api/songs/${song.id}/regenerate`, {
@@ -315,7 +381,7 @@ async function regenerate(song: SongPublic) {
     statusText.value = res.job.progress
     refreshSongs().catch(() => {})
   } catch (err: any) {
-    errorText.value = err?.data?.statusMessage || err?.message || '重新生成失败'
+    errorText.value = err?.data?.statusMessage || err?.message || 'Regeneration failed'
     statusText.value = ''
   } finally {
     busyId.value = null
@@ -336,10 +402,10 @@ function loadFromSong(song: SongPublic) {
   }
   if (payload.audio_upload_id) {
     uploadId.value = String(payload.audio_upload_id)
-    uploadName.value = '已恢复参考音频（来自上次生成）'
+    uploadName.value = 'Reference audio restored (from last generation)'
   }
-  remixFrom.value = song.title || '未命名'
-  statusText.value = '已载入参数，可调整后生成'
+  remixFrom.value = song.title || 'Untitled'
+  statusText.value = 'Parameters loaded, adjust and generate'
   errorText.value = ''
 }
 
@@ -360,20 +426,6 @@ function openSong(song: SongPublic) {
   navigateTo(`/song/${song.id}`)
 }
 
-async function removeSong(song: SongPublic) {
-  if (!confirm(`删除「${song.title}」？此操作不可恢复。`)) return
-  busyId.value = song.id
-  try {
-    await $fetch(`/api/songs/${song.id}`, { method: 'DELETE' })
-    if (activeSong.value?.id === song.id) activeSong.value = null
-    await refreshSongs()
-  } catch (err: any) {
-    errorText.value = err?.data?.statusMessage || err?.message || '删除失败'
-  } finally {
-    busyId.value = null
-  }
-}
-
 async function hydrateRemixFromQuery() {
   const id = typeof route.query.remix === 'string' ? route.query.remix : ''
   if (!id) return
@@ -391,6 +443,27 @@ async function hydrateRemixFromQuery() {
 }
 
 onMounted(() => {
+  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
+  if (import.meta.client && authReady.value && !user.value) {
+    openLoginWithRedirect(route.fullPath)
+  }
   hydrateRemixFromQuery()
+})
+
+watch([authReady, user], ([ready, u]) => {
+  if (import.meta.client && ready && !u) {
+    openLoginWithRedirect(route.fullPath)
+  }
+})
+
+useHead({
+  title: 'AI Cover Generator — Create AI Cover Songs | CraftAI',
+  meta: [
+    { name: 'description', content: 'Create AI cover songs for free. Upload a track or describe a style, and AI generates a professional cover with new vocals and arrangements.' },
+    { property: 'og:title', content: 'AI Cover Generator — Create AI Cover Songs' },
+    { property: 'og:description', content: 'Upload a track and AI generates a professional cover in seconds. Free to start.' },
+    { property: 'og:type', content: 'website' },
+  ],
+  link: [{ rel: 'canonical', href: 'https://creator.yozzytools.com/cover' }],
 })
 </script>

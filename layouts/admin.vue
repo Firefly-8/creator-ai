@@ -3,7 +3,7 @@
     <!-- Admin Sidebar (only show if logged in) -->
     <aside v-if="isLoggedIn" class="admin-sidebar">
       <div class="admin-sidebar__brand">
-        <img src="/logo.png" alt="Admin" class="h-8 w-8 rounded-[10px] object-contain" />
+        <img src="/logo-mark.png" alt="Admin" class="h-8 w-8 rounded-[10px] object-contain" />
         <span class="font-display text-[15px] font-700 text-white">Admin</span>
       </div>
       <nav class="admin-nav">
