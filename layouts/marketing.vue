@@ -79,6 +79,7 @@
             <p class="mk-foot__label">Legal</p>
             <NuxtLink to="/privacy">Privacy</NuxtLink>
             <NuxtLink to="/terms">Terms</NuxtLink>
+            <NuxtLink to="/refund-policy">Refunds</NuxtLink>
           </div>
         </nav>
       </div>

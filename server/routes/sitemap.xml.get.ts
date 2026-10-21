@@ -18,6 +18,7 @@ export default defineEventHandler(async (event) => {
     { path: '/contact', priority: 0.5, changefreq: 'monthly' },
     { path: '/privacy', priority: 0.3, changefreq: 'monthly' },
     { path: '/terms', priority: 0.3, changefreq: 'monthly' },
+    { path: '/refund-policy', priority: 0.3, changefreq: 'monthly' },
     { path: '/login', priority: 0.3, changefreq: 'monthly' },
     { path: '/signup', priority: 0.4, changefreq: 'monthly' },
     { path: '/ai-music-generator', priority: 0.7, changefreq: 'weekly' },

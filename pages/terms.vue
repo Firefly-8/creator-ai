@@ -16,7 +16,15 @@
       </p>
 
       <div class="ck-page__body">
-        <h2>1. The service</h2>
+                <section class="ck-legal__who">
+          <h2>Who you are agreeing to</h2>
+          <p>
+            These terms are between you and {{ SITE_INFO.legalName }}<br>
+            {{ formatAddress() }}
+          </p>
+        </section>
+
+<h2>1. The service</h2>
         <p>
           Create Keepsakes lets you create personalised greeting cards and
           prints from photographs and text you supply. We produce a digital
@@ -161,6 +169,7 @@
 </template>
 
 <script setup lang="ts">
+import { SITE_INFO, formatAddress } from '~/utils/site-info'
 definePageMeta({ layout: 'marketing' })
 
 useHead({

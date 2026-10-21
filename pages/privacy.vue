@@ -17,7 +17,18 @@
       </p>
 
       <div class="ck-legal__body">
-        <h2>Who we are</h2>
+                <section class="ck-legal__who">
+          <h2>Who runs this service</h2>
+          <p>
+            {{ SITE_INFO.legalName }}<br>
+            {{ formatAddress() }}
+          </p>
+          <p>
+            Questions about privacy: <a href="mailto:{{ SITE_INFO.privacyEmail }}">{{ SITE_INFO.privacyEmail }}</a>
+          </p>
+        </section>
+
+<h2>Who we are</h2>
         <p>
           Create Keepsakes is a product of Yozzy Tools. We make tools for
           making personalised greeting cards and prints. When you use this
@@ -151,6 +162,7 @@
 </template>
 
 <script setup lang="ts">
+import { SITE_INFO, formatAddress } from '~/utils/site-info'
 definePageMeta({ layout: 'marketing' })
 
 useHead({
