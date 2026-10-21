@@ -26,28 +26,6 @@
               <p v-if="note" class="ck-auth__note">{{ note }}</p>
             </div>
 
-            <!-- 标签页 -->
-            <div class="ck-auth__tabs" role="tablist">
-              <button
-                role="tab"
-                :aria-selected="mode === 'login'"
-                class="ck-auth__tab"
-                :class="{ 'is-active': mode === 'login' }"
-                @click="switchMode('login')"
-              >
-                Sign in
-              </button>
-              <button
-                role="tab"
-                :aria-selected="mode === 'signup'"
-                class="ck-auth__tab"
-                :class="{ 'is-active': mode === 'signup' }"
-                @click="switchMode('signup')"
-              >
-                Create an account
-              </button>
-            </div>
-
             <!-- Google -->
             <button
               class="ck-auth__google"
@@ -421,35 +399,6 @@ async function handleGoogleSignIn() {
   color: var(--ck-ink-2);
 }
 
-/* ---------- 标签页 ---------- */
-.ck-auth__tabs {
-  display: flex;
-  gap: 0.25rem;
-  margin: 1.5rem 0 1.25rem;
-  padding: 0.25rem;
-  border-radius: 999px;
-  background: var(--ck-cream);
-}
-.ck-auth__tab {
-  flex: 1;
-  padding: 0.6rem 0.5rem;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  color: var(--ck-ink-2);
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.16s ease, color 0.16s ease;
-}
-.ck-auth__tab:hover { color: var(--ck-ink); }
-.ck-auth__tab.is-active {
-  background: var(--ck-bg);
-  color: var(--ck-ink);
-  box-shadow: 0 2px 8px -3px rgba(58, 46, 38, 0.3);
-}
-
 /* ---------- Google ---------- */
 .ck-auth__google {
   display: flex;
@@ -457,6 +406,8 @@ async function handleGoogleSignIn() {
   justify-content: center;
   gap: 0.6rem;
   width: 100%;
+  /* 上面原来有一排标签页，它撑开的间距现在归这里 */
+  margin-top: 1.5rem;
   height: 3rem;
   border: 1.5px solid var(--ck-line);
   border-radius: 0.7rem;
@@ -588,11 +539,11 @@ async function handleGoogleSignIn() {
 }
 .ck-auth__promise .i-ph-lock-key { flex: none; margin-top: 0.1rem; color: var(--ck-coral); }
 
-/* ---------- 切换 ---------- */
+/* ---------- 切换（现在唯一的切换入口，标签页已移除） ---------- */
 .ck-auth__switch {
-  margin: 1.15rem 0 0;
+  margin: 1.35rem 0 0;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   color: var(--ck-ink-2);
 }
 .ck-auth__switch-btn {
@@ -606,6 +557,7 @@ async function handleGoogleSignIn() {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.ck-auth__switch-btn:hover { color: var(--ck-coral); }
 
 /* ---------- 过渡 ---------- */
 .ck-auth-enter-active,

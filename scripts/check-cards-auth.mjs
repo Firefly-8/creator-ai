@@ -4,10 +4,10 @@
  *   1. 未登录点「Make card」→ 弹登录框，note 可见
  *   2. 关掉弹窗 → 页面状态还在（还在第 3 步）
  *   3. 再点一次 → 还是弹登录框
- *   4. 手动切过标签之后再点「Make」→ 必须回到「Create an account」
- *      （旧代码只在 initialMode 的**值变化**时才重置标签 → 这里会串味）
+ *   4. 手动切过模式之后再点「Make」→ 必须回到调用方要的模式
+ *      （旧代码只在 initialMode 的**值变化**时才重置 → 这里会串味）
  *   5. 从顶栏打开登录框 → **不该**还带着上一句 note（不能串味）
- *   6. 切到 Sign in 标签 → 布局正常
+ *   6. 底部链接切模式 → 布局正常（顶部那排标签页已移除）
  */
 import { chromium } from 'playwright-core'
 import path from 'node:path'
@@ -43,8 +43,13 @@ function check(name, cond, extra = '') {
   ;(cond ? ok : fail).push(name + (extra ? ` (${extra})` : ''))
   console.log(`${cond ? '✓' : '✗'} ${name}${extra ? ` — ${extra}` : ''}`)
 }
-const activeTab = async () =>
-  ((await page.locator('.ck-auth__tab.is-active').textContent().catch(() => '')) || '').trim()
+/** 当前是登录还是注册 —— 标签页已移除，改看标题和提交按钮 */
+const mode = async () => {
+  const submit = ((await page.locator('.ck-auth__submit').textContent().catch(() => '')) || '').trim()
+  return submit === 'Sign in' ? 'login' : 'signup'
+}
+/** 底部的切换链接（现在唯一的切换入口） */
+const switchLink = () => page.locator('.ck-auth__switch-btn').first()
 
 async function openMakeModal() {
   await page.locator('.ck-nav__inner button', { hasText: 'Make' }).first().click()
@@ -86,7 +91,9 @@ await openMakeModal()
 check('未登录点生成会弹登录框', await page.locator('.ck-auth').isVisible())
 check('弹窗带上下文说明 note', await page.locator('.ck-auth__note').count() === 1,
   ((await page.locator('.ck-auth__note').textContent()) || '').trim())
-check('默认停在「Create an account」', await activeTab() === 'Create an account', `当前=${await activeTab()}`)
+check('顶部不再有 Sign in / Create an account 标签页', await page.locator('.ck-auth__tabs').count() === 0)
+check('底部保留切换链接', await page.locator('.ck-auth__switch-btn').count() === 1)
+check('默认是注册模式', await mode() === 'signup', `当前=${await mode()}`)
 await page.screenshot({ path: `${OUT}-1-open.png` })
 
 // 2. 关掉弹窗
@@ -100,14 +107,14 @@ await openMakeModal()
 check('再点一次还是弹登录框', await page.locator('.ck-auth').isVisible())
 await closeModal()
 
-// 4. 手动切到 Sign in → 关掉 → 再点 Make → 必须回到 Create an account
+// 4. 手动切到 Sign in → 关掉 → 再点 Make → 必须回到注册模式
 await openMakeModal()
-await page.locator('.ck-auth__tab', { hasText: 'Sign in' }).first().click()
+await switchLink().click()
 await page.waitForTimeout(400)
-check('能手动切到 Sign in', await activeTab() === 'Sign in', `当前=${await activeTab()}`)
+check('底部链接能切到 Sign in', await mode() === 'login', `当前=${await mode()}`)
 await closeModal()
 await openMakeModal()
-check('手动切过标签后仍按调用方的意图打开', await activeTab() === 'Create an account', `当前=${await activeTab()}`)
+check('手动切过之后仍按调用方的意图打开', await mode() === 'signup', `当前=${await mode()}`)
 await page.screenshot({ path: `${OUT}-2-after-switch.png` })
 await closeModal()
 
@@ -118,13 +125,13 @@ if (await headerBtn.count()) {
   await page.waitForSelector('.ck-auth', { timeout: 15000 })
   await page.waitForTimeout(600)
   check('顶栏打开的登录框没有残留 note', await page.locator('.ck-auth__note').count() === 0)
-  await page.screenshot({ path: `${OUT}-3-header.png` })
-  // 6. 切到 Sign in 标签 → 布局正常
-  const tab = page.locator('.ck-auth__tab', { hasText: 'Sign in' })
-  await tab.first().click()
+  check('顶栏「Log in」打开的是登录模式', await mode() === 'login', `当前=${await mode()}`)
+  await page.screenshot({ path: `${OUT}-3-header-login.png` })
+  // 6. 底部链接切模式 → 布局正常
+  await switchLink().click()
   await page.waitForTimeout(500)
-  check('Sign in 标签能切', await page.locator('.ck-auth__submit').textContent() === 'Sign in')
-  await page.screenshot({ path: `${OUT}-4-signin.png` })
+  check('底部链接能切换模式', await mode() === 'signup', `当前=${await mode()}`)
+  await page.screenshot({ path: `${OUT}-4-after-switch.png` })
 } else {
   check('顶栏登录按钮存在', false, '没找到 .mk-top__actions button')
 }

@@ -68,7 +68,8 @@ async function shot(viewport, suffix) {
   console.log(`v ${OUT}-${suffix}.png`)
 
   // 切到 Sign in 再拍一张
-  const tab = page.locator('.ck-auth__tab', { hasText: 'Sign in' })
+  // ⚠️ 顶部那排标签页已移除，现在唯一的切换入口是底部的链接
+  const tab = page.locator('.ck-auth__switch-btn')
   if (await tab.count()) {
     await tab.first().click()
     await page.waitForTimeout(600)

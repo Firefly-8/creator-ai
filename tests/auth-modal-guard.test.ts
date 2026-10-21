@@ -52,6 +52,13 @@ describe('登录弹窗：AuthModal 组件', () => {
     expect(authModal).toContain('ck-auth__note')
   })
 
+  it('顶部不再有 Sign in / Create an account 标签页（底部链接是唯一切换入口）', () => {
+    expect(authModal).not.toContain('ck-auth__tabs')
+    expect(authModal).not.toContain('ck-auth__tab')
+    expect(authModal).not.toContain('role="tablist"')
+    expect(authModal).toContain('ck-auth__switch-btn')
+  })
+
   it('登录成功后取走并执行 afterAuth 回调', () => {
     expect(authModal).toContain('consumeAfterAuth')
     expect(authModal).toContain('await done()')
