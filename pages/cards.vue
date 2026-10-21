@@ -2,30 +2,47 @@
   <div class="ck-cards">
     <!-- ============ 顶部 ============ -->
     <header class="ck-cards__head">
-      <div class="ck-wrap">
-        <p v-if="step < 4" class="ck-eyebrow">Step {{ step }} of 3</p>
-        <h1 class="ck-h1">{{ stepHeadline }}</h1>
-        <p class="ck-lede">{{ stepLede }}</p>
-        <ol class="ck-steps-nav">
-          <li
-            v-for="(s, i) in stepLabels"
-            :key="s"
-            :class="{ 'is-on': step >= i + 1, 'is-done': step > i + 1, 'is-current': step === i + 1 }"
-          >
-            <button
-              type="button"
-              class="ck-steps-nav__btn"
-              :disabled="i + 1 > maxReached"
-              @click="goTo(i + 1)"
+      <div class="ck-wrap ck-cards__headgrid">
+        <div class="ck-cards__headcopy">
+          <p v-if="step < 4" class="ck-eyebrow">Step {{ step }} of 3</p>
+          <h1 class="ck-h1">{{ stepHeadline }}</h1>
+          <p class="ck-lede">{{ stepLede }}</p>
+          <ol class="ck-steps-nav">
+            <li
+              v-for="(s, i) in stepLabels"
+              :key="s"
+              :class="{ 'is-on': step >= i + 1, 'is-done': step > i + 1, 'is-current': step === i + 1 }"
             >
-              <span class="ck-steps-nav__dot">
-                <span v-if="step > i + 1" class="i-ph-check" />
-                <template v-else>{{ i + 1 }}</template>
-              </span>
-              {{ s }}
-            </button>
-          </li>
-        </ol>
+              <button
+                type="button"
+                class="ck-steps-nav__btn"
+                :disabled="i + 1 > maxReached"
+                @click="goTo(i + 1)"
+              >
+                <span class="ck-steps-nav__dot">
+                  <span v-if="step > i + 1" class="i-ph-check" />
+                  <template v-else>{{ i + 1 }}</template>
+                </span>
+                {{ s }}
+              </button>
+            </li>
+          </ol>
+        </div>
+
+        <!-- 真实成品卡示例：光有文字会显得又窄又空（跟首页 hero 同一个配方） -->
+        <aside class="ck-cards__art" aria-hidden="true">
+          <div class="ck-showcard">
+            <img
+              src="https://assets.yozzytools.com/showcase/hero-birthday.webp"
+              alt=""
+              loading="lazy"
+            />
+            <div class="ck-showcard__caption">
+              <p class="ck-showcard__kicker">Their inside joke</p>
+              <p class="ck-showcard__line">“Margaret still does the crossword in pen.”</p>
+            </div>
+          </div>
+        </aside>
       </div>
     </header>
 
@@ -680,7 +697,10 @@ onBeforeUnmount(() => {
   flex-direction: column;
 }
 
-.ck-wrap { max-width: 74rem; margin: 0 auto; padding: 0 1.5rem; }
+/* ⚠️ width:100% 不能少 ——
+   .ck-cards 是 flex 纵向容器，子项带 margin:0 auto 时会**收缩成内容宽**
+   （auto margin 吃掉了剩余空间），导致正文卡片比头部窄一大截、两边没对齐。 */
+.ck-wrap { max-width: 74rem; width: 100%; margin: 0 auto; padding: 0 1.5rem; }
 
 .ck-h1 {
   font-family: var(--ck-serif);
@@ -700,9 +720,55 @@ onBeforeUnmount(() => {
 
 /* ---------- 顶部 ---------- */
 .ck-cards__head {
-  padding: 4.5rem 0 2.5rem;
+  padding: 3.75rem 0 2.75rem;
   border-bottom: 1px solid var(--ck-line);
   background: linear-gradient(180deg, #f7efe4 0%, var(--ck-bg) 100%);
+}
+/* ⚠️ 头部两栏：左边文案，右边真实成品卡
+   （原来整页只有文字，看起来又窄又空 —— 首页是「文案 + 成品图」两栏） */
+.ck-cards__headgrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: 3rem;
+  align-items: center;
+}
+@media (max-width: 900px) {
+  .ck-cards__headgrid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .ck-cards__art { display: none; }
+}
+.ck-cards__art { justify-self: end; }
+.ck-showcard {
+  width: 100%;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 28px 56px -30px rgba(58, 46, 38, 0.55);
+  transform: rotate(1.5deg);
+}
+.ck-showcard img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+.ck-showcard__caption {
+  padding: 0.85rem 1rem 0.95rem;
+  border-top: 1px solid var(--ck-line);
+}
+.ck-showcard__kicker {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ck-coral);
+}
+.ck-showcard__line {
+  margin: 0.3rem 0 0;
+  font-family: var(--ck-serif);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--ck-ink);
 }
 .ck-steps-nav {
   display: flex;

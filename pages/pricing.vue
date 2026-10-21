@@ -346,16 +346,15 @@ const promises = [
 .ck-plan__price {
   display: flex;
   align-items: baseline;
-  gap: 0.12rem;
+  gap: 0.24rem;
   margin-top: 0.75rem;
 }
-/* 货币符号：比数字小一号，顶到数字的上沿 —— 同一个字号时
-   Playfair 的 $ 竖笔会冲出数字行，看着像浮在半空 */
+/* 货币符号：换 sans 字体的 $，小一号，基线跟数字对齐。
+   ⚠️ 别用 Playfair 的 $：那个字形是**双竖笔**的（竖笔冲出上下沿），
+      无论同字号还是缩小都像「浮」着 —— 截图对比过 6 种方案，只有换字体干净。 */
 .ck-plan__currency {
-  align-self: flex-start;
-  margin-top: 0.42rem;
-  font-family: var(--ck-serif);
-  font-size: 1.3rem;
+  font-family: 'Manrope', system-ui, sans-serif;
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1;
   color: var(--ck-ink);
