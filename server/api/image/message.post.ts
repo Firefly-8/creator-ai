@@ -10,8 +10,10 @@
  */
 import { defineEventHandler, readBody, createError } from 'h3'
 import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
+import { MiniMaxError } from '../../utils/minimax'
 import { getScenario } from '../../../utils/imageScenarios'
 import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 export default defineEventHandler(async (event) => {
   const auth = event.context.auth
@@ -73,11 +75,20 @@ export default defineEventHandler(async (event) => {
     const json = (await res.json().catch(() => ({}))) as any
     const code = json?.base_resp?.status_code
     if (typeof code === 'number' && code !== 0) {
-      throw new Error(json?.base_resp?.status_msg || 'Message service error')
+      // 用 MiniMaxError 带上准确的错误码 —— 告警要靠它区分
+      // 「用户 prompt 违规」和「上游挂了 / 额度耗尽」
+      throw new MiniMaxError(code, json?.base_resp?.status_msg || 'Message service error')
     }
     message = String(json?.choices?.[0]?.message?.content || '').trim()
   } catch (e) {
     console.error('[image/message] MiniMax 调用失败', e)
+    // 失败流水 + 多用户失败告警判定
+    // ⚠️ 这里有兜底文案，用户不会看到报错 —— 但上游确实挂了，必须记下来
+    await recordGenerationFailure(event, {
+      userId: auth.uid,
+      endpoint: 'image/message',
+      error: e,
+    }).catch((err) => console.error('[failure-monitor] 记录失败出错:', err))
     // 兜底：给一条安全的预置祝词，别让用户对着空白
     message = scenario.presetMessages?.[0] || 'Thinking of you today. Have a wonderful day.'
     // 兜底文案不算真的生成了 → 把额度退回去

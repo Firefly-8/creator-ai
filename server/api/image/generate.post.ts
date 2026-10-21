@@ -6,12 +6,12 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { createJob, updateJob } from '../../utils/jobs'
 import { createImageRecord, updateImage, processImageResult } from '../../utils/images'
-import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
-import { optimizeImagePrompt } from '../../utils/minimax'
+import { generateImage, optimizeImagePrompt } from '../../utils/minimax'
 import { buildSubjectReference, type SubjectReference } from '../../utils/image-reference'
 import { buildScenarioPrompt } from '../../../utils/imageScenarios'
 import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 export default defineEventHandler(async (event) => {
   console.log("[Image Generate] === Start ===")
@@ -116,9 +116,6 @@ export default defineEventHandler(async (event) => {
 
   // 5. 调用 MiniMax API
   try {
-    const apiKey = await getDecryptedApiKey()
-    const baseUrl = getMiniMaxBaseUrl()
-
     // i2i（主体参考）：参考图要转成 MiniMax 认的格式，且必须用 image-01-live
     let subjectReference: SubjectReference[] | undefined
     let finalModel = model
@@ -133,33 +130,25 @@ export default defineEventHandler(async (event) => {
     await updateJob(job.id, { status: 'processing' })
 
     console.log("[Image Generate] Calling MiniMax API...")
-  const res = await fetch(`${baseUrl}/v1/image_generation`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        prompt: finalPrompt,
-        model: finalModel,
-        aspect_ratio: aspectRatio,
-        n: count,
-        response_format: 'url',
-        // 参考图会强烈压制画风（实测：开优化器时 watercolor/anime 会被压成照片风），
-        // 所以 i2i 默认关掉优化器，让用户选的风格词占主导
-        prompt_optimizer: mode === 'i2i'
-          ? promptOptimizerRaw === true
-          : usePromptOptimizer,
-        ...(subjectReference ? { subject_reference: subjectReference } : {}),
-      }),
+    // ⚠️ 必须走 generateImage（内部是 minimaxFetch），不能自己 fetch。
+    //   MiniMax 的业务错误（2056 额度耗尽 / 1008 余额不足 / 1026 内容审核…）
+    //   **全部是 HTTP 200 + body.base_resp.status_code != 0**。
+    //   以前这里只判断 res.ok，于是额度用完会走成「成功但没图」的静默失败 ——
+    //   用户看到空图，日志里一行错误都没有，告警也无从谈起。
+    //   minimaxFetch 会把 base_resp.status_code 抛成 MiniMaxError.statusCode。
+    const result = await generateImage({
+      prompt: finalPrompt,
+      model: finalModel,
+      aspect_ratio: aspectRatio,
+      n: count,
+      response_format: 'url',
+      // 参考图会强烈压制画风（实测：开优化器时 watercolor/anime 会被压成照片风），
+      // 所以 i2i 默认关掉优化器，让用户选的风格词占主导
+      prompt_optimizer: mode === 'i2i'
+        ? promptOptimizerRaw === true
+        : usePromptOptimizer,
+      ...(subjectReference ? { subject_reference: subjectReference } : {}),
     })
-
-    if (!res.ok) {
-      const errText = await res.text()
-      throw new Error(`MiniMax error: ${res.status} ${errText}`)
-    }
-
-    const result = await res.json() as any
 
     // 6. 处理图片结果（下载到 R2）
     const imagePaths = await processImageResult(result)
@@ -186,6 +175,15 @@ export default defineEventHandler(async (event) => {
       scenario: scenarioUsed || null,
     }
   } catch (err: any) {
+    // 失败流水 + 多用户失败告警判定
+    // ⚠️ 放在最前面：额度退还和写失败状态都可能再抛错，
+    //    告警记录不能被它们挤掉。
+    await recordGenerationFailure(event, {
+      userId: auth.uid,
+      endpoint: 'image/generate',
+      error: err,
+    }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
+
     // 生成失败 → 把额度按张数退回去（用户什么都没拿到）
     for (let i = 0; i < count; i++) {
       await refundDailyQuota(event, auth.uid, 'image')

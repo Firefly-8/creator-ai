@@ -5,9 +5,10 @@
 
 import { defineEventHandler, readBody, createError } from 'h3'
 import { createJob, createSongDraft, updateJob, updateSong } from '../../utils/jobs'
-import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
+import { generateMusic } from '../../utils/minimax'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 export default defineEventHandler(async (event) => {
   // 1. 认证
@@ -47,30 +48,15 @@ export default defineEventHandler(async (event) => {
 
   // 4. 调用 MiniMax API
   try {
-    const apiKey = await getDecryptedApiKey()
-    const baseUrl = getMiniMaxBaseUrl()
-
     await updateJob(job.id, { status: 'processing' })
 
-    const res = await fetch(`${baseUrl}/v1/music_generation`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        prompt,
-        lyrics: mode === 'instrumental' ? undefined : lyrics,
-        model,
-      }),
+    // ⚠️ 走 generateMusic（内部会检查 base_resp.status_code），
+    //   否则「额度耗尽」会走成 HTTP 200 + 空数据 的静默失败。
+    const result = await generateMusic({
+      prompt,
+      lyrics: mode === 'instrumental' ? undefined : lyrics,
+      model,
     })
-
-    if (!res.ok) {
-      const errText = await res.text()
-      throw new Error(`MiniMax error: ${res.status} ${errText}`)
-    }
-
-    const result = await res.json() as any
 
     // 5. 处理结果
     const audioUrl = result?.data?.audio_url || result?.data?.url
@@ -106,6 +92,13 @@ export default defineEventHandler(async (event) => {
       audioUrl: `/api/audio/${song.id}`,
     }
   } catch (err: any) {
+    // 失败流水 + 多用户失败告警判定
+    await recordGenerationFailure(event, {
+      userId: auth.uid,
+      endpoint: 'music/generate',
+      error: err,
+    }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
+
     await updateSong(song.id, {
       status: 'failed',
       error_message: err.message?.slice(0, 500) || 'Generation failed',

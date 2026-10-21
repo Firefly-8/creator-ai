@@ -11,7 +11,10 @@ const PUBLIC_PATHS = [
   '/api/gallery',
   '/api/blog',
   '/api/health',
-  '/api/minimax/quota',
+  // ⚠️ '/api/minimax/quota' 曾经是公开的 —— 任何人都能看账户额度，
+  // 而且带 ?probe=N 会**真的调 MiniMax 生成 N 张图**（白嫖额度）。
+  // 现在要求登录；probe 模式另外要求 admin 身份。
+  // '/api/minimax/quota',
   // 样例底图：用户「没有照片？用样例」的兜底入口，
   // 必须在登录前可用（纯静态资源，无隐私风险）
   '/api/image/samples',
@@ -20,6 +23,8 @@ const PUBLIC_PATHS = [
   '/api/subscriptions/webhook',
   '/api/robots',
   '/api/sitemap',
+  // 运维端点：自己用 X-Ops-Secret 鉴权（跟 Firebase token 无关）
+  '/api/ops',
   // ⚠️ '/api/upload' 曾经是公开的 —— 任何人都能往 R2 塞文件（白嫖存储）。
   // 上传是 i2i 流程的第一步，生成必须登录，所以上传也必须登录。
   // 前端已有「上传 401 → 降级成 t2i」的兜底，不会白屏。

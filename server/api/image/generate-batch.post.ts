@@ -4,12 +4,12 @@
  */
 
 import { defineEventHandler, readBody, createError } from 'h3'
-import { decomposePromptToBatch } from '../../utils/minimax'
+import { decomposePromptToBatch, generateImage } from '../../utils/minimax'
 import { createJob, updateJob } from '../../utils/jobs'
 import { createImageRecord, updateImage, processImageResult } from '../../utils/images'
-import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 interface BatchImageResult {
   style: string
@@ -54,6 +54,13 @@ export default defineEventHandler(async (event) => {
       aspectRatio,
     })
   } catch (err: any) {
+    // 需求拆解失败也是上游失败 —— 一样要进失败流水
+    await recordGenerationFailure(event, {
+      userId: auth.uid,
+      endpoint: 'image/generate-batch:decompose',
+      error: err,
+    }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
+
     await refundDailyQuota(event, auth.uid, 'text')
     throw createError({
       statusCode: 502,
@@ -91,31 +98,18 @@ export default defineEventHandler(async (event) => {
           aspectRatio,
         })
 
-        const apiKey = await getDecryptedApiKey()
-        const baseUrl = getMiniMaxBaseUrl()
-
-        const res = await fetch(`${baseUrl}/v1/image_generation`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            prompt: dir.prompt,
-            model,
-            aspect_ratio: aspectRatio,
-            n: nPerPrompt,
-            response_format: 'url',
-            prompt_optimizer: true,
-          }),
+        // ⚠️ 走 generateImage（内部会检查 base_resp.status_code）：
+        //   MiniMax 的业务错误（2056 额度耗尽 / 1008 余额不足…）是 HTTP 200，
+        //   只判断 res.ok 会把「额度用完」走成「成功但没图」的静默失败。
+        const result = await generateImage({
+          prompt: dir.prompt,
+          model,
+          aspect_ratio: aspectRatio,
+          n: nPerPrompt,
+          response_format: 'url',
+          prompt_optimizer: true,
         })
 
-        if (!res.ok) {
-          const errText = await res.text()
-          throw new Error(`MiniMax: ${res.status} ${errText}`)
-        }
-
-        const result = await res.json() as any
         const imagePaths = await processImageResult(result)
 
         await updateImage(image.id, {
@@ -133,6 +127,15 @@ export default defineEventHandler(async (event) => {
           prompt: dir.prompt,
         }
       } catch (err: any) {
+        // 失败流水 + 多用户失败告警判定
+        // ⚠️ 一个方向失败会记 1 条流水（批量 4 个方向 = 最多 4 条，但都是同一个用户）
+        //    —— 告警判定用的是**不同用户数**，所以一个人连点 20 次不会误报。
+        await recordGenerationFailure(event, {
+          userId: auth.uid,
+          endpoint: 'image/generate-batch',
+          error: err,
+        }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
+
         // 这个方向失败了 → 把它的额度退回去
         for (let i = 0; i < nPerPrompt; i++) {
           await refundDailyQuota(event, auth.uid, 'image')

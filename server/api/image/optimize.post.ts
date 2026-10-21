@@ -4,6 +4,7 @@
  */
 import { defineEventHandler, readBody, createError } from 'h3'
 import { optimizeImagePrompt, MiniMaxError, resolveMiniMaxUserMessage } from '../../utils/minimax'
+import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 export default defineEventHandler(async (event) => {
   const auth = event.context.auth
@@ -24,6 +25,13 @@ export default defineEventHandler(async (event) => {
     })
     return result
   } catch (err: any) {
+    // 失败流水 + 多用户失败告警判定
+    await recordGenerationFailure(event, {
+      userId: auth.uid,
+      endpoint: 'image/optimize',
+      error: err,
+    }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
+
     if (err instanceof MiniMaxError) {
       throw createError({
         statusCode: 502,

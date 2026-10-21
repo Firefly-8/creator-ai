@@ -7,9 +7,27 @@
  *   - 按量计费：无窗口限制，只受账户余额与 RPM 限制
  *
  * 安全：只输出额度摘要与账户类型，绝不输出 API Key 明文。
+ *
+ * ⚠️ 鉴权（2026-10-21 加）：
+ *   这个端点以前在公开白名单里，任何人都能访问，而且 `?probe=N` 会
+ *   **真的调 MiniMax 生成 N 张图** —— 等于把额度白送出去。
+ *   现在：整个端点要求登录；带 probe 参数额外要求 admin 身份。
  */
-import { defineEventHandler } from 'h3'
+import { defineEventHandler, createError, getQuery } from 'h3'
 import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
+import { getDB } from '../../utils/db-runtime'
+
+/** 只有 admin 用户能跑 probe（真烧额度） */
+async function isAdminUser(event: any, uid: string): Promise<boolean> {
+  const db = getDB(event)
+  if (!db) return false
+  const priv = await db
+    .prepare("SELECT privilege FROM user_privileges WHERE user_id = ? AND privilege = 'admin' LIMIT 1")
+    .bind(uid)
+    .first()
+    .catch(() => null)
+  return !!priv
+}
 
 /** 只暴露 key 的类型与长度，不暴露任何字符内容 */
 function classifyKey(key: string) {
@@ -33,6 +51,12 @@ async function probeJson(url: string, key: string) {
 }
 
 export default defineEventHandler(async (event) => {
+  // 必须登录
+  const auth = event.context.auth
+  if (!auth?.uid) {
+    throw createError({ statusCode: 401, statusMessage: 'Login required' })
+  }
+
   let key = ''
   try {
     key = await getDecryptedApiKey()
@@ -79,9 +103,16 @@ export default defineEventHandler(async (event) => {
   }
 
   // 实测：生成 N 张图，看 5 小时窗口 / 周窗口额度掉了多少（需带一次性 token）
+  // ⚠️ probe 会**真的消耗额度** —— 只允许 admin 用
   let probeResult: any = null
   const probeToken = getQuery(event).probe
   if (probeToken) {
+    if (!(await isAdminUser(event, auth.uid))) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: 'probe mode requires admin privileges',
+      })
+    }
     const probeN = Math.min(9, Math.max(1, Number(getQuery(event).n) || 1))
     const before = await probeJson(`${baseUrl}/v1/token_plan/remains`, key)
     const genRes = await fetch(`${baseUrl}/v1/image_generation`, {

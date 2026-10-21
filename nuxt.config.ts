@@ -23,10 +23,25 @@ export default defineNuxtConfig({
     minimaxApiKey: process.env.MINIMAX_API_KEY || '',
     minimaxBaseUrl: process.env.MINIMAX_BASE_URL || 'https://api.minimaxi.com',
     appSecret: process.env.APP_SECRET || '',
-    
+
+    // ── 告警（多人生成失败 → 邮件通知所有者）─────────────────
+    // ⚠️ 这里 process.env 是**构建期**内联进产物的，改完 CF secret 不重新部署不生效。
+    //    运行时优先读 globalThis.__env__（真实运行时 env），见 server/utils/env.ts。
+    //    留在这里是为了本地开发和「构建时就有值」的场景兜底。
+    alertEmailTo: process.env.ALERT_EMAIL_TO || '',
+    alertEmailFrom: process.env.ALERT_EMAIL_FROM || '',
+    alertProvider: process.env.ALERT_PROVIDER || '',
+    resendApiKey: process.env.RESEND_API_KEY || '',
+    brevoApiKey: process.env.BREVO_API_KEY || '',
+    alertMinDistinctUsers: process.env.ALERT_MIN_DISTINCT_USERS || '',
+    alertWindowMinutes: process.env.ALERT_WINDOW_MINUTES || '',
+    alertCooldownMinutes: process.env.ALERT_COOLDOWN_MINUTES || '',
+    alertCountUserErrors: process.env.ALERT_COUNT_USER_ERRORS || '',
+
     public: {
       appName: 'Create Keepsakes',
       appVersion: '1.0.0',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || '',
       firebaseApiKey: process.env.FIREBASE_API_KEY || 'AIzaSyAwoUulU3NBq7QsXr_wleNtvoHk534iwtM',
       firebaseAuthDomain: process.env.FIREBASE_AUTH_DOMAIN || 'creator-cab02.firebaseapp.com',
       firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'creator-cab02',
