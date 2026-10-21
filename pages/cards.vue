@@ -240,26 +240,6 @@
       </section>
     </div>
 
-    <!-- 登录弹窗 -->
-    <Teleport to="body">
-      <div v-if="needLogin" class="ck-modal" @click.self="needLogin = false">
-        <div class="ck-modal__box">
-          <h3 class="ck-modal__title">Almost there</h3>
-          <p class="ck-modal__text">
-            We just need an account to save your card and keep your photo safe.
-            Everything you have entered is kept.
-          </p>
-          <div class="ck-modal__actions">
-            <NuxtLink to="/signup?redirect=/cards" class="ck-btn ck-btn--primary">Create a free account</NuxtLink>
-            <NuxtLink to="/login?redirect=/cards" class="ck-btn ck-btn--ghost">I already have one</NuxtLink>
-          </div>
-          <button class="ck-modal__close" @click="needLogin = false">
-            <span class="i-ph-x" />
-          </button>
-        </div>
-      </div>
-    </Teleport>
-
     <!-- ============ 底部操作栏：返回 / 继续 ============ -->
     <div v-if="step <= 3" class="ck-nav">
       <div class="ck-wrap ck-nav__inner">
@@ -404,7 +384,29 @@ const pickedUrl = computed(() => candidates.value.find(c => c.id === picked.valu
 const messageOptions = ref<string[]>([])
 const chosenMessage = ref('')
 const writingMessage = ref(false)
-const needLogin = ref(false)
+
+// ── 登录弹窗（全站共用那套 AuthModal）──────────────────────
+// ⚠️ 以前这里自己画了一个 "Almost there" 弹窗，但它 Teleport 到 body 之后
+//    拿不到 .ck-cards 上的 CSS 变量（--ck-ink / --ck-coral / --ck-line ...）
+//    → 标题变浅灰、主按钮「Create a free account」变成白底白字（看不见），
+//    整个弹窗像坏掉了一样。
+//    现在直接用 layouts/marketing.vue 里的 <AuthModal>：
+//    自带浅色变量、焦点陷阱、Google 登录、邮箱/密码切换。
+const { openSignup, setNote, setAfterAuth, clearNote, clearAfterAuth } = useAuthModal()
+
+/**
+ * 未登录点了「Make card」→ 弹登录弹窗。
+ * 登录成功后**自动接着出图**（用户不用再点一次按钮），
+ * 已经填好的照片、名字、画风都还在页面上，不会丢。
+ */
+function openAuthForGenerate() {
+  setNote('Create an account or sign in — everything you have already entered is kept.')
+  setAfterAuth(async () => {
+    await loadUsage()
+    await generate()
+  })
+  openSignup()
+}
 
 // ── 每日免费额度 ────────────────────────────────────────────
 // 额度是服务端强制的（server/utils/daily-usage.ts），这里只是读出来显示。
@@ -589,7 +591,8 @@ async function generate() {
     // 401 = 需要登录。判断放在服务端返回上，比读本地 auth 状态可靠
     //（useAuth 每次调用返回新 ref，组件里拿到的 user 常常是空的）
     if (isUnauthorized(e)) {
-      needLogin.value = true
+      // 弹全站共用的登录弹窗，登录成功自动接着出图
+      openAuthForGenerate()
     } else if (e?.data?.code === 'OUT_OF_CREDITS' || e?.data?.data?.code === 'OUT_OF_CREDITS') {
       // 付费档但张数用完了 —— 说人话 + 给充值入口
       quotaRemaining.value = 0
@@ -646,6 +649,12 @@ watch(step, (v) => {
   if (v > 1) q.step = String(v)
   else delete q.step
   navigateTo({ path: '/cards', query: q }, { replace: true })
+})
+
+// 离开页面时把弹窗的说明/回调清掉 —— 别让别的页面误触发这一页的逻辑
+onBeforeUnmount(() => {
+  clearNote()
+  clearAfterAuth()
 })
 </script>
 
@@ -1035,27 +1044,4 @@ watch(step, (v) => {
 }
 .ck-msgpick__item--on { border-color: var(--ck-coral); background: rgba(200, 84, 61, 0.05); }
 .ck-msgpick__item--ai { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 700; color: var(--ck-coral-deep); border-style: dashed; }
-
-/* ---------- 弹窗 ---------- */
-.ck-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: grid;
-  place-items: center;
-  padding: 1.5rem;
-  background: rgba(36, 31, 27, 0.55);
-}
-.ck-modal__box {
-  position: relative;
-  width: min(28rem, 100%);
-  padding: 2rem;
-  border-radius: 1rem;
-  background: #fffdfa;
-  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.4);
-}
-.ck-modal__title { font-family: var(--ck-serif); font-size: 1.5rem; font-weight: 600; color: var(--ck-ink); }
-.ck-modal__text { margin-top: 0.6rem; font-size: 0.9375rem; line-height: 1.6; color: var(--ck-ink-2); }
-.ck-modal__actions { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.25rem; }
-.ck-modal__close { position: absolute; top: 0.75rem; right: 0.75rem; border: none; background: none; font-size: 1.1rem; color: #a08f81; cursor: pointer; }
 </style>

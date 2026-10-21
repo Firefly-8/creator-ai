@@ -22,6 +22,8 @@
               <img src="/logo.png" alt="" class="ck-auth__logo" />
               <h2 :id="titleId" class="ck-auth__title">{{ heading }}</h2>
               <p class="ck-auth__subtitle">{{ subheading }}</p>
+              <!-- 上下文说明：由打开弹窗的页面设置（比如「登录后继续出图」） -->
+              <p v-if="note" class="ck-auth__note">{{ note }}</p>
             </div>
 
             <!-- 标签页 -->
@@ -161,7 +163,15 @@ const emit = defineEmits<{
 }>()
 
 const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth()
-const { redirectPath, clearRedirect } = useAuthModal()
+const {
+  redirectPath,
+  clearRedirect,
+  note,
+  consumeAfterAuth,
+  clearNote,
+  clearAfterAuth,
+  initialMode,
+} = useAuthModal()
 
 const mode = ref(props.initialMode || 'login')
 const email = ref('')
@@ -191,6 +201,10 @@ function close() {
   error.value = ''
   showPassword.value = false
   clearRedirect()
+  // 说明和回调都是「一次性的」—— 关掉弹窗就作废，
+  // 免得之后别的页面再弹登录框时误触发上一次的逻辑
+  clearNote()
+  clearAfterAuth()
 }
 
 function switchMode(next: 'login' | 'signup') {
@@ -207,6 +221,12 @@ watch(() => props.initialMode, (val) => {
 // 打开时聚焦第一个输入框（省一次点击，中老年用户尤其需要）
 watch(isOpen, (open) => {
   if (!open) return
+  // ⚠️ 每次打开都要按「这一次想显示哪个标签」重置：
+  //    只 watch props.initialMode 是不够的 —— 它只在**值变化**时才触发。
+  //    例：用户上次在弹窗里手动切到「Create an account」，
+  //        这次调用方要的是「Sign in」，但 initialMode 里的值没变 → 不会触发 → 串味。
+  //    读共享 ref（而不是 props）还能避开父组件更新 props 的时序问题。
+  mode.value = initialMode.value || 'login'
   error.value = ''
   nextTick(() => emailInput.value?.focus())
 })
@@ -255,6 +275,28 @@ function friendlyError(e: any): string {
   return msg.replace('Firebase: ', '').replace(/\(auth\/.+\)\.?$/, '') || 'Something went wrong. Please try again.'
 }
 
+/** 登录成功后的收尾：有 redirect 就跳走，否则执行「登录后接着做」的回调 */
+async function finishAuth() {
+  const to = redirectPath.value
+  // 先取走回调（取走即清空），再 close() —— close() 会把回调一起清掉
+  const done = consumeAfterAuth()
+  close()
+  // 登录已经成功了，别让提交按钮一直转圈（回调可能要跑很久，比如出图）
+  loading.value = false
+  if (to) {
+    clearRedirect()
+    await navigateTo(to)
+    return
+  }
+  if (done) {
+    try {
+      await done()
+    } catch {
+      // 回调内部的错误由回调自己处理，这里不弹窗（登录已经成功了）
+    }
+  }
+}
+
 async function handleSubmit() {
   error.value = ''
   loading.value = true
@@ -264,12 +306,7 @@ async function handleSubmit() {
     } else {
       await signUpWithEmail(email.value, password.value)
     }
-    const to = redirectPath.value
-    close()
-    if (to) {
-      clearRedirect()
-      await navigateTo(to)
-    }
+    await finishAuth()
   } catch (e: any) {
     error.value = friendlyError(e)
   } finally {
@@ -282,12 +319,7 @@ async function handleGoogleSignIn() {
   loading.value = true
   try {
     await signInWithGoogle()
-    const to = redirectPath.value
-    close()
-    if (to) {
-      clearRedirect()
-      await navigateTo(to)
-    }
+    await finishAuth()
   } catch (e: any) {
     error.value = friendlyError(e)
   } finally {
@@ -375,6 +407,16 @@ async function handleGoogleSignIn() {
 .ck-auth__subtitle {
   margin: 0.45rem 0 0;
   font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ck-ink-2);
+}
+/* 上下文说明：为什么现在要登录 */
+.ck-auth__note {
+  margin: 0.7rem 0 0;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.6rem;
+  background: var(--ck-cream);
+  font-size: 0.8125rem;
   line-height: 1.5;
   color: var(--ck-ink-2);
 }
