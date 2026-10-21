@@ -89,10 +89,7 @@
     <section class="ck-lp__section ck-lp__faq-wrap">
       <h2 class="ck-lp__h2">Questions about {{ aud.short.toLowerCase() }} cards</h2>
       <div class="ck-lp__faq">
-        <details v-for="f in aud.faqs" :key="f.q">
-          <summary>{{ f.q }}</summary>
-          <p>{{ f.a }}</p>
-        </details>
+        <FaqAccordion :items="aud.faqs" />
       </div>
     </section>
 
@@ -429,40 +426,7 @@ useHead(() => {
 .ck-lp__steps p { font-size: 0.92rem; color: var(--lp-ink-2); line-height: 1.55; margin: 0; }
 
 /* ---------- FAQ ---------- */
-.ck-lp__faq { display: grid; gap: 0.7rem; max-width: 780px; }
-.ck-lp__faq details {
-  background: #fff;
-  border: 1px solid var(--lp-line);
-  border-radius: 14px;
-  padding: 0 1.2rem;
-}
-.ck-lp__faq summary {
-  cursor: pointer;
-  font-weight: 700;
-  font-size: 1rem;
-  padding: 1.05rem 0;
-  list-style: none;
-  position: relative;
-  padding-right: 2rem;
-}
-.ck-lp__faq summary::-webkit-details-marker { display: none; }
-.ck-lp__faq summary::after {
-  content: '+';
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 1.4rem;
-  font-weight: 400;
-  color: var(--lp-coral);
-}
-.ck-lp__faq details[open] summary::after { content: '–'; }
-.ck-lp__faq details p {
-  margin: 0 0 1.1rem;
-  font-size: 0.95rem;
-  line-height: 1.65;
-  color: var(--lp-ink-2);
-}
+.ck-lp__faq { max-width: 780px; }
 
 /* ---------- 其他对象 ---------- */
 .ck-lp__others {

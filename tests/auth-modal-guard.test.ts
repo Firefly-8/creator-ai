@@ -59,6 +59,13 @@ describe('登录弹窗：AuthModal 组件', () => {
     expect(authModal).toContain('ck-auth__switch-btn')
   })
 
+  it('底部只留一个隐私协议链接（不再是一整段话）', () => {
+    expect(authModal).toContain('ck-auth__privacy')
+    expect(authModal).toContain('to="/privacy"')
+    expect(authModal).not.toContain('We never publish them')
+    expect(authModal).not.toContain('send newsletters')
+  })
+
   it('登录成功后取走并执行 afterAuth 回调', () => {
     expect(authModal).toContain('consumeAfterAuth')
     expect(authModal).toContain('await done()')

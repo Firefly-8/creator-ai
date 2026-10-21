@@ -133,13 +133,7 @@
       <div class="ck-wrap ck-faq-wrap">
         <h2 class="ck-h2">The useful bits.</h2>
         <div class="ck-faq">
-          <details v-for="f in faqs" :key="f.q" class="ck-faq__item">
-            <summary>
-              {{ f.q }}
-              <span class="i-ph-plus ck-faq__sign" />
-            </summary>
-            <p>{{ f.a }}</p>
-          </details>
+          <FaqAccordion :items="faqs" />
         </div>
       </div>
     </section>
@@ -627,36 +621,6 @@ const faqs = [
 /* ---------- FAQ ---------- */
 .ck-faq-wrap { max-width: 52rem; }
 .ck-faq { margin-top: 2.25rem; }
-.ck-faq__item {
-  border-bottom: 1px solid var(--ck-line);
-}
-.ck-faq__item summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 0;
-  cursor: pointer;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--ck-ink);
-  list-style: none;
-}
-.ck-faq__item summary::-webkit-details-marker { display: none; }
-.ck-faq__sign {
-  flex: none;
-  font-size: 1.15rem;
-  color: var(--ck-coral);
-  transition: transform 0.18s ease;
-}
-.ck-faq__item[open] .ck-faq__sign { transform: rotate(45deg); }
-.ck-faq__item p {
-  padding-bottom: 1.15rem;
-  font-size: 0.9375rem;
-  line-height: 1.7;
-  color: var(--ck-ink-2);
-  max-width: 62ch;
-}
 
 /* ---------- 底部 CTA ---------- */
 .ck-cta { text-align: center; }

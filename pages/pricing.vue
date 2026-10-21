@@ -96,13 +96,7 @@
       <section class="ck-faq-wrap">
         <h2 class="ck-h2">The fine print, in plain words.</h2>
         <div class="ck-faq">
-          <details v-for="f in faqs" :key="f.q" class="ck-faq__item">
-            <summary>
-              {{ f.q }}
-              <span class="i-ph-plus ck-faq__sign" />
-            </summary>
-            <p>{{ f.a }}</p>
-          </details>
+          <FaqAccordion :items="faqs" />
         </div>
       </section>
 
@@ -444,22 +438,6 @@ const promises = [
 /* ---------- FAQ ---------- */
 .ck-faq-wrap { margin-top: 4rem; max-width: 52rem; }
 .ck-faq { margin-top: 1.75rem; }
-.ck-faq__item { border-bottom: 1px solid var(--ck-line); }
-.ck-faq__item summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.05rem 0;
-  cursor: pointer;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  list-style: none;
-}
-.ck-faq__item summary::-webkit-details-marker { display: none; }
-.ck-faq__sign { flex: none; color: var(--ck-coral); transition: transform 0.18s ease; }
-.ck-faq__item[open] .ck-faq__sign { transform: rotate(45deg); }
-.ck-faq__item p { padding-bottom: 1.1rem; font-size: 0.9375rem; line-height: 1.7; color: var(--ck-ink-2); max-width: 62ch; }
 
 /* ---------- 承诺 ---------- */
 .ck-promise {

@@ -101,11 +101,10 @@
               </button>
             </form>
 
-            <!-- 信任 -->
+            <!-- 信任：只留一个隐私协议链接（原来是一整段话，又长又占地方） -->
             <p class="ck-auth__promise">
               <span class="i-ph-lock-key" />
-              Your photos stay private. We never publish them, and we do not
-              send newsletters.
+              <NuxtLink to="/privacy" class="ck-auth__privacy">Privacy Policy</NuxtLink>
             </p>
 
             <!-- 切换 -->
@@ -527,17 +526,20 @@ async function handleGoogleSignIn() {
 /* ---------- 承诺 ---------- */
 .ck-auth__promise {
   display: flex;
-  align-items: flex-start;
-  gap: 0.45rem;
-  margin: 1.15rem 0 0;
-  padding: 0.7rem 0.85rem;
-  border-radius: 0.6rem;
-  background: var(--ck-cream);
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 1.2rem 0 0;
   font-size: 0.8125rem;
-  line-height: 1.5;
   color: var(--ck-ink-2);
 }
-.ck-auth__promise .i-ph-lock-key { flex: none; margin-top: 0.1rem; color: var(--ck-coral); }
+.ck-auth__promise .i-ph-lock-key { color: var(--ck-coral); }
+.ck-auth__privacy {
+  color: var(--ck-ink-2);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.ck-auth__privacy:hover { color: var(--ck-coral-deep); }
 
 /* ---------- 切换（现在唯一的切换入口，标签页已移除） ---------- */
 .ck-auth__switch {
