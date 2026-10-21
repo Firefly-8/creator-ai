@@ -241,7 +241,7 @@ export async function getUserQuota(event: any, uid: string, kind: UsageKind): Pr
 
   ent = await renewSubscriptionIfDue(db, ent, uid)
 
-  // 1) 后台发的无限特权
+  // 1) 后台发的无限特权（管理员手动发的 svip / unlimited_credits）
   if (ent.privileged) {
     return {
       kind,
@@ -256,46 +256,54 @@ export async function getUserQuota(event: any, uid: string, kind: UsageKind): Pr
     }
   }
 
-  // 2) credits_remaining = -1 → 不限（历史老用户 / 手动放行）
-  if (ent.credits === -1) {
-    return {
-      kind,
-      limit: null,
-      used: 0,
-      remaining: null,
-      unlimited: true,
-      reason: 'unlimited_credits',
-      mode: 'unlimited',
-      credits: -1,
-      plan: ent.plan,
-    }
-  }
-
-  // 3) 图片：付费档走 credits（**不再无限**）
-  if (kind === 'image' && isPaidPlan(ent.plan)) {
-    if (ent.credits > 0) {
+  // 2) 付费档才看 credits
+  //    ⚠️ credits_remaining = -1 在**免费档**的老数据里也出现过
+  //       （迁移 0002 那时候是「免费 = 无限额度」的意思）——
+  //       所以这条判断必须限定在付费档内，否则免费用户会变成无限生成。
+  if (isPaidPlan(ent.plan)) {
+    // 2a) -1 = 不限（老付费用户 / 手动放行）
+    if (ent.credits === -1) {
       return {
         kind,
         limit: null,
         used: 0,
-        remaining: ent.credits,
-        unlimited: false,
-        reason: 'paid_credit',
-        mode: 'credit',
-        credits: ent.credits,
+        remaining: null,
+        unlimited: true,
+        reason: 'unlimited_credits',
+        mode: 'unlimited',
+        credits: -1,
         plan: ent.plan,
       }
     }
-    return {
-      kind,
-      limit: null,
-      used: 0,
-      remaining: 0,
-      unlimited: false,
-      reason: 'out_of_credits',
-      mode: 'credit',
-      credits: 0,
-      plan: ent.plan,
+
+    // 2b) 图片走 credits（**不再无限**）；音乐/文案仍走每日额度（下面那段）
+    if (kind === 'image') {
+      if (ent.credits > 0) {
+        return {
+          kind,
+          limit: null,
+          used: 0,
+          remaining: ent.credits,
+          unlimited: false,
+          reason: 'paid_credit',
+          mode: 'credit',
+          credits: ent.credits,
+          plan: ent.plan,
+        }
+      }
+
+      // 2c) 卡用完了
+      return {
+        kind,
+        limit: null,
+        used: 0,
+        remaining: 0,
+        unlimited: false,
+        reason: 'out_of_credits',
+        mode: 'credit',
+        credits: 0,
+        plan: ent.plan,
+      }
     }
   }
 

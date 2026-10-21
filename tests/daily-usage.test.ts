@@ -370,7 +370,7 @@ describe('付费额度（credits）—— 2026-10-21 提价重构的核心', () 
     expect(q.limit).toBeGreaterThan(FREE_DAILY_LIMITS.text.verified)
   })
 
-  it('credits_remaining = -1 → 不限', async () => {
+  it('付费档 credits_remaining = -1 → 不限', async () => {
     const { db } = makeDb({ user: paidUser({ credits_remaining: -1 }) })
     mockGetDB.mockReturnValue(db)
     const q = await getUserQuota(event, 'u1', 'image')
@@ -380,6 +380,17 @@ describe('付费额度（credits）—— 2026-10-21 提价重构的核心', () 
       const r = await consumeQuota(event, 'u1', 'image', 1)
       expect(r.unlimited).toBe(true)
     }
+  })
+
+  it('⚠️ 免费用户的 credits_remaining = -1 也不能 unlimited（老数据陷阱）', async () => {
+    // 迁移 0002 那时候「免费 = 无限额度」，把免费用户的 credits_remaining 写成了 -1。
+    // 现在 -1 只在**付费档**里表示不限 —— 免费用户必须老老实实走每日额度。
+    const { db } = makeDb({ user: freeUser({ credits_remaining: -1 }) })
+    mockGetDB.mockReturnValue(db)
+    const q = await getUserQuota(event, 'u1', 'image')
+    expect(q.unlimited).toBe(false)
+    expect(q.mode).toBe('daily')
+    expect(q.limit).toBe(FREE_DAILY_LIMITS.image.verified)
   })
 
   it('管理员特权（unlimited_credits）→ 不限', async () => {
