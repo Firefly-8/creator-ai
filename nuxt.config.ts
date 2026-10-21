@@ -25,9 +25,9 @@ export default defineNuxtConfig({
     appSecret: process.env.APP_SECRET || '',
 
     // ── 告警（多人生成失败 → 邮件通知所有者）─────────────────
-    // ⚠️ 这里 process.env 是**构建期**内联进产物的，改完 CF secret 不重新部署不生效。
-    //    运行时优先读 globalThis.__env__（真实运行时 env），见 server/utils/env.ts。
-    //    留在这里是为了本地开发和「构建时就有值」的场景兜底。
+    // ⚠️ 这里 process.env 是**构建期**内联进产物的 —— 明文会留在 dist/ 里。
+    //    运行时优先读 globalThis.__env__（CF 注入的加密 env），见 server/utils/env.ts。
+    //    留在这里只是本地开发和构建期兜底。
     alertEmailTo: process.env.ALERT_EMAIL_TO || '',
     alertEmailFrom: process.env.ALERT_EMAIL_FROM || '',
     alertProvider: process.env.ALERT_PROVIDER || '',

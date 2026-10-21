@@ -95,9 +95,11 @@ MiniMax 这些错误码归为用户侧，**不进告警统计**：
 | `ALERT_COUNT_USER_ERRORS` | `false` | 是否把用户侧错误也算进去 |
 | `BREVO_API_KEY` | — | 用 Brevo 时才需要 |
 
-> ⚠️ **改 secret 不需要重新部署** —— 代码运行时读的是 `globalThis.__env__`（真实运行时 env），
-> 不是构建期内联的 `process.env`。改完下一个请求就生效。
-> （`nuxt.config.ts` 里的 `process.env` 只是本地开发和构建期兜底。）
+> ⚠️ **改完 secret 必须重新部署才生效** —— CF Pages 的环境变量是**部署时快照**注入的。
+> 在 Dashboard 改完变量后点 **Redeploy**，或者 push 一个 commit 触发构建。
+> （代码运行时读的是 `globalThis.__env__`，值来自 CF 的加密存储，
+> 明文不会内联进 `dist/`；但注入时机仍然是部署时。）
+> `nuxt.config.ts` 里的 `process.env` 只是本地开发和构建期兜底。
 
 ---
 
@@ -226,7 +228,33 @@ HTTP 200 + {base_resp:{status_code:2056}}, data 为空
 
 ---
 
-## 8. 还能加的（还没做）
+## 8. 当前状态
+
+| 项 | 状态 |
+|---|---|
+| 代码 | ✅ 已上线（test 分支 → staging） |
+| D1 迁移 `0008_ops_monitoring.sql` | ✅ 已应用到 staging 库（`craftai-db-staging`） |
+| `OPS_ALERT_SECRET` | ✅ 已写入 craftai-staging/production、craftai/preview、craftai/production |
+| `ALERT_EMAIL_TO` | ⬜ **待配** —— 需要你的 QQ 邮箱地址 |
+| `RESEND_API_KEY` | ⬜ **待配** —— 需要去 resend.com 注册并验证域名 |
+
+写 secret 的命令（以后改别的变量也用这个）：
+
+```bash
+export MY_VALUE='...'
+python3 scripts/cf-set-secrets.py --project craftai-staging --env production \
+  --set ALERT_EMAIL_TO=@MY_VALUE
+python3 scripts/cf-set-secrets.py --project craftai-staging --env production \
+  --set RESEND_API_KEY=@MY_VALUE
+# 写完记得重新部署（Dashboard Redeploy 或 push 一次）
+```
+
+⚠️ 这个脚本只提交「要改的键」，其余变量原样保留 ——
+CF 的 GET 接口对 secret_text 永远返回空值，把 GET 结果原样 PATCH 回去会**静默清空密钥**。
+
+---
+
+## 9. 还能加的（还没做）
 
 - **恢复通知**：告警后恢复时发一封「已恢复」。当前没做 —— 邮件场景下可能太啰嗦。
 - **企业微信 / 飞书机器人**：一个 webhook URL 就完事、零费用、国内秒达，适合当主通道或备份。

@@ -1,11 +1,15 @@
 /**
  * 运行时环境变量读取
  *
- * ⚠️ 为什么不用 useRuntimeConfig()：
- *   nuxt.config.ts 里全是 `process.env.XXX || ''` —— 那是**构建期**内联进产物的。
- *   改完 CF Pages 的 secret 后，不重新部署就读不到新值。
- *   而 globalThis.__env__ 是 Nitro 在**每次请求**时赋值的真实运行时 env，
- *   改完 secret 下一个请求就生效 ✅
+ * ⚠️ 关键事实：**CF Pages 的环境变量是「部署时快照」注入的**
+ *   改完 Dashboard 里的 secret，**必须重新部署**才会生效（Dashboard 有 Redeploy 按钮，
+ *   或者 push 一个 commit 触发构建）。不是「下一个请求就生效」。
+ *
+ * 那为什么还要用 globalThis.__env__ 而不是只用 useRuntimeConfig()：
+ *   1) globalThis.__env__ 是 CF 运行时注入的 env 对象，值来自 CF 的加密存储；
+ *      而 nuxt.config.ts 里的 process.env.XXX 会被**内联进构建产物**，
+ *      明文会留在 dist/ 里（谁都能从部署产物里翻出来）。
+ *   2) 读 env 只需要一处入口，不用每个模块各写一遍路径探测。
  *
  * 优先级：event context > globalThis.__env__ > runtimeConfig（构建期内联的兜底）
  *
