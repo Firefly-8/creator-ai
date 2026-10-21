@@ -15,12 +15,12 @@
         <div class="panel p-6">
           <p class="text-sm text-ink-400">{{ $t('dashboard.musicGenerated') }}</p>
           <p class="mt-1 text-2xl font-700 text-white">{{ stats.music }}</p>
-          <p class="mt-1 text-xs text-ink-500">{{ musicRemaining }} {{ $t('dashboard.remaining') }}</p>
+          <p class="mt-1 text-xs text-ink-500">{{ musicRemaining }} left today</p>
         </div>
         <div class="panel p-6">
           <p class="text-sm text-ink-400">{{ $t('dashboard.imagesGenerated') }}</p>
           <p class="mt-1 text-2xl font-700 text-white">{{ stats.image }}</p>
-          <p class="mt-1 text-xs text-ink-500">{{ imageRemaining }} {{ $t('dashboard.remaining') }}</p>
+          <p class="mt-1 text-xs text-ink-500">{{ imageRemaining }} {{ imageQuotaSuffix }}</p>
         </div>
         <div class="panel p-6">
           <p class="text-sm text-ink-400">{{ $t('dashboard.currentPlan') }}</p>
@@ -33,8 +33,17 @@
       <div class="mb-8 panel p-6">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="font-display text-lg font-600 text-white">Daily Free Generation</h2>
-            <p class="mt-1 text-sm text-ink-400">Free generations reset every day. Upgrade for no-watermark 2K prints.</p>
+            <h2 class="font-display text-lg font-600 text-white">
+              {{ isPaid ? 'Your plan' : 'Daily Free Generation' }}
+            </h2>
+            <p class="mt-1 text-sm text-ink-400">
+              <template v-if="isPaid">
+                Each card you make is print-ready: 2K, no mark on the file.
+              </template>
+              <template v-else>
+                Free generations reset every day. Upgrade for no-watermark 2K prints.
+              </template>
+            </p>
           </div>
           <div class="flex items-center gap-3">
             <div v-if="dailyStreak > 0" class="text-center">
@@ -44,7 +53,9 @@
             <!-- 额度现在是服务端自动扣的，不需要「领取」—— 直接显示还剩多少 -->
             <div class="flex items-center gap-2">
               <span class="rounded-full bg-white/[0.06] px-3 py-1.5 text-sm text-ink-300">
-                <span class="font-700 text-white">{{ dailyImageRemaining }}</span> images left today
+                <span class="font-700 text-white">{{ dailyImageRemaining }}</span>
+                <template v-if="isPaid"> cards left on your plan</template>
+                <template v-else> images left today</template>
               </span>
               <span class="rounded-full bg-white/[0.06] px-3 py-1.5 text-sm text-ink-300">
                 <span class="font-700 text-white">{{ dailyMusicRemaining }}</span> songs left today
@@ -101,6 +112,10 @@ const dailyStreak = ref(0)
 const plan = ref('free')
 const musicRemaining = ref('∞')
 const imageRemaining = ref('∞')
+/** 有没有付费权益（付费档显示的是「还剩几张卡」） */
+const isPaid = ref(false)
+/** 图片额度后面跟的那句话 —— 付费档和免费档说法不一样 */
+const imageQuotaSuffix = ref('remaining this month')
 const recentItems = ref<Array<{ id: string; title: string; type: string; date: string; status: string }>>([])
 
 // 加载用户数据
@@ -114,10 +129,13 @@ async function loadDashboard() {
     // 每日额度（服务端强制的真实计数，不是「总数减已用」）
     const quotas = data.quotas
     if (quotas) {
+      isPaid.value = !!data.quotas?.paid || !!data.subscription?.plan && data.subscription.plan !== 'free'
       musicRemaining.value = quotas.music?.unlimited ? '∞' : String(quotas.music?.remaining ?? 0)
       imageRemaining.value = quotas.image?.unlimited ? '∞' : String(quotas.image?.remaining ?? 0)
       dailyImageRemaining.value = quotas.image?.unlimited ? '∞' : (quotas.image?.remaining ?? 0)
       dailyMusicRemaining.value = quotas.music?.unlimited ? '∞' : (quotas.music?.remaining ?? 0)
+      imageQuotaSuffix.value =
+        quotas.image?.mode === 'credit' ? 'cards left on your plan' : 'free left today'
     }
   } catch (err) {
     console.error('[Dashboard] Failed to load:', err)

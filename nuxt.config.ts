@@ -10,7 +10,11 @@ export default defineNuxtConfig({
 
   components: [
     { path: '~/components/ui', pathPrefix: false },
-    '~/components',
+    // ⚠️ pathPrefix: false —— 组件注册名 = 文件名（PayPalButton、CardComposer…）
+    //    默认的 true 会带上目录前缀（PricingPayPalButton、CardsCardComposer…），
+    //    模板里写 <PayPalButton> 就解析不到 → **组件静默不渲染**（页面 200，测试全绿，
+    //    但按钮/面板根本没渲染出来）。踩过这个坑，所以锁成 false。
+    { path: '~/components', pathPrefix: false },
   ],
 
   css: ['~/assets/css/tokens.css', '~/assets/css/main.css', '~/assets/css/brand-fonts.css'],

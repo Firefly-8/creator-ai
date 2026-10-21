@@ -29,7 +29,7 @@
 
           <ul class="ck-hero__facts">
             <li><span class="i-ph-check-circle" /> Preview free</li>
-            <li><span class="i-ph-check-circle" /> From $3.99</li>
+            <li><span class="i-ph-check-circle" /> From ${{ PLANS.single.price.toFixed(2) }}</li>
             <li><span class="i-ph-check-circle" /> No design skills needed</li>
             <li><span class="i-ph-check-circle" /> Photos deleted in 30 days</li>
           </ul>
@@ -162,6 +162,7 @@
 
 <script setup lang="ts">
 import HomeAudience from '~/components/home/HomeAudience.vue'
+import { PLANS } from '~/utils/pricing'
 
 definePageMeta({ layout: 'marketing' })
 
@@ -257,7 +258,7 @@ const gallery = [
 const faqs = [
   {
     q: 'What does a card cost?',
-    a: 'Cards start at $3.99 each. A monthly plan of $9.99 includes five cards, and a one-off pack of $19.99 gives you twenty that never expire. You can see the cost before you pay anything.',
+    a: `Cards start at $${PLANS.single.price.toFixed(2)} each. A monthly plan of $${PLANS.creator.price.toFixed(2)} includes five cards, and a one-off pack of $${PLANS.lifetime.price.toFixed(2)} gives you twenty that never expire. You can see the cost before you pay anything.`,
   },
   {
     q: 'Do I need any design skills?',

@@ -5,16 +5,17 @@
  * ⚠️ 必须**回查 PayPal** 确认订阅真的建成了 —— 不能只信前端传回来的 id。
  *
  * 顺带处理一个真实场景：webhook 可能比前端先到（重复激活）→ 幂等 ✅
+ *
+ * ⚠️ 关于金额：订阅的实际扣款金额由 **PayPal 后台的 plan 对象**决定，
+ *    代码里的价格只是显示用。所以改价后必须同步改 PayPal 后台那个 plan
+ *    （node scripts/paypal-check.mjs --sync-price）。
+ *    这里会核对 PayPal 实际收了多少，对不上就大声记日志 ——
+ *    但**不阻断**：用户已经付了钱，阻断 = 付了钱拿不到东西 = 拒付风险。
  */
 import { defineEventHandler, readBody, createError } from 'h3'
 import { getDB } from '../../utils/db-runtime'
 import { getSubscription, isPayPalConfigured } from '../../utils/paypal'
-
-/** planId → 该给多少张卡 */
-const PLAN_CARDS: Record<string, number> = {
-  creator: 5,
-  pro: 20,
-}
+import { PLANS, getPlan, resolvePlanId, type PlanId } from '../../../utils/pricing'
 
 export default defineEventHandler(async (event) => {
   const auth = event.context.auth
@@ -26,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event).catch(() => ({}) as any)
   const subscriptionId = String(body?.subscriptionId || '').trim()
-  const planId = String(body?.planId || 'creator')
+  const planId = resolvePlanId(String(body?.planId || 'creator')) ?? 'creator'
   if (!subscriptionId) {
     throw createError({ statusCode: 400, statusMessage: 'subscriptionId is required' })
   }
@@ -59,7 +60,20 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Subscription has no plan' })
   }
 
-  const cards = PLAN_CARDS[planId] ?? 5
+  // ── 1.5 核对 PayPal 实际收的钱 ──
+  const charged = String(sub?.billing_info?.last_amount?.value ?? '')
+  const expected = PLANS[planId as PlanId].price.toFixed(2)
+  const expectedNum = Number(expected)
+  const chargedNum = Number(charged)
+  const amountOk = !charged || !Number.isFinite(chargedNum) || Math.abs(chargedNum - expectedNum) < 0.01
+  if (!amountOk) {
+    console.error(
+      `[paypal/activate] ⚠️⚠️ 金额对不上！uid=${auth.uid} plan=${planId} PayPal 实收 $${charged}，我们标价 $${expected} —— ` +
+        'PayPal 后台的 plan 价格没跟着改？（node scripts/paypal-check.mjs --sync-price）',
+    )
+  }
+
+  const cards = getPlan(planId)?.cards ?? PLANS.creator.cards
   const now = new Date().toISOString()
   const periodEnd = sub?.billing_info?.next_billing_time || null
 
@@ -75,6 +89,7 @@ export default defineEventHandler(async (event) => {
       alreadyActive: true,
       planId,
       cards: existing.credits_remaining,
+      amountOk,
       message: 'Your subscription is already active.',
     }
   }
@@ -112,13 +127,16 @@ export default defineEventHandler(async (event) => {
       .run()
   }
 
-  console.log(`[paypal/activate] ✅ uid=${auth.uid} sub=${subscriptionId} plan=${planId} cards=${cards}`)
+  console.log(
+    `[paypal/activate] ✅ uid=${auth.uid} sub=${subscriptionId} plan=${planId} cards=${cards} amountOk=${amountOk}`,
+  )
 
   return {
     ok: true,
     planId,
     cards,
     periodEnd,
+    amountOk,
     message: `Your plan is active — ${cards} cards added.`,
   }
 })

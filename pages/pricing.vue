@@ -13,73 +13,40 @@
         </p>
       </header>
 
-      <!-- 三档 -->
+      <!-- 三档（价格全部来自 utils/pricing.ts —— 页面不会和收银台对不上） -->
       <div class="ck-plans">
-        <!-- 免费 -->
-        <div class="ck-plan">
-          <h2 class="ck-plan__name">Free</h2>
-          <p class="ck-plan__desc">Try it out. No card needed.</p>
+        <div
+          v-for="p in planCards"
+          :key="p.id"
+          class="ck-plan"
+          :class="{ 'ck-plan--popular': p.popular }"
+        >
+          <span v-if="p.popular" class="ck-plan__badge">Most popular</span>
+          <h2 class="ck-plan__name">{{ p.name }}</h2>
+          <p class="ck-plan__desc">{{ p.description }}</p>
           <p class="ck-plan__price">
-            <span class="ck-plan__amount">$0</span>
+            <span class="ck-plan__amount">${{ p.price.toFixed(2) }}</span>
+            <span v-if="p.interval" class="ck-plan__per">/ {{ p.interval }}</span>
           </p>
-          <p class="ck-plan__for">One card a day, with a small mark on it.</p>
-          <NuxtLink to="/cards" class="ck-btn ck-btn--ghost ck-btn--full">Start free</NuxtLink>
-          <ul class="ck-plan__list">
-            <li><span class="i-ph-check" /> 1 card per day</li>
-            <li><span class="i-ph-check" /> 1024 px downloads</li>
-            <li><span class="i-ph-check" /> Small mark on the file</li>
-            <li><span class="i-ph-check" /> Your photos stay private</li>
-          </ul>
-        </div>
+          <p class="ck-plan__for">{{ p.blurb }}</p>
 
-        <!-- 月付（主推） -->
-        <div class="ck-plan ck-plan--popular">
-          <span class="ck-plan__badge">Most popular</span>
-          <h2 class="ck-plan__name">Monthly</h2>
-          <p class="ck-plan__desc">For making a few through the year.</p>
-          <p class="ck-plan__price">
-            <span class="ck-plan__amount">$9.99</span>
-            <span class="ck-plan__per">/ month</span>
-          </p>
-          <p class="ck-plan__for">5 cards a month, then $2.00 for each extra one.</p>
           <PayPalButton
-            plan-id="creator"
-            kind="subscription"
-            label="Get Monthly"
+            v-if="p.kind !== 'free'"
+            :plan-id="p.id"
+            :kind="p.kind === 'subscription' ? 'subscription' : 'one_time'"
+            :label="p.cta"
             :logged-in="!!user"
             @need-login="requireLogin"
             @paid="onPaid"
           />
-          <ul class="ck-plan__list">
-            <li><span class="i-ph-check" /> 5 cards every month</li>
-            <li><span class="i-ph-check" /> Print-ready 300 DPI files</li>
-            <li><span class="i-ph-check" /> No mark on the file</li>
-            <li><span class="i-ph-check" /> Unused cards roll over</li>
-            <li><span class="i-ph-check" /> Cancel whenever you like</li>
-          </ul>
-        </div>
+          <NuxtLink v-else to="/cards" class="ck-btn ck-btn--ghost ck-btn--full">
+            {{ p.cta }}
+          </NuxtLink>
 
-        <!-- 买断 -->
-        <div class="ck-plan">
-          <h2 class="ck-plan__name">One-off pack</h2>
-          <p class="ck-plan__desc">For the person who makes three cards a year.</p>
-          <p class="ck-plan__price">
-            <span class="ck-plan__amount">$19.99</span>
-          </p>
-          <p class="ck-plan__for">20 cards. They never expire.</p>
-          <PayPalButton
-            plan-id="lifetime"
-            kind="one_time"
-            label="Pay once — 20 cards"
-            :logged-in="!!user"
-            @need-login="requireLogin"
-            @paid="onPaid"
-          />
           <ul class="ck-plan__list">
-            <li><span class="i-ph-check" /> 20 cards, no expiry</li>
-            <li><span class="i-ph-check" /> Print-ready 300 DPI files</li>
-            <li><span class="i-ph-check" /> No mark on the file</li>
-            <li><span class="i-ph-check" /> One payment, nothing recurring</li>
+            <li v-for="f in p.features" :key="f">
+              <span class="i-ph-check" /> {{ f }}
+            </li>
           </ul>
         </div>
       </div>
@@ -104,11 +71,18 @@
         <div>
           <h2 class="ck-h2">Just one card?</h2>
           <p class="ck-sub">
-            A single card is <strong>$3.99</strong>. No account tricks, no
+            A single card is <strong>${{ singlePlan.price.toFixed(2) }}</strong>. No account tricks, no
             "upgrade" prompts — you pay for the card and you are done.
           </p>
         </div>
-        <NuxtLink to="/cards" class="ck-btn ck-btn--primary">Make one card</NuxtLink>
+        <PayPalButton
+          :plan-id="singlePlan.id"
+          kind="one_time"
+          :label="`Pay once — $${singlePlan.price.toFixed(2)}`"
+          :logged-in="!!user"
+          @need-login="requireLogin"
+          @paid="onPaid"
+        />
       </section>
 
       <!-- FAQ -->
@@ -138,21 +112,31 @@
 </template>
 
 <script setup lang="ts">
+import { PLANS } from '~/utils/pricing'
+// ⚠️ 必须显式 import —— Nuxt 的组件自动导入会带目录前缀
+//    （components/pricing/PayPalButton.vue 注册成的是 PricingPayPalButton），
+//    写 <PayPalButton> 解析不到 → **整个按钮静默不渲染**（页面看着正常，买了也买不了）
+import PayPalButton from '~/components/pricing/PayPalButton.vue'
+
 definePageMeta({ layout: 'marketing' })
 
 useHead({
   title: 'Pricing — Create Keepsakes',
   meta: [{
     name: 'description',
-    content: 'One card for $3.99. A monthly plan of $9.99 includes 5 print-ready cards. Cancel anytime.',
+    content: `One card for $${PLANS.single.price.toFixed(2)}. A monthly plan of $${PLANS.creator.price.toFixed(2)} includes 5 print-ready cards. Cancel anytime.`,
   }],
   link: [{ rel: 'canonical', href: 'https://create.yozzytools.com/pricing' }],
 })
 
-const { user, authReady } = useAuth()
+const { user } = useAuth()
 const { isOpen: authModalOpen, openLoginWithRedirect } = useAuthModal()
 const payMessage = ref('')
 const payError = ref('')
+
+/** 三档：免费 / 月付 / 买断包（价格直接来自唯一真相源） */
+const planCards = [PLANS.free, PLANS.creator, PLANS.lifetime]
+const singlePlan = PLANS.single
 
 function requireLogin() {
   openLoginWithRedirect('/pricing')
@@ -171,12 +155,16 @@ async function onPaid(info: any) {
 
 const faqs = [
   {
-    q: 'What exactly do I get for $9.99 a month?',
+    q: `What exactly do I get for $${PLANS.creator.price.toFixed(2)} a month?`,
     a: 'Five cards a month, at full print resolution — 300 DPI, sized for a 5 × 7 inch card — with no mark on the file. If you do not use all five, they roll over to the next month instead of disappearing.',
   },
   {
     q: 'What happens if I need more than five?',
-    a: 'Each extra card is $2.00. You can add them whenever you want, and you will always see the price before you pay.',
+    a: `Each extra card is $${PLANS.single.price.toFixed(2)} — the same price as buying one card on its own. You can add them whenever you want, and you will always see the price before you pay.`,
+  },
+  {
+    q: 'What if I use all my cards?',
+    a: 'Your account falls back to the free daily allowance, so you can still make marked-up previews and try things out. Buy one more card or a pack of twenty and your print-ready files are back.',
   },
   {
     q: 'Can I cancel?',
@@ -196,7 +184,7 @@ const faqs = [
   },
   {
     q: 'Is this a subscription trap?',
-    a: 'No. There is a one-off pack coming for people who only make a card or two a year, and it never expires. We would rather you pay once than cancel and ask for your money back.',
+    a: `No. The one-off pack of ${PLANS.lifetime.cards} cards is $${PLANS.lifetime.price.toFixed(2)}, it never expires, and there is nothing recurring about it. We would rather you pay once than cancel and ask for your money back.`,
   },
 ]
 

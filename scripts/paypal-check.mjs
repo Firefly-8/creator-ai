@@ -8,6 +8,12 @@
  *   node scripts/paypal-check.mjs            # 只检查（token / 产品 / 计划）
  *   node scripts/paypal-check.mjs --create   # 顺便创建本项目需要的产品和计划
  *   node scripts/paypal-check.mjs --order    # 顺便创建一个测试订单（一次性支付）
+ *   node scripts/paypal-check.mjs --sync-price  # 把 PayPal 后台的订阅计划价格改成 utils/pricing.ts 里的价
+ *
+ * ⚠️ 为什么要有 --sync-price：
+ *   订阅的**实际扣款金额由 PayPal 后台的 plan 对象决定**，代码里的 price 只是显示用。
+ *   提价之后必须把后台那个 plan 的价格一起改掉 ——
+ *   否则前端写着 $19.99、用户实际只被扣 $9.99（少收钱 + 虚假宣传）。
  *
  * 凭据来源（见 docs/paypal-setup.md）：
  *   PAYPAL_CLIENT_ID / PAYPAL_CLIENT_SECRET   → Dashboard ▸ Apps & Credentials
@@ -42,6 +48,30 @@ const BASE = IS_SANDBOX ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.pa
 const ARGS = process.argv.slice(2)
 const WANT_CREATE = ARGS.includes('--create')
 const WANT_ORDER = ARGS.includes('--order')
+const WANT_SYNC_PRICE = ARGS.includes('--sync-price')
+
+/**
+ * 从 utils/pricing.ts 读价格 —— 脚本不能自己再抄一份（抄一份就会漂）
+ */
+function readPricing() {
+  const src = readFileSync(join(ROOT, 'utils/pricing.ts'), 'utf8')
+  const plans = {}
+  const blockRe = /id:\s*'(\w+)',\s*name:[\s\S]*?price:\s*([\d.]+),[\s\S]*?cards:\s*(\d+),([\s\S]*?)\n  \},/g
+  for (const m of src.matchAll(blockRe)) {
+    const [, id, price, cards, tail] = m
+    plans[id] = {
+      price: Number(price),
+      cards: Number(cards),
+      interval: tail.match(/interval:\s*'(\w+)'/)?.[1],
+    }
+  }
+  if (!plans.creator || !plans.single) {
+    fail('读不到 utils/pricing.ts 里的价格（文件格式变了？）')
+  }
+  return plans
+}
+
+const PRICING = readPricing()
 
 const C = {
   dim: (s) => `\x1b[2m${s}\x1b[0m`,
@@ -148,7 +178,56 @@ async function main() {
     console.log(`${C.warn('!')} 列计划失败：${e.message}`)
   }
 
-  // ── 4. 可选：创建本项目需要的产品和计划 ──
+  // ── 3.5 价格对不对？──
+  // 订阅的实际扣款金额就是 PayPal 后台 plan 里的价 —— 对不上就是少收钱。
+  {
+    const want = PRICING.creator.price.toFixed(2)
+    const monthly = plans.find(p => /monthly/i.test(p.name || ''))
+    const amt = monthly?.billing_cycles?.[0]?.pricing_scheme?.fixed_price?.value
+    if (monthly && amt) {
+      if (String(amt) !== want) {
+        console.log(
+          `${C.bad('✗')} 月付计划价格对不上：PayPal 后台是 $${amt}，代码里是 $${want}`,
+        )
+        console.log(C.dim('  跑 node scripts/paypal-check.mjs --sync-price 把它改过来'))
+      } else {
+        console.log(`${C.ok('✓')} 月付计划价格一致（$${amt}）`)
+      }
+    }
+  }
+
+  // ── 4. 可选：把 PayPal 后台的订阅计划价格同步成代码里的价 ──
+  if (WANT_SYNC_PRICE) {
+    console.log(C.b('\n同步订阅计划价格…'))
+    const want = PRICING.creator.price.toFixed(2)
+    const monthly = plans.find(p => /monthly/i.test(p.name || ''))
+    if (!monthly) {
+      console.log(`${C.bad('✗')} 找不到名为 "Create Keepsakes Monthly" 的计划，先跑 --create`)
+    } else {
+      const cur = monthly.billing_cycles?.[0]?.pricing_scheme?.fixed_price?.value
+      if (String(cur) === want) {
+        console.log(`${C.ok('✓')} 已经是 $${want}，不用改`)
+      } else {
+        try {
+          await api('PATCH', `/v1/billing/plans/${monthly.id}`, {
+            billing_cycles: [
+              {
+                ...monthly.billing_cycles[0],
+                pricing_scheme: { fixed_price: { value: want, currency_code: 'USD' } },
+              },
+            ],
+          }, token)
+          console.log(`${C.ok('✓')} ${monthly.id} 价格已改成 $${want}（原来 $${cur}）`)
+          console.log(C.dim('  注意：已有订阅者通常在**下一个周期**才按新价扣款（PayPal 的行为）'))
+        } catch (e) {
+          console.log(`${C.bad('✗')} 改价失败：${e.message}`)
+          console.log(C.dim('  PayPal 有时不允许直接改价 —— 那就新建一个计划，改环境变量 PAYPAL_CREATOR_PLAN_ID'))
+        }
+      }
+    }
+  }
+
+  // ── 5. 可选：创建本项目需要的产品和计划 ──
   if (WANT_CREATE) {
     console.log(C.b('\n创建产品与计划…'))
 
@@ -172,10 +251,14 @@ async function main() {
       console.log(`${C.ok('✓')} 复用已有产品 ${productId}`)
     }
 
-    // 订阅计划：$9.99/月（Creator）
+    // 订阅计划（金额来自 utils/pricing.ts —— 改价只改那一处）
     const wantPlans = [
-      { name: 'Create Keepsakes Monthly', amount: '9.99', interval: 'MONTH', code: 'CK-MONTHLY-9-99' },
-      { name: 'Create Keepsakes Yearly', amount: '99.00', interval: 'YEAR', code: 'CK-YEARLY-99-00' },
+      {
+        name: 'Create Keepsakes Monthly',
+        amount: PRICING.creator.price.toFixed(2),
+        interval: 'MONTH',
+        code: `CK-MONTHLY-${PRICING.creator.price.toFixed(2).replace('.', '-')}`,
+      },
     ]
     for (const wp of wantPlans) {
       const exists = plans.find(p => p.name === wp.name)
@@ -220,7 +303,7 @@ async function main() {
         purchase_units: [
           {
             description: 'Create Keepsakes — One card',
-            amount: { currency_code: 'USD', value: '3.99' },
+            amount: { currency_code: 'USD', value: PRICING.single.price.toFixed(2) },
           },
         ],
       }, token)
@@ -234,10 +317,14 @@ async function main() {
   }
 
   console.log(C.b('\n下一步：') + ' 把 plan id 填进 .env：')
-  console.log(C.dim('  PAYPAL_CREATOR_PLAN_ID=P-xxxx     # $9.99/月'))
-  console.log(C.dim('  PAYPAL_PRO_PLAN_ID=P-xxxx        # $19.99/月（若要保留）'))
+  console.log(C.dim(`  PAYPAL_CREATOR_PLAN_ID=P-xxxx     # $${PRICING.creator.price.toFixed(2)}/月`))
   console.log(C.dim('  PAYPAL_SANDBOX=true'))
-  console.log(C.dim('  一次性支付（$3.99 / $19.99）不需要 plan id，Orders v2 直接用金额 ✅\n'))
+  console.log(
+    C.dim(
+      `  一次性支付（$${PRICING.single.price.toFixed(2)} / $${PRICING.lifetime.price.toFixed(2)}）` +
+        '不需要 plan id，Orders v2 直接用金额 ✅\n',
+    ),
+  )
 }
 
 main().catch((e) => {

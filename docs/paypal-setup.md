@@ -10,13 +10,13 @@ PayPal 的对象分三层，**搞混了会白折腾**：
 | 对象 | 用途 | 我们的场景 |
 |---|---|---|
 | **Product**（目录产品） | 一个"卖的东西"的壳，带名字/描述/类型 | 订阅档位共用一个 Product |
-| **Plan**（订阅计划） | 挂在 Product 上，定义**计费周期和价格** | $9.99/月、$99/年 |
-| **Order**（订单） | 一次性的付款单，直接带金额 | **$3.99 单张、$19.99 买断 20 张** |
+| **Plan**（订阅计划） | 挂在 Product 上，定义**计费周期和价格** | $19.99/月 |
+| **Order**（订单） | 一次性的付款单，直接带金额 | **$6.99 单张、$59.99 买断 20 张** |
 
 **关键结论**：
 - **订阅** = Product + Plan + 订阅实例 → 需要 plan id
 - **一次性支付** = 直接建 Order，**不需要 Product，也不需要 Plan** ✅
-  → 所以 $3.99 / $19.99 两个档位只要在代码里写金额即可，后台一个都不用建
+  → 所以 $6.99 / $59.99 两个档位只要在代码里写金额即可，后台一个都不用建
 
 ---
 
@@ -109,14 +109,13 @@ node scripts/paypal-check.mjs --create
 它会：
 1. 建一个 Product `Create Keepsakes`（已存在就复用）
 2. 建两个 Plan：
-   - `Create Keepsakes Monthly` — $9.99 / MONTH
+   - `Create Keepsakes Monthly` — $19.99 / MONTH
    - `Create Keepsakes Yearly` — $99.00 / YEAR
 
 建完把 plan id 填进 `.env`：
 
 ```bash
-PAYPAL_CREATOR_PLAN_ID=P-xxxxxxxxxxxx     # $9.99/月
-PAYPAL_PRO_PLAN_ID=P-xxxxxxxxxxxx        # $19.99/月（要保留才填）
+PAYPAL_CREATOR_PLAN_ID=P-xxxxxxxxxxxx     # $19.99/月
 PAYPAL_SANDBOX=true
 ```
 
@@ -140,7 +139,7 @@ curl -X POST https://api-m.sandbox.paypal.com/v1/billing/plans \
     "billing_cycles": [{
       "frequency": {"interval_unit":"MONTH","interval_count":1},
       "tenure_type": "REGULAR","sequence":1,"total_cycles":0,
-      "pricing_scheme": {"fixed_price":{"value":"9.99","currency_code":"USD"}}
+      "pricing_scheme": {"fixed_price":{"value":"19.99","currency_code":"USD"}}
     }],
     "payment_preferences": {
       "auto_bill_outstanding": true,
@@ -152,7 +151,7 @@ curl -X POST https://api-m.sandbox.paypal.com/v1/billing/plans \
 
 ---
 
-## 4. 一次性支付（$3.99 / $19.99）—— 后台什么都不用建
+## 4. 一次性支付（$6.99 / $59.99）—— 后台什么都不用建
 
 一次性支付走 **Orders v2**，直接带金额：
 
@@ -169,10 +168,20 @@ curl -X POST https://api-m.sandbox.paypal.com/v1/billing/plans \
 
 | planId | 金额 | 张数 |
 |---|---|---|
-| `single` | $3.99 | 1 |
-| `lifetime` | $19.99 | 20 |
+| `single` | $6.99 | 1 |
+| `lifetime` | $59.99 | 20 |
 
-⚠️ 绝不能接受前端传来的金额 —— 否则改个请求参数就能 3.99 买 20 张。
+⚠️ 绝不能接受前端传来的金额 —— 否则改个请求参数就能 6.99 买 20 张。
+
+⚠️ **订阅的实收金额由 PayPal 后台的 plan 对象决定，代码里的 price 只是显示用。**
+   提价之后必须同步改后台那个 plan 的价格，否则会出现
+   「前端写着 $19.99、用户实际只被扣 $9.99」—— 少收钱 + 虚假宣传。
+
+```bash
+node scripts/paypal-check.mjs --sync-price   # 把后台 plan 价格改成 utils/pricing.ts 里的价
+```
+
+价格只有一个真相源：`utils/pricing.ts`。改价只改那一个文件。
 
 想手工验一下 Orders v2 能不能用：
 

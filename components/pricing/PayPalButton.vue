@@ -26,9 +26,12 @@
 /**
  * PayPal 按钮（订阅 + 一次性支付共用）
  *
- * ⚠️ 一次性支付（$3.99 / $19.99）走 Orders v2：
+ * ⚠️ 一次性支付（$6.99 / $59.99）走 Orders v2：
  *    createOrder 时调我们自己的 /api/paypal/order，金额由服务端决定 ✅
- * 订阅走 createSubscription，需要 PayPal plan id。
+ *    （金额来自 utils/pricing.ts，不接受前端传值）
+ * 订阅走 createSubscription，需要 PayPal plan id
+ *    —— ⚠️ 订阅的实收金额由 **PayPal 后台的 plan 对象**决定，
+ *       提价后要跑 node scripts/paypal-check.mjs --sync-price 同步。
  *
  * 没登录时先弹登录框（父组件通过 need-login 事件通知）。
  */

@@ -19,10 +19,10 @@ const read = (f: string) => readFileSync(join(ROOT, f), 'utf8')
 describe('PayPal 一次性支付', () => {
   it('金额必须由服务端决定，绝不能信前端传来的值', () => {
     const src = read('server/api/paypal/order.post.ts')
-    // 服务端有一张权威的 planId → 金额 表
-    expect(src).toMatch(/const ONE_TIME_PLANS/)
-    expect(src).toMatch(/amount:\s*'3\.99'/)
-    expect(src).toMatch(/amount:\s*'19\.99'/)
+    // 服务端有一张权威的 planId → 金额 表（utils/pricing.ts）
+    expect(src).toMatch(/const ONE_TIME_PLAN_IDS/)
+    expect(src).toContain("from '../../../utils/pricing'")
+    expect(src).toContain('planAmount(planId)')
     // 读 body 时只取 planId，不取金额
     expect(src).toContain("String(body?.planId || '')")
     expect(src).not.toMatch(/body\?\.amount/)
@@ -90,11 +90,10 @@ describe('PayPal Webhook 安全', () => {
 })
 
 describe('PayPal 定价与前端', () => {
-  it('plan 表要跟实际定价一致（不再是假的「每月 N 次生成」）', () => {
+  it('plan 表由 utils/pricing.ts 生成（不再手写一份）', () => {
     const src = read('server/api/subscriptions/plans.get.ts')
-    expect(src).toContain("price: 3.99")
-    expect(src).toContain("price: 9.99")
-    expect(src).toContain("price: 19.99")
+    expect(src).toContain("from '../../../utils/pricing'")
+    expect(src).toContain('PLAN_LIST')
     // 旧的假字段不能留
     expect(src).not.toMatch(/generations\/month/)
   })

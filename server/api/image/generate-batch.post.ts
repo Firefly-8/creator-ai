@@ -8,7 +8,7 @@ import { decomposePromptToBatch, generateImage } from '../../utils/minimax'
 import { createJob, updateJob } from '../../utils/jobs'
 import { createImageRecord, updateImage, processImageResult } from '../../utils/images'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
-import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+import { consumeDailyQuota, consumeQuota, refundDailyQuota, refundQuota } from '../../utils/daily-usage'
 import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 interface BatchImageResult {
@@ -70,12 +70,11 @@ export default defineEventHandler(async (event) => {
 
   const directions = decomposed.prompts.slice(0, 4)
 
-  // ⚠️ 批量一次能出 4 方向 × 2 张 = 8 张图 —— 必须按**实际张数**扣额度，
+  // ⚠️ 批量一次能出 4 方向 × 2 张 = 8 张图 —— 免费档必须按**实际张数**扣额度，
   // 否则一个请求就能把一天的额度一次掏空。
+  // 付费档：整批算 **1 张卡**（一次会话 = 一张卡，用户从候选里挑一张）。
   const totalImages = directions.length * nPerPrompt
-  for (let i = 0; i < totalImages; i++) {
-    await consumeDailyQuota(event, auth.uid, 'image')
-  }
+  const batchQuota = await consumeQuota(event, auth.uid, 'image', totalImages)
 
   // 5. 创建批量任务
   const job = await createJob(auth.uid, 'image-batch', {
@@ -136,9 +135,11 @@ export default defineEventHandler(async (event) => {
           error: err,
         }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
 
-        // 这个方向失败了 → 把它的额度退回去
-        for (let i = 0; i < nPerPrompt; i++) {
-          await refundDailyQuota(event, auth.uid, 'image')
+        // 这个方向失败了 → 免费档把它占掉的每日额度退回去
+        // 付费档不退卡：整批只扣了 1 张，而且这个方向失败不代表整批颗粒无收，
+        // 退卡会让「故意让一个方向失败」变成薅卡漏洞。
+        if (batchQuota.mode !== 'credit') {
+          await refundQuota(event, auth.uid, 'image', nPerPrompt, 'daily')
         }
         return {
           style: dir.style,

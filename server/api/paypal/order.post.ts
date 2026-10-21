@@ -1,9 +1,9 @@
 /**
  * POST /api/paypal/order — 创建一次性支付订单（Orders v2）
  *
- * 覆盖两个一次性档位：
- *   single   $3.99  1 张
- *   lifetime $19.99 20 张
+ * 覆盖两个一次性档位（价格/张数全部来自 utils/pricing.ts）：
+ *   single   $6.99   1 张
+ *   lifetime $59.99  20 张
  *
  * 流程：
  *   1. 前端 POST 这里 → 服务端向 PayPal 建 order（intent=CAPTURE）
@@ -13,17 +13,15 @@
  *   5. 服务端 capture 成功后发放额度（写 subscriptions 表）
  *
  * ⚠️ 金额**永远由服务端按 planId 决定**，绝不接受前端传来的金额 ——
- *    否则改一下请求参数就能 3.99 买 20 张。
+ *    否则改一下请求参数就能 6.99 买 20 张。
  */
 import { defineEventHandler, readBody, createError } from 'h3'
 import { getDB } from '../../utils/db-runtime'
 import { getPayPalConfig, createOrder, isPayPalConfigured, findLink } from '../../utils/paypal'
+import { PLANS, planAmount, planCards, type PlanId } from '../../../utils/pricing'
 
-/** 一次性档位 → 价格与张数（服务端唯一真相） */
-const ONE_TIME_PLANS: Record<string, { amount: string; cards: number; label: string }> = {
-  single: { amount: '3.99', cards: 1, label: 'One card' },
-  lifetime: { amount: '19.99', cards: 20, label: 'One-off pack (20 cards)' },
-}
+/** 一次性档位（订阅不走这里） */
+const ONE_TIME_PLAN_IDS: PlanId[] = ['single', 'lifetime']
 
 export default defineEventHandler(async (event) => {
   const auth = event.context.auth
@@ -38,10 +36,12 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event).catch(() => ({}) as any)
   const planId = String(body?.planId || '')
-  const plan = ONE_TIME_PLANS[planId]
-  if (!plan) {
+  if (!ONE_TIME_PLAN_IDS.includes(planId as PlanId)) {
     throw createError({ statusCode: 400, statusMessage: 'Unknown one-time plan' })
   }
+  const plan = PLANS[planId as PlanId]
+  const amount = planAmount(planId)
+  const cards = planCards(planId)
 
   const db = getDB(event)
   if (!db) throw createError({ statusCode: 503, statusMessage: 'Database not available' })
@@ -53,7 +53,7 @@ export default defineEventHandler(async (event) => {
   let order: any
   try {
     order = await createOrder({
-      amount: plan.amount,
+      amount,
       currency: 'USD',
       description: `Create Keepsakes — ${plan.label}`,
       returnUrl: `${base}/pricing?paid=1&order={id}`,
@@ -92,7 +92,7 @@ export default defineEventHandler(async (event) => {
         '1:1',
         auth.uid,
         'pending',
-        JSON.stringify({ orderId, planId, amount: plan.amount, cards: plan.cards }),
+        JSON.stringify({ orderId, planId, amount, cards }),
         new Date().toISOString(),
         new Date().toISOString(),
       )
@@ -105,8 +105,8 @@ export default defineEventHandler(async (event) => {
   return {
     orderId,
     planId,
-    amount: plan.amount,
-    cards: plan.cards,
+    amount,
+    cards,
     clientId: cfg.clientId,
     sandbox: cfg.isSandbox,
     approveUrl: findLink(order?.links, 'approve'),

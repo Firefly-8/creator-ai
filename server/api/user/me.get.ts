@@ -52,7 +52,9 @@ export default defineEventHandler(async (event) => {
     subscription: {
       plan: subscription?.plan || 'free',
       status: subscription?.status || 'active',
-      creditsRemaining: subscription?.credits_remaining ?? -1,
+      // ⚠️ 不要用 -1 当默认值 —— 那个值在额度语义里表示「不限」，
+      //    免费用户没有订阅行，不该显示成「不限」
+      creditsRemaining: subscription?.credits_remaining ?? 0,
     },
     stats: {
       songs: songCount?.count || 0,

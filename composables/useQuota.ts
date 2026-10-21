@@ -15,15 +15,16 @@ interface QuotaStatus {
 
 interface QuotaResponse {
   plan: string
-  quotas: {
-    free: { music: number; image: number; lyrics: number; cover: number }
-    creator: { music: number; image: number; lyrics: number; cover: number }
-    pro: { music: number; image: number; lyrics: number; cover: number }
+  paid: boolean
+  credits: number | null
+  limits: {
+    free: { music: number; image: number; text: number }
+    paid: { music: number; image: number; text: number }
   }
   usage: {
     music: QuotaStatus
     image: QuotaStatus
-    lyrics: QuotaStatus
+    text: QuotaStatus
     cover: QuotaStatus
   }
 }
@@ -47,19 +48,22 @@ export function useQuota() {
     }
   }
 
-  function canGenerate(type: 'music' | 'image' | 'lyrics' | 'cover'): boolean {
+  function canGenerate(type: 'music' | 'image' | 'text' | 'cover'): boolean {
     if (!quotaData.value) return true // 未加载时允许，服务端会拦截
-    return quotaData.value.usage[type]?.allowed ?? true
+    const q = quotaData.value.usage[type]
+    if (!q) return true
+    if (q.remaining === null) return true // 不限
+    return q.remaining > 0
   }
 
-  function getRemaining(type: 'music' | 'image' | 'lyrics' | 'cover'): number {
+  function getRemaining(type: 'music' | 'image' | 'text' | 'cover'): number {
     if (!quotaData.value) return -1
     return quotaData.value.usage[type]?.remaining ?? 0
   }
 
-  function getUsage(type: 'music' | 'image' | 'lyrics' | 'cover'): QuotaStatus | null {
+  function getUsage(type: 'music' | 'image' | 'text' | 'cover'): QuotaStatus | null {
     if (!quotaData.value) return null
-    return quotaData.value.usage[type]
+    return quotaData.value.usage[type] ?? null
   }
 
   function refresh() {

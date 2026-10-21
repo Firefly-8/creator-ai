@@ -64,10 +64,10 @@ describe('每日额度闸门', () => {
     const burns = BURNS_CREDITS.some(k => src.includes(k))
     if (!burns) return
 
-    // 必须扣额度
+    // 必须扣额度（consumeQuota 是带 units 的新接口，consumeDailyQuota 是兼容包装）
     expect(
-      src.includes('consumeDailyQuota'),
-      `${file} 会烧 MiniMax 额度但没调用 consumeDailyQuota —— 白嫖口子`,
+      src.includes('consumeQuota') || src.includes('consumeDailyQuota'),
+      `${file} 会烧 MiniMax 额度但没调用 consumeQuota/consumeDailyQuota —— 白嫖口子`,
     ).toBe(true)
 
     // 必须确认登录（中间件兜底 + 端点内显式检查，双保险）
@@ -77,18 +77,18 @@ describe('每日额度闸门', () => {
     ).toBe(true)
   })
 
-  it('出图接口必须按实际张数扣额度（不能一次 n=4 只扣 1 次）', () => {
+  it('出图接口必须把实际张数交给额度层（不能一次 n=4 只算 1 次）', () => {
     const src = read('server/api/image/generate.post.ts')
-    // 有按 count 循环扣额度的逻辑
-    expect(src).toMatch(/for\s*\([^)]*<\s*count[^)]*\)[\s\S]{0,200}consumeDailyQuota/)
-    // 失败时要按张数退还
-    expect(src).toMatch(/for\s*\([^)]*<\s*count[^)]*\)[\s\S]{0,200}refundDailyQuota/)
+    // 一次调用，但把 count 传进去 —— 服务端据此决定扣几张
+    expect(src).toMatch(/consumeQuota\([^)]*'image'[^)]*count/)
+    // 失败时按同样的张数退还
+    expect(src).toMatch(/refundQuota\([^)]*'image'[^)]*count/)
   })
 
-  it('批量生图必须按实际张数扣额度', () => {
+  it('批量生图必须把实际张数交给额度层', () => {
     const src = read('server/api/image/generate-batch.post.ts')
     expect(src).toContain('totalImages')
-    expect(src).toContain('consumeDailyQuota')
+    expect(src).toMatch(/consumeQuota\([^)]*'image'[^)]*totalImages/)
   })
 
   it('上传接口不能是公开的（否则可白嫖 R2 存储）', () => {
@@ -113,15 +113,27 @@ describe('每日额度闸门', () => {
     expect(sql).toContain('text_count')
   })
 
-  it('额度判定必须在服务端，且付费/特权用户豁免', () => {
+  it('额度判定必须在服务端，特权用户豁免', () => {
     const src = read('server/utils/daily-usage.ts')
-    // 付费订阅豁免
-    expect(src).toContain("plan !== 'free'")
-    // 无限积分豁免
-    expect(src).toContain('credits_remaining === -1')
+    // 无限积分豁免（credits = -1）
+    expect(src).toMatch(/credits\s*===\s*-1/)
     // 管理员特权豁免
     expect(src).toContain('unlimited_credits')
     // 数据库不可用时不能放行
     expect(src).not.toMatch(/if\s*\(\s*!db\s*\)\s*\{\s*return\s*\{\s*allowed:\s*true/)
+  })
+
+  it('付费档**不再**无限（2026-10-21 提价重构）—— 必须走 credits', () => {
+    // ⚠️ 先剥掉注释 —— 否则「以前是这么写的」这类说明文字会被误判
+    const code = read('server/utils/daily-usage.ts')
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .replace(/^\s*\/\/.*$/gm, '')
+    // 「plan 不是 free 就无限」那条短路必须消失
+    expect(code).not.toMatch(/plan !== 'free' && status === 'active'/)
+    // 付费档走 credit 模式
+    expect(code).toMatch(/isPaidPlan\(ent\.plan\)/)
+    expect(code).toContain("mode: 'credit'")
+    // 用完张数要拒（402）
+    expect(code).toContain('OUT_OF_CREDITS')
   })
 })

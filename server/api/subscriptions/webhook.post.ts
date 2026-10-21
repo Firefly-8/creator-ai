@@ -16,11 +16,30 @@
 import { defineEventHandler, readBody, createError, getHeader } from 'h3'
 import { getDB } from '../../utils/db-runtime'
 import { verifyPayPalWebhook, shouldSkipVerification } from '../../utils/paypal-webhook'
+import { PLANS, getPlan, resolvePlanId, type PlanId } from '../../../utils/pricing'
 
-/** planId → 该给多少张卡 */
-const PLAN_CARDS: Record<string, number> = {
-  creator: 5,
-  pro: 20,
+/**
+ * PayPal 的 plan id → 我们内部的档位
+ *
+ * ⚠️ resource.plan_id 是 PayPal 的原始 id（P-XXXX），不是我们的档位名，
+ *    拿它去查表永远查不到，只能瞎猜一个 5 张 —— 以前就是这样。
+ *    现在用环境变量里配的 plan id 反查。
+ */
+function planIdForPayPalPlan(paypalPlanId: string): PlanId {
+  const creator = process.env.PAYPAL_CREATOR_PLAN_ID || ''
+  const legacyPro = process.env.PAYPAL_PRO_PLAN_ID || ''
+  if (paypalPlanId && (paypalPlanId === creator || paypalPlanId === legacyPro)) return 'creator'
+  // 只有一个订阅档，认不出来也按 creator 处理（但要留日志）
+  if (paypalPlanId) {
+    console.warn(`[PayPal Webhook] 未知的 PayPal plan id：${paypalPlanId}（按 creator 处理）`)
+  }
+  return 'creator'
+}
+
+/** 该订阅档每个周期发几张 */
+function cardsForPlan(planId: PlanId): number {
+  const plan = getPlan(planId)
+  return plan?.kind === 'subscription' ? plan.cards : PLANS.creator.cards
 }
 
 export default defineEventHandler(async (event) => {
@@ -64,6 +83,9 @@ export default defineEventHandler(async (event) => {
       case 'BILLING.SUBSCRIPTION.ACTIVATED':
         await onSubscriptionActivated(event, resource)
         break
+      case 'BILLING.SUBSCRIPTION.RENEWED':
+        await onSubscriptionRenewed(event, resource)
+        break
       case 'BILLING.SUBSCRIPTION.CANCELLED':
         await onSubscriptionStatus(event, resource, 'cancelled')
         break
@@ -104,7 +126,8 @@ async function onSubscriptionActivated(event: any, resource: any) {
   if (!db) return
 
   // 从 resource 里能拿到 plan_id 和 subscriber email
-  const planId = String(resource?.plan_id || '')
+  const paypalPlanId = String(resource?.plan_id || '')
+  const planId = planIdForPayPalPlan(paypalPlanId)
   const email = String(resource?.subscriber?.email_address || resource?.email || '')
 
   // 优先按 paypal_subscription_id 找（前端 activate 时已经写进去了）
@@ -144,7 +167,7 @@ async function onSubscriptionActivated(event: any, resource: any) {
     return
   }
 
-  const cards = PLAN_CARDS[planId] ?? 5
+  const cards = cardsForPlan(planId)
   await db
     .prepare(
       `UPDATE subscriptions
@@ -166,6 +189,79 @@ async function onSubscriptionActivated(event: any, resource: any) {
     .catch((e) => console.error('[PayPal Webhook] 更新订阅失败', e))
 
   console.log(`[PayPal Webhook] ✅ 订阅生效 uid=${row.user_id} +${cards} 张`)
+}
+
+/**
+ * 订阅续费 → 发新一轮额度
+ *
+ * ⚠️ 为什么要跟「惰性续发」配合（见 server/utils/daily-usage.ts）：
+ *   webhook 偶尔会丢，只靠它就会「付了钱拿不到新周期额度」。
+ *   所以两边都发，但用同一个判据避免双发：
+ *     - 这里：只有「本地的周期已经过期（storedEnd < now）」才发
+ *     - 惰性续发：只有「本地的周期已经过期（now >= period_end）」才发
+ *   谁先跑谁发，发完都把周期终点推到未来 ⇒ 后来的看到周期在未来就跳过。
+ *
+ * ⚠️ 周期终点**只往前推，绝不往回拨** ——
+ *    否则惰性续发推进过的周期会被这里改回去，导致「每次读额度都发一次」。
+ */
+async function onSubscriptionRenewed(event: any, resource: any) {
+  const subscriptionId = resource?.id
+  if (!subscriptionId) return
+  const db = getDB(event)
+  if (!db) return
+
+  const nextBilling = resource?.billing_info?.next_billing_time || null
+  const row = await db
+    .prepare(
+      'SELECT id, user_id, plan, credits_remaining, current_period_end FROM subscriptions WHERE paypal_subscription_id = ?',
+    )
+    .bind(subscriptionId)
+    .first<{
+      id: string
+      user_id: string
+      plan: string
+      credits_remaining: number
+      current_period_end: string | null
+    }>()
+    .catch(() => null)
+
+  if (!row) {
+    console.warn('[PayPal Webhook] 续费事件找不到对应用户', { subscriptionId })
+    return
+  }
+
+  const storedEnd = row.current_period_end ? Date.parse(row.current_period_end) : 0
+  const now = Date.now()
+
+  if (storedEnd && storedEnd >= now) {
+    // 周期已经推进过了（惰性续发先跑过）→ 只对齐周期终点，不重复发额度
+    const nextEnd =
+      nextBilling && Date.parse(nextBilling) > storedEnd ? nextBilling : row.current_period_end
+    await db
+      .prepare('UPDATE subscriptions SET current_period_end = ?, status = ?, updated_at = ? WHERE id = ?')
+      .bind(nextEnd, 'active', new Date().toISOString(), row.id)
+      .run()
+      .catch((e) => console.error('[PayPal Webhook] 对齐周期失败', e))
+    console.log(`[PayPal Webhook] 订阅续费（周期已推进过，跳过发额度）uid=${row.user_id}`)
+    return
+  }
+
+  const planId = resolvePlanId(row.plan) ?? 'creator'
+  const cards = cardsForPlan(planId)
+  const nowIso = new Date().toISOString()
+
+  await db
+    .prepare(
+      `UPDATE subscriptions
+       SET credits_remaining = CASE WHEN credits_remaining = -1 THEN -1 ELSE credits_remaining + ? END,
+           current_period_start = ?, current_period_end = ?, status = 'active', updated_at = ?
+       WHERE id = ?`,
+    )
+    .bind(cards, nowIso, nextBilling, nowIso, row.id)
+    .run()
+    .catch((e) => console.error('[PayPal Webhook] 续费发额度失败', e))
+
+  console.log(`[PayPal Webhook] ✅ 订阅续费 uid=${row.user_id} +${cards} 张`)
 }
 
 /** 取消 / 暂停 / 过期 → 只改状态，不回收已发额度 */

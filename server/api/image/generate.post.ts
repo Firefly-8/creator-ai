@@ -10,7 +10,7 @@ import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { generateImage, optimizeImagePrompt } from '../../utils/minimax'
 import { buildSubjectReference, type SubjectReference } from '../../utils/image-reference'
 import { buildScenarioPrompt } from '../../../utils/imageScenarios'
-import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+import { consumeQuota, refundQuota } from '../../utils/daily-usage'
 import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 export default defineEventHandler(async (event) => {
@@ -60,14 +60,14 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'prompt is required' })
   }
 
-  // 2.2 每日免费额度（服务端强制，客户端绕不过）
-  //     ⚠️ 必须按**实际出图张数**扣 —— 客户端可以传 n（最多 4），
+  // 2.2 额度（服务端强制，客户端绕不过）
+  //     ⚠️ 免费档必须按**实际出图张数**扣 —— 客户端可以传 n（最多 4），
   //     一次请求出 4 张图，扣 1 次额度就是白送 3 张。
   //     必须在调 MiniMax 之前扣 —— 否则并发请求会超发。
   //     失败时在 catch 里按张数退还（用户没拿到图就不该扣）。
-  for (let i = 0; i < count; i++) {
-    await consumeDailyQuota(event, auth.uid, 'image')
-  }
+  //     付费档：一次生成扣 **1 张卡**（4 个候选是草稿，用户只拿走 1 张，
+  //     按张数扣等于「做 1 张卡付 4 张的钱」）。
+  const imageQuota = await consumeQuota(event, auth.uid, 'image', count)
 
   // 3. 自动 Prompt 优化（深度优化走两步，普通优化走一步）
   //    场景化生图的 prompt 已经按「场景+画风」拼好了，不能再被优化器改写，
@@ -184,10 +184,9 @@ export default defineEventHandler(async (event) => {
       error: err,
     }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
 
-    // 生成失败 → 把额度按张数退回去（用户什么都没拿到）
-    for (let i = 0; i < count; i++) {
-      await refundDailyQuota(event, auth.uid, 'image')
-    }
+    // 生成失败 → 把额度退回去（用户什么都没拿到）
+    //   免费档退 count 次每日额度；付费档退 1 张卡
+    await refundQuota(event, auth.uid, 'image', count, imageQuota.mode)
     await updateImage(image.id, {
       status: 'failed',
       error_message: err.message?.slice(0, 500) || 'Generation failed',

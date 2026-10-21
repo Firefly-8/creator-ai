@@ -156,14 +156,24 @@
           </button>
         </div>
 
-        <!-- 免费额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
+        <!-- 额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
         <div v-if="outOfQuota && !usageUnlimited" class="ck-quota">
-          <p class="ck-quota__title">You have used today's free generations.</p>
-          <p class="ck-quota__text">
-            Upgrade for 2K images with no watermark, ready to print at 300 DPI —
-            and more generations every day.
-          </p>
-          <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">See plans</NuxtLink>
+          <template v-if="outOfCards">
+            <p class="ck-quota__title">You have used all your cards.</p>
+            <p class="ck-quota__text">
+              Add one more card, or a pack of twenty, and you can keep making
+              print-ready files.
+            </p>
+            <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">Add cards</NuxtLink>
+          </template>
+          <template v-else>
+            <p class="ck-quota__title">You have used today's free generations.</p>
+            <p class="ck-quota__text">
+              Upgrade for 2K images with no watermark, ready to print at 300 DPI —
+              and more generations every day.
+            </p>
+            <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">See plans</NuxtLink>
+          </template>
         </div>
 
         <p v-if="genError" class="ck-error ck-error--big">{{ genError }}</p>
@@ -283,11 +293,14 @@
         >
           <span v-if="generating" class="i-ph-spinner animate-spin" />
           <span v-else class="i-ph-magic-wand" />
-          {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? 'Daily limit reached' : `Make ${scenario?.label.toLowerCase() || 'card'}`) }}
+          {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? (outOfCards ? 'No cards left' : 'Daily limit reached') : `Make ${scenario?.label.toLowerCase() || 'card'}`) }}
         </button>
       </div>
       <p v-if="step === 3" class="ck-nav__hint">
         <template v-if="usageUnlimited">Unlimited generations on your plan.</template>
+        <template v-else-if="usageMode === 'credit' && usageLoaded">
+          You have {{ quotaRemaining }} card{{ quotaRemaining === 1 ? '' : 's' }} left on your plan.
+        </template>
         <template v-else-if="usageLoaded">You have {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left today.</template>
         <template v-else>Free to preview. Only pay when it is right.</template>
       </p>
@@ -392,7 +405,6 @@ const messageOptions = ref<string[]>([])
 const chosenMessage = ref('')
 const writingMessage = ref(false)
 const needLogin = ref(false)
-const hasPaid = ref(false)
 
 // ── 每日免费额度 ────────────────────────────────────────────
 // 额度是服务端强制的（server/utils/daily-usage.ts），这里只是读出来显示。
@@ -400,15 +412,32 @@ const hasPaid = ref(false)
 const usageLoaded = ref(false)
 const quotaRemaining = ref(0)
 const usageUnlimited = ref(false)
+/** 'credit' = 付费档（扣买来的张数）；'daily' = 免费档（扣每日额度） */
+const usageMode = ref<'credit' | 'daily' | 'unlimited'>('daily')
+/** 有没有付费权益（决定下载是不是 2K 无水印） */
+const hasPaid = ref(false)
 const outOfQuota = computed(() => usageLoaded.value && !usageUnlimited.value && quotaRemaining.value <= 0)
+/** 付费档但张数用完了 —— 和「免费额度用完」要说不同的话 */
+const outOfCards = computed(() => usageMode.value === 'credit' && outOfQuota.value)
 
 async function loadUsage() {
   try {
     const res = await api.get<{
-      image: { limit: number | null; used: number; remaining: number | null; unlimited: boolean }
+      image: {
+        limit: number | null
+        used: number
+        remaining: number | null
+        unlimited: boolean
+        mode?: 'credit' | 'daily' | 'unlimited'
+      }
+      paid?: boolean
     }>('/api/user/usage')
     quotaRemaining.value = res.image?.remaining ?? 0
     usageUnlimited.value = !!res.image?.unlimited
+    usageMode.value = res.image?.mode || (res.image?.unlimited ? 'unlimited' : 'daily')
+    // ⚠️ 付费权益 = 是不是付费档，**不看他卡够不够** ——
+    //    付过钱的人做过的卡，永远能下 2K 无水印的打印文件。
+    hasPaid.value = !!res.paid
     usageLoaded.value = true
   } catch {
     // 没登录 / 接口不通 → 不显示额度信息，不阻断流程
@@ -561,6 +590,11 @@ async function generate() {
     //（useAuth 每次调用返回新 ref，组件里拿到的 user 常常是空的）
     if (isUnauthorized(e)) {
       needLogin.value = true
+    } else if (e?.data?.code === 'OUT_OF_CREDITS' || e?.data?.data?.code === 'OUT_OF_CREDITS') {
+      // 付费档但张数用完了 —— 说人话 + 给充值入口
+      quotaRemaining.value = 0
+      genError.value = 'You have used all your cards. Add more to keep making them.'
+      await loadUsage()
     } else if (e?.statusCode === 429 || e?.data?.statusCode === 429) {
       // 每日免费额度用完 —— 说人话 + 给升级入口
       quotaRemaining.value = 0
