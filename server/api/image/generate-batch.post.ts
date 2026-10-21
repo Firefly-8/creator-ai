@@ -9,6 +9,7 @@ import { createJob, updateJob } from '../../utils/jobs'
 import { createImageRecord, updateImage, processImageResult } from '../../utils/images'
 import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
+import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
 
 interface BatchImageResult {
   style: string
@@ -43,6 +44,9 @@ export default defineEventHandler(async (event) => {
   // 4. M3 结构化拆解 — 输出 4 个高质量 prompt
   let decomposed: { prompts: Array<{ style: string; prompt: string; colorMood: string }>; notes: string }
 
+  // 拆解需求本身要调 M3 —— 记 text 档
+  await consumeDailyQuota(event, auth.uid, 'text')
+
   try {
     decomposed = await decomposePromptToBatch({
       prompt: requirement,
@@ -50,6 +54,7 @@ export default defineEventHandler(async (event) => {
       aspectRatio,
     })
   } catch (err: any) {
+    await refundDailyQuota(event, auth.uid, 'text')
     throw createError({
       statusCode: 502,
       statusMessage: `需求拆解失败: ${err?.message || '请稍后重试'}`,
@@ -57,6 +62,13 @@ export default defineEventHandler(async (event) => {
   }
 
   const directions = decomposed.prompts.slice(0, 4)
+
+  // ⚠️ 批量一次能出 4 方向 × 2 张 = 8 张图 —— 必须按**实际张数**扣额度，
+  // 否则一个请求就能把一天的额度一次掏空。
+  const totalImages = directions.length * nPerPrompt
+  for (let i = 0; i < totalImages; i++) {
+    await consumeDailyQuota(event, auth.uid, 'image')
+  }
 
   // 5. 创建批量任务
   const job = await createJob(auth.uid, 'image-batch', {
@@ -121,6 +133,10 @@ export default defineEventHandler(async (event) => {
           prompt: dir.prompt,
         }
       } catch (err: any) {
+        // 这个方向失败了 → 把它的额度退回去
+        for (let i = 0; i < nPerPrompt; i++) {
+          await refundDailyQuota(event, auth.uid, 'image')
+        }
         return {
           style: dir.style,
           colorMood: dir.colorMood,

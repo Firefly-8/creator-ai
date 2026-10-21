@@ -34,7 +34,12 @@ function walk(dir: string, out: string[] = []): string[] {
   return out
 }
 
-const components = walk(join(ROOT, 'components')).map(f => relative(ROOT, f))
+const components = [
+  ...walk(join(ROOT, 'components')).map(f => relative(ROOT, f)),
+  // ⚠️ pages/ 也要扫 —— 2026-10-21 在 pages/dashboard/index.vue 里
+  // 又发现一处 useI18n()（之前的守卫只扫 components/，漏了它）
+  ...walk(join(ROOT, 'pages')).map(f => relative(ROOT, f)),
+]
 
 describe('组件里禁止 useI18n()', () => {
   it('能扫到组件文件（避免路径写错导致假绿）', () => {

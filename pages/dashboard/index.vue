@@ -34,29 +34,22 @@
         <div class="flex items-center justify-between">
           <div>
             <h2 class="font-display text-lg font-600 text-white">Daily Free Generation</h2>
-            <p class="mt-1 text-sm text-ink-400">Come back every day for free generations</p>
+            <p class="mt-1 text-sm text-ink-400">Free generations reset every day. Upgrade for no-watermark 2K prints.</p>
           </div>
           <div class="flex items-center gap-3">
             <div v-if="dailyStreak > 0" class="text-center">
               <p class="text-2xl font-700 text-accent-soft">{{ dailyStreak }}</p>
               <p class="text-[11px] text-ink-400">day streak</p>
             </div>
-            <button
-              class="btn-primary !h-9 !px-4 text-sm"
-              :disabled="dailyMusicClaimed"
-              @click="claimDaily('music')"
-            >
-              <span v-if="dailyMusicClaimed">Claimed ✓</span>
-              <span v-else>+1 Free Music</span>
-            </button>
-            <button
-              class="btn-secondary !h-9 !px-4 text-sm"
-              :disabled="dailyImageClaimed"
-              @click="claimDaily('image')"
-            >
-              <span v-if="dailyImageClaimed">Claimed ✓</span>
-              <span v-else>+1 Free Image</span>
-            </button>
+            <!-- 额度现在是服务端自动扣的，不需要「领取」—— 直接显示还剩多少 -->
+            <div class="flex items-center gap-2">
+              <span class="rounded-full bg-white/[0.06] px-3 py-1.5 text-sm text-ink-300">
+                <span class="font-700 text-white">{{ dailyImageRemaining }}</span> images left today
+              </span>
+              <span class="rounded-full bg-white/[0.06] px-3 py-1.5 text-sm text-ink-300">
+                <span class="font-700 text-white">{{ dailyMusicRemaining }}</span> songs left today
+              </span>
+            </div>
           </div>
         </div>
       </div>
@@ -88,7 +81,9 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+// ⚠️ 组件/页面里不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，
+// 客户端拿到的 t 不是函数 → 整页 500。用 useT()。
+const { t: $t } = useT()
 const { user, authReady } = useAuth()
 const { openLoginWithRedirect } = useAuthModal()
 const route = useRoute()
@@ -97,6 +92,12 @@ definePageMeta({ layout: 'default', middleware: ['auth'] })
 const { get } = useApi()
 
 const stats = ref({ music: 0, image: 0 })
+// 每日额度（真实的每日剩余数，服务端强制）
+const dailyImageRemaining = ref<number | string>(0)
+const dailyMusicRemaining = ref<number | string>(0)
+const dailyImageClaimed = ref(false)
+const dailyMusicClaimed = ref(false)
+const dailyStreak = ref(0)
 const plan = ref('free')
 const musicRemaining = ref('∞')
 const imageRemaining = ref('∞')
@@ -110,11 +111,13 @@ async function loadDashboard() {
     stats.value.image = data.stats?.images || 0
     plan.value = data.subscription?.plan || 'free'
     
-    // 免费模式无限额度
-    const quotas = data.quotas?.free
+    // 每日额度（服务端强制的真实计数，不是「总数减已用」）
+    const quotas = data.quotas
     if (quotas) {
-      musicRemaining.value = quotas.music - stats.value.music > 0 ? String(quotas.music - stats.value.music) : '0'
-      imageRemaining.value = quotas.image - stats.value.image > 0 ? String(quotas.image - stats.value.image) : '0'
+      musicRemaining.value = quotas.music?.unlimited ? '∞' : String(quotas.music?.remaining ?? 0)
+      imageRemaining.value = quotas.image?.unlimited ? '∞' : String(quotas.image?.remaining ?? 0)
+      dailyImageRemaining.value = quotas.image?.unlimited ? '∞' : (quotas.image?.remaining ?? 0)
+      dailyMusicRemaining.value = quotas.music?.unlimited ? '∞' : (quotas.music?.remaining ?? 0)
     }
   } catch (err) {
     console.error('[Dashboard] Failed to load:', err)
@@ -143,6 +146,8 @@ async function loadDailyFree() {
     const data = await $fetch('/api/user/daily-free')
     dailyMusicClaimed.value = data.music?.claimed || false
     dailyImageClaimed.value = data.image?.claimed || false
+    dailyMusicRemaining.value = data.music?.unlimited ? '∞' : (data.music?.remaining ?? 0)
+    dailyImageRemaining.value = data.image?.unlimited ? '∞' : (data.image?.remaining ?? 0)
     dailyStreak.value = data.streakDays || 0
   } catch {
     // ignore

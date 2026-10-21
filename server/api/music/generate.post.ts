@@ -7,6 +7,7 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { createJob, createSongDraft, updateJob, updateSong } from '../../utils/jobs'
 import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
+import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
 
 export default defineEventHandler(async (event) => {
   // 1. 认证
@@ -15,6 +16,9 @@ export default defineEventHandler(async (event) => {
 
   // 1.5 速率检查
   await rateLimitMiddleware(event, 'generate')
+
+  // 每日免费额度（服务端强制）
+  await consumeDailyQuota(event, auth.uid, 'music')
 
   // 2. 解析参数
   const body = await readBody(event)

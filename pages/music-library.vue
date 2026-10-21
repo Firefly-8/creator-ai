@@ -54,7 +54,9 @@
 </template>
 
 <script setup lang="ts">
-const { t } = useI18n()
+// ⚠️ 不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，客户端拿到的
+// t 不是函数 → 整页 500。用 useT()（内部走 useNuxtApp().$i18n.t）。
+const { t } = useT()
 const { user, authReady } = useAuth()
 const { openLoginWithRedirect } = useAuthModal()
 const route = useRoute()

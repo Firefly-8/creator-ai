@@ -11,8 +11,15 @@
 import { defineEventHandler, readBody, createError } from 'h3'
 import { getDecryptedApiKey, getMiniMaxBaseUrl } from '../../utils/secureConfig'
 import { getScenario } from '../../../utils/imageScenarios'
+import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
 
 export default defineEventHandler(async (event) => {
+  const auth = event.context.auth
+  if (!auth?.uid) throw createError({ statusCode: 401 })
+
+  // 写文案也烧 MiniMax 额度 —— 单独一档（text），不跟图片生成抢额度
+  await consumeDailyQuota(event, auth.uid, 'text')
+
   const body = await readBody(event).catch(() => ({}) as any)
   const scenarioId = String(body?.scenario || '')
   const name = String(body?.name || '').trim().slice(0, 60)
@@ -73,6 +80,8 @@ export default defineEventHandler(async (event) => {
     console.error('[image/message] MiniMax 调用失败', e)
     // 兜底：给一条安全的预置祝词，别让用户对着空白
     message = scenario.presetMessages?.[0] || 'Thinking of you today. Have a wonderful day.'
+    // 兜底文案不算真的生成了 → 把额度退回去
+    await refundDailyQuota(event, auth.uid, 'text')
   }
 
   // 清理模型可能带上的引号/markdown/多余空白

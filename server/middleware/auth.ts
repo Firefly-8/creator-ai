@@ -17,7 +17,9 @@ const PUBLIC_PATHS = [
   '/api/image/samples',
   '/api/robots',
   '/api/sitemap',
-  '/api/upload',
+  // ⚠️ '/api/upload' 曾经是公开的 —— 任何人都能往 R2 塞文件（白嫖存储）。
+  // 上传是 i2i 流程的第一步，生成必须登录，所以上传也必须登录。
+  // 前端已有「上传 401 → 降级成 t2i」的兜底，不会白屏。
   '/api/admin',
   '/_nuxt',
   '/logo.png',

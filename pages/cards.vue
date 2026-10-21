@@ -150,17 +150,29 @@
         <div class="ck-generate">
           <button
             class="ck-btn ck-btn--primary ck-btn--lg"
-            :disabled="generating || !scenario"
+            :disabled="generating || !scenario || (outOfQuota && !usageUnlimited)"
             @click="generate"
           >
             <span v-if="generating" class="i-ph-spinner animate-spin" />
             <span v-else class="i-ph-magic-wand" />
-            {{ generating ? 'Making your card…' : `Make ${scenario.label.toLowerCase()}` }}
+            {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? 'Daily limit reached' : `Make ${scenario.label.toLowerCase()}`) }}
           </button>
           <p class="ck-hint ck-hint--center">
             <span class="i-ph-check-circle" />
-            Free to preview. Only pay when it is right.
+            <template v-if="usageUnlimited">Unlimited generations on your plan.</template>
+            <template v-else-if="usageLoaded">You have {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left today.</template>
+            <template v-else>Free to preview. Only pay when it is right.</template>
           </p>
+
+          <!-- 免费额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
+          <div v-if="outOfQuota && !usageUnlimited" class="ck-quota">
+            <p class="ck-quota__title">You have used today's free generations.</p>
+            <p class="ck-quota__text">
+              Upgrade for 2K images with no watermark, ready to print at 300 DPI —
+              and more generations every day.
+            </p>
+            <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">See plans</NuxtLink>
+          </div>
         </div>
 
         <p v-if="genError" class="ck-error ck-error--big">{{ genError }}</p>
@@ -292,6 +304,28 @@ const writingMessage = ref(false)
 const needLogin = ref(false)
 const hasPaid = ref(false)
 
+// ── 每日免费额度 ────────────────────────────────────────────
+// 额度是服务端强制的（server/utils/daily-usage.ts），这里只是读出来显示。
+// 服务端会按**实际出图张数**扣，所以这里也要按剩余额度决定一次出几张。
+const usageLoaded = ref(false)
+const quotaRemaining = ref(0)
+const usageUnlimited = ref(false)
+const outOfQuota = computed(() => usageLoaded.value && !usageUnlimited.value && quotaRemaining.value <= 0)
+
+async function loadUsage() {
+  try {
+    const res = await api.get<{
+      image: { limit: number | null; used: number; remaining: number | null; unlimited: boolean }
+    }>('/api/user/usage')
+    quotaRemaining.value = res.image?.remaining ?? 0
+    usageUnlimited.value = !!res.image?.unlimited
+    usageLoaded.value = true
+  } catch {
+    // 没登录 / 接口不通 → 不显示额度信息，不阻断流程
+    usageLoaded.value = false
+  }
+}
+
 const api = useApi()
 
 /** $fetch 抛错时把 401 认出来（不同版本字段不一样，都试一遍） */
@@ -410,16 +444,20 @@ async function generate() {
   generating.value = true
   try {
     const uid = await uploadPhoto()
+    // 出图张数不能超过今天剩余的免费额度 —— 服务端也会按实际张数扣，
+    // 这里先按额度收敛，避免请求到一半才被拒。
+    const maxN = usageUnlimited.value ? 4 : Math.max(1, Math.min(4, quotaRemaining.value))
     const res = await api.post<{ images: { id: string; url: string }[] }>('/api/image/generate', {
       scenario: scenario.value.id,
       style: style.value,
       name: name.value,
       extra: extra.value,
       uploadId: uid || undefined,
-      n: 4,
+      n: maxN,
       aspect_ratio: '3:4',
       promptOptimizer: false,
     })
+    await loadUsage()
     candidates.value = (res.images || []).map((im, i) => ({
       id: im.id || String(i),
       url: im.url,
@@ -430,6 +468,11 @@ async function generate() {
     //（useAuth 每次调用返回新 ref，组件里拿到的 user 常常是空的）
     if (isUnauthorized(e)) {
       needLogin.value = true
+    } else if (e?.statusCode === 429 || e?.data?.statusCode === 429) {
+      // 每日免费额度用完 —— 说人话 + 给升级入口
+      quotaRemaining.value = 0
+      genError.value = "You've used today's free generations. Upgrade for no-watermark 2K prints."
+      await loadUsage()
     } else {
       genError.value =
         e?.data?.statusMessage || e?.message || 'Something went wrong. Please try again.'
@@ -458,6 +501,11 @@ async function askAI() {
     writingMessage.value = false
   }
 }
+
+// 额度：进入页面就读一次（未登录会失败，忽略即可 —— 生成时服务端会要求登录）
+onMounted(() => {
+  loadUsage()
+})
 </script>
 
 <style scoped>
@@ -680,6 +728,28 @@ async function askAI() {
 
 .ck-hint { display: flex; align-items: flex-start; gap: 0.35rem; margin-top: 0.6rem; font-size: 0.8125rem; line-height: 1.5; color: var(--ck-ink-2); }
 .ck-hint--center { justify-content: center; }
+.ck-quota {
+  margin-top: 0.9rem;
+  padding: 1.15rem 1.25rem;
+  border-radius: 0.9rem;
+  background: #fff;
+  border: 1px solid var(--ck-line, rgba(58, 46, 38, 0.12));
+  box-shadow: 0 8px 22px -14px rgba(58, 46, 38, 0.35);
+  max-width: 30rem;
+}
+.ck-quota__title {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--ck-ink, #2a2420);
+}
+.ck-quota__text {
+  margin: 0 0 0.9rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--ck-ink-2, #6b5f55);
+}
+
 .ck-error { margin-top: 0.6rem; font-size: 0.875rem; color: var(--ck-coral-deep); }
 .ck-error--big { padding: 0.75rem 1rem; border-radius: 0.6rem; background: rgba(200, 84, 61, 0.1); font-size: 0.9375rem; }
 

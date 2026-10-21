@@ -2,6 +2,7 @@
  * GET /api/user/daily-free — 检查今日免费额度状态
  */
 import { defineEventHandler, createError } from 'h3'
+import { peekDailyQuota } from '../../utils/daily-usage'
 import { getDB } from '../../utils/db-runtime'
 
 export default defineEventHandler(async (event) => {
@@ -11,16 +12,10 @@ export default defineEventHandler(async (event) => {
   const db = getDB(event)
   if (!db) throw createError({ statusCode: 503, statusMessage: 'Database not available' })
 
-  const today = new Date().toISOString().split('T')[0]
-
-  // 检查今日是否已领取
-  const musicClaimed = await db.prepare(
-    'SELECT id FROM daily_free_claims WHERE user_id = ? AND claim_date = ? AND type = ?'
-  ).bind(auth.uid, today, 'music').first()
-
-  const imageClaimed = await db.prepare(
-    'SELECT id FROM daily_free_claims WHERE user_id = ? AND claim_date = ? AND type = ?'
-  ).bind(auth.uid, today, 'image').first()
+  // ⚠️ 语义已改（2026-10-21）：原来这里是「今天领取过没有」，
+  // 但那个 claimed 标记**生成接口根本不查** —— 领不领都能生成，等于没限制。
+  // 现在统一走 daily_usage 的真实计数。
+  const quota = await peekDailyQuota(event, auth.uid)
 
   // 获取用户连续登录天数
   const stats = await db.prepare(
@@ -28,8 +23,10 @@ export default defineEventHandler(async (event) => {
   ).bind(auth.uid).first<{ streak_days: number }>()
 
   return {
-    music: { claimed: !!musicClaimed },
-    image: { claimed: !!imageClaimed },
+    // 兼容旧字段：claimed = 今天已经用掉过额度
+    music: { claimed: quota.music.used > 0, ...quota.music },
+    image: { claimed: quota.image.used > 0, ...quota.image },
+    text: quota.text,
     streakDays: stats?.streak_days || 0,
   }
 })

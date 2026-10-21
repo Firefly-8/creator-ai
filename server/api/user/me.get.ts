@@ -3,6 +3,7 @@
  */
 
 import { defineEventHandler, getHeader, createError } from 'h3'
+import { peekDailyQuota } from '../../utils/daily-usage'
 
 export default defineEventHandler(async (event) => {
   // 验证 Token
@@ -57,10 +58,10 @@ export default defineEventHandler(async (event) => {
       songs: songCount?.count || 0,
       images: imageCount?.count || 0,
     },
-    quotas: {
-      free: { music: 10, image: 20, lyrics: 10, cover: 5 },
-      creator: { music: 100, image: 200, lyrics: 100, cover: 50 },
-      pro: { music: 300, image: 500, lyrics: 300, cover: 100 },
-    },
+    // ⚠️ 这里以前是写死的假配额表（free: image 20 / music 10），
+    // 客户端拿它减已用来显示「还剩多少」，但**生成接口压根不查它** ——
+    // 看着像有配额，实际拦不住任何人。
+    // 现在换成真实的每日额度（服务端强制的 daily_usage 计数）。
+    quotas: await peekDailyQuota(event, uid),
   }
 })

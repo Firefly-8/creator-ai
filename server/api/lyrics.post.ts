@@ -1,5 +1,11 @@
 
+import { consumeDailyQuota, refundDailyQuota } from '../utils/daily-usage'
+
 export default defineEventHandler(async (event) => {
+  const auth = event.context.auth
+  if (!auth?.uid) throw createError({ statusCode: 401 })
+
+  await consumeDailyQuota(event, auth.uid, 'text')
   assertAppSecret(event)
   const body = await readBody(event)
 

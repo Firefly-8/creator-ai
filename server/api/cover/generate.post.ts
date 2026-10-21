@@ -1,4 +1,11 @@
+import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
+
 export default defineEventHandler(async (event) => {
+  const auth = event.context.auth
+  if (!auth?.uid) throw createError({ statusCode: 401 })
+
+  // 封面图也是生图 —— 走同一档 image 额度
+  await consumeDailyQuota(event, auth.uid, 'image')
   assertAppSecret(event)
   const body = await readBody(event)
   const prompt = String(body?.prompt || '').trim()

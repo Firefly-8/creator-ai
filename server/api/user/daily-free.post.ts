@@ -2,7 +2,7 @@
  * POST /api/user/daily-free — 领取每日免费生成
  */
 import { defineEventHandler, readBody, createError } from 'h3'
-import { nanoid } from 'nanoid'
+import { peekDailyQuota } from '../../utils/daily-usage'
 import { getDB } from '../../utils/db-runtime'
 
 export default defineEventHandler(async (event) => {
@@ -18,19 +18,10 @@ export default defineEventHandler(async (event) => {
   const today = new Date().toISOString().split('T')[0]
   const now = new Date().toISOString()
 
-  // 检查是否已领取
-  const existing = await db.prepare(
-    'SELECT id FROM daily_free_claims WHERE user_id = ? AND claim_date = ? AND type = ?'
-  ).bind(auth.uid, today, type).first()
-
-  if (existing) {
-    throw createError({ statusCode: 409, statusMessage: 'Already claimed today' })
-  }
-
-  // 记录领取
-  await db.prepare(
-    'INSERT INTO daily_free_claims (id, user_id, claim_date, type) VALUES (?, ?, ?, ?)'
-  ).bind(nanoid(12), auth.uid, today, type).run()
+  // ⚠️ 不再「领取」—— 额度是服务端在生成时自动扣的。
+  // 这里保留这个 POST 只为了兼容旧前端（dashboard 的「领取」按钮），
+  // 行为改成幂等：返回当前额度，绝不写 daily_free_claims。
+  const quota = await peekDailyQuota(event, auth.uid)
 
   // 更新或创建用户统计
   const stats = await db.prepare(
@@ -62,9 +53,15 @@ export default defineEventHandler(async (event) => {
   }
 
   return {
-    claimed: true,
+    claimed: quota[type].used > 0,
     type,
-    streakDays: stats ? ((stats.streak_days || 0) + 1) : 1,
-    message: `You earned 1 free ${type} generation!`,
+    limit: quota[type].limit,
+    used: quota[type].used,
+    remaining: quota[type].remaining,
+    unlimited: quota[type].unlimited,
+    streakDays: stats?.streak_days || 0,
+    message: quota[type].unlimited
+      ? `You have unlimited ${type} generations.`
+      : `You have ${quota[type].remaining} free ${type} generation(s) left today.`,
   }
 })

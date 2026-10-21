@@ -9,6 +9,9 @@ export default defineEventHandler(async (event) => {
   const auth = event.context.auth
   if (!auth?.uid) throw createError({ statusCode: 401 })
 
+  // prompt 优化也烧 M3 额度 —— 记在 text 档
+  await consumeDailyQuota(event, auth.uid, 'text')
+
   const body = await readBody(event)
   const prompt = String(body?.prompt || '').trim()
   if (!prompt) throw createError({ statusCode: 400, statusMessage: 'prompt is required' })

@@ -11,6 +11,7 @@ import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { optimizeImagePrompt } from '../../utils/minimax'
 import { buildSubjectReference, type SubjectReference } from '../../utils/image-reference'
 import { buildScenarioPrompt } from '../../../utils/imageScenarios'
+import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
 
 export default defineEventHandler(async (event) => {
   console.log("[Image Generate] === Start ===")
@@ -57,6 +58,15 @@ export default defineEventHandler(async (event) => {
 
   if (!prompt) {
     throw createError({ statusCode: 400, statusMessage: 'prompt is required' })
+  }
+
+  // 2.2 每日免费额度（服务端强制，客户端绕不过）
+  //     ⚠️ 必须按**实际出图张数**扣 —— 客户端可以传 n（最多 4），
+  //     一次请求出 4 张图，扣 1 次额度就是白送 3 张。
+  //     必须在调 MiniMax 之前扣 —— 否则并发请求会超发。
+  //     失败时在 catch 里按张数退还（用户没拿到图就不该扣）。
+  for (let i = 0; i < count; i++) {
+    await consumeDailyQuota(event, auth.uid, 'image')
   }
 
   // 3. 自动 Prompt 优化（深度优化走两步，普通优化走一步）
@@ -176,6 +186,10 @@ export default defineEventHandler(async (event) => {
       scenario: scenarioUsed || null,
     }
   } catch (err: any) {
+    // 生成失败 → 把额度按张数退回去（用户什么都没拿到）
+    for (let i = 0; i < count; i++) {
+      await refundDailyQuota(event, auth.uid, 'image')
+    }
     await updateImage(image.id, {
       status: 'failed',
       error_message: err.message?.slice(0, 500) || 'Generation failed',
