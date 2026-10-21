@@ -15,6 +15,9 @@ const PUBLIC_PATHS = [
   // 样例底图：用户「没有照片？用样例」的兜底入口，
   // 必须在登录前可用（纯静态资源，无隐私风险）
   '/api/image/samples',
+  // PayPal webhook 是 PayPal 服务器调过来的，没有用户 token ——
+  // 它靠**签名验证**保护（server/utils/paypal-webhook.ts）✅
+  '/api/subscriptions/webhook',
   '/api/robots',
   '/api/sitemap',
   // ⚠️ '/api/upload' 曾经是公开的 —— 任何人都能往 R2 塞文件（白嫖存储）。

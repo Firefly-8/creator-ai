@@ -42,9 +42,14 @@
             <span class="ck-plan__per">/ month</span>
           </p>
           <p class="ck-plan__for">5 cards a month, then $2.00 for each extra one.</p>
-          <NuxtLink to="/signup?plan=creator" class="ck-btn ck-btn--primary ck-btn--full">
-            Get Monthly
-          </NuxtLink>
+          <PayPalButton
+            plan-id="creator"
+            kind="subscription"
+            label="Get Monthly"
+            :logged-in="!!user"
+            @need-login="requireLogin"
+            @paid="onPaid"
+          />
           <ul class="ck-plan__list">
             <li><span class="i-ph-check" /> 5 cards every month</li>
             <li><span class="i-ph-check" /> Print-ready 300 DPI files</li>
@@ -62,9 +67,14 @@
             <span class="ck-plan__amount">$19.99</span>
           </p>
           <p class="ck-plan__for">20 cards. They never expire.</p>
-          <button class="ck-btn ck-btn--ghost ck-btn--full" disabled>
-            Pay once — coming soon
-          </button>
+          <PayPalButton
+            plan-id="lifetime"
+            kind="one_time"
+            label="Pay once — 20 cards"
+            :logged-in="!!user"
+            @need-login="requireLogin"
+            @paid="onPaid"
+          />
           <ul class="ck-plan__list">
             <li><span class="i-ph-check" /> 20 cards, no expiry</li>
             <li><span class="i-ph-check" /> Print-ready 300 DPI files</li>
@@ -73,6 +83,14 @@
           </ul>
         </div>
       </div>
+
+      <!-- 支付结果提示 -->
+      <p v-if="payMessage" class="ck-pay-note ck-pay-note--ok">
+        <span class="i-ph-check-circle" /> {{ payMessage }}
+      </p>
+      <p v-else-if="payError" class="ck-pay-note ck-pay-note--bad">
+        <span class="i-ph-warning-circle" /> {{ payError }}
+      </p>
 
       <!-- 信任 -->
       <p class="ck-trust">
@@ -130,6 +148,26 @@ useHead({
   }],
   link: [{ rel: 'canonical', href: 'https://create.yozzytools.com/pricing' }],
 })
+
+const { user, authReady } = useAuth()
+const { isOpen: authModalOpen, openLoginWithRedirect } = useAuthModal()
+const payMessage = ref('')
+const payError = ref('')
+
+function requireLogin() {
+  openLoginWithRedirect('/pricing')
+}
+
+async function onPaid(info: any) {
+  if (info?.type === 'subscription') {
+    payMessage.value = 'Your plan is active. Thank you!'
+  } else {
+    payMessage.value = info?.message || 'Payment received — your cards are ready.'
+  }
+  payError.value = ''
+  // 刷新额度显示
+  await refreshNuxtData()
+}
 
 const faqs = [
   {
@@ -300,6 +338,18 @@ const promises = [
 .ck-plan__list { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.85rem 0 0; padding: 0; list-style: none; }
 .ck-plan__list li { display: flex; align-items: flex-start; gap: 0.45rem; font-size: 0.9375rem; color: var(--ck-ink); }
 .ck-plan__list .i-ph-check { flex: none; margin-top: 0.2rem; color: var(--ck-coral); }
+
+.ck-pay-note {
+  margin: 0 0 1.2rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: 0.8rem;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ck-pay-note--ok { background: rgba(47, 64, 52, 0.1); color: #2f4034; }
+.ck-pay-note--bad { background: rgba(200, 84, 61, 0.1); color: #a53f2c; }
 
 .ck-trust {
   display: flex;

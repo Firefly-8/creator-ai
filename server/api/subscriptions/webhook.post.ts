@@ -1,109 +1,202 @@
 /**
- * PayPal Webhook — 处理订阅事件
- * 
- * 事件类型：
- * - BILLING.SUBSCRIPTION.ACTIVATED
- * - BILLING.SUBSCRIPTION.CANCELLED
- * - BILLING.SUBSCRIPTION.EXPIRED
- * - PAYMENT.SALE.COMPLETED
- * 
- * 注意：生产环境必须实现 PayPal webhook 签名验证
- * 参考：https://developer.paypal.com/docs/api/webhooks/v1/#verify-webhook-signature
+ * PayPal Webhook — 订阅 + 一次性支付事件
+ *
+ * ⚠️ 这个端点在 auth 中间件的公开白名单里（PayPal 服务器调它没有 token），
+ *    所以**签名验证是唯一的安全边界** —— 验证不过必须直接拒绝，
+ *    否则任何人都能伪造「用户已付款」来白嫖额度。
+ *
+ * 事件：
+ *   BILLING.SUBSCRIPTION.ACTIVATED   → 订阅生效，发额度
+ *   BILLING.SUBSCRIPTION.CANCELLED   → 用户主动取消
+ *   BILLING.SUBSCRIPTION.SUSPENDED   → 扣款失败被暂停
+ *   BILLING.SUBSCRIPTION.EXPIRED     → 到期未续，降级
+ *   PAYMENT.CAPTURE.COMPLETED        → 一次性付款成功
+ *   CHECKOUT.ORDER.COMPLETED         → Orders v2 付款成功
  */
+import { defineEventHandler, readBody, createError, getHeader } from 'h3'
+import { getDB } from '../../utils/db-runtime'
+import { verifyPayPalWebhook, shouldSkipVerification } from '../../utils/paypal-webhook'
 
-import { defineEventHandler, readBody, createError } from 'h3'
-
-// Webhook 事件处理
-const WEBHOOK_EVENTS = {
-  SUBSCRIPTION_ACTIVATED: 'BILLING.SUBSCRIPTION.ACTIVATED',
-  SUBSCRIPTION_CANCELLED: 'BILLING.SUBSCRIPTION.CANCELLED',
-  SUBSCRIPTION_EXPIRED: 'BILLING.SUBSCRIPTION.EXPIRED',
-  SUBSCRIPTION_SUSPENDED: 'BILLING.SUBSCRIPTION.SUSPENDED',
-  PAYMENT_SALE_COMPLETED: 'PAYMENT.SALE.COMPLETED',
-  PAYMENT_SALE_REFUNDED: 'PAYMENT.SALE.REFUNDED',
+/** planId → 该给多少张卡 */
+const PLAN_CARDS: Record<string, number> = {
+  creator: 5,
+  pro: 20,
 }
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody(event)
-  
-  // 1. 验证 PayPal webhook 签名（生产环境必须实现）
-  // TODO: 实现 PayPal webhook 签名验证
-  // 在验证完成之前，返回 200 以避免 PayPal 重试，但不处理事件
-  const transmissionId = getHeader(event, 'paypal-transmission-id')
-  const certUrl = getHeader(event, 'paypal-cert-url')
-  const authAlgo = getHeader(event, 'paypal-auth-algo')
-  const transmissionSig = getHeader(event, 'paypal-transmission-sig')
-  const transmissionTime = getHeader(event, 'paypal-transmission-time')
-  
-  // 检查是否是 PayPal 的 webhook 请求
-  if (!transmissionId || !certUrl || !transmissionSig) {
-    throw createError({ statusCode: 400, statusMessage: 'Invalid webhook request' })
+  const rawBody = await readRawBody(event, 'utf8').catch(() => undefined)
+  const body = rawBody ? safeParse(rawBody) : {}
+  const eventType = body?.event_type
+  const resource = body?.resource || {}
+
+  // ── 1. 签名验证 ──
+  const webhookId = process.env.PAYPAL_WEBHOOK_ID || ''
+  const skip = shouldSkipVerification(process.env.NODE_ENV, webhookId)
+
+  if (!skip) {
+    const headers = {
+      'paypal-transmission-id': getHeader(event, 'paypal-transmission-id'),
+      'paypal-transmission-time': getHeader(event, 'paypal-transmission-time'),
+      'paypal-transmission-sig': getHeader(event, 'paypal-transmission-sig'),
+      'paypal-cert-url': getHeader(event, 'paypal-cert-url'),
+      'paypal-auth-algo': getHeader(event, 'paypal-auth-algo'),
+    }
+    const result = await verifyPayPalWebhook(headers, webhookId, body, rawBody)
+    if (!result.ok) {
+      console.error('[PayPal Webhook] ❌ signature verification failed:', result.reason)
+      throw createError({ statusCode: 401, statusMessage: 'Invalid webhook signature' })
+    }
+    console.log('[PayPal Webhook] ✅ signature verified')
+  } else {
+    console.warn(
+      '[PayPal Webhook] ⚠️ 跳过签名验证（未配置 PAYPAL_WEBHOOK_ID 且非 production）—— 绝不能这样上生产',
+    )
   }
-  
-  // 开发环境：记录事件但不处理（等待签名验证实现）
-  const eventType = body.event_type
-  const resource = body.resource
-  
+
   console.log(`[PayPal Webhook] ${eventType}`, {
-    transmissionId,
-    subscriptionId: resource?.id,
-    state: resource?.state,
+    id: resource?.id,
+    status: resource?.status || resource?.state,
   })
-  
-  // 2. 处理事件
+
+  // ── 2. 处理事件 ──
   try {
     switch (eventType) {
-      case WEBHOOK_EVENTS.SUBSCRIPTION_ACTIVATED:
-      case WEBHOOK_EVENTS.PAYMENT_SALE_COMPLETED:
-        await handleSubscriptionActivated(resource)
+      case 'BILLING.SUBSCRIPTION.ACTIVATED':
+        await onSubscriptionActivated(event, resource)
         break
-        
-      case WEBHOOK_EVENTS.SUBSCRIPTION_CANCELLED:
-      case WEBHOOK_EVENTS.SUBSCRIPTION_SUSPENDED:
-        await handleSubscriptionCancelled(resource)
+      case 'BILLING.SUBSCRIPTION.CANCELLED':
+        await onSubscriptionStatus(event, resource, 'cancelled')
         break
-        
-      case WEBHOOK_EVENTS.SUBSCRIPTION_EXPIRED:
-        await handleSubscriptionExpired(resource)
+      case 'BILLING.SUBSCRIPTION.SUSPENDED':
+        await onSubscriptionStatus(event, resource, 'suspended')
         break
-        
+      case 'BILLING.SUBSCRIPTION.EXPIRED':
+        await onSubscriptionStatus(event, resource, 'expired')
+        break
+      case 'PAYMENT.CAPTURE.COMPLETED':
+      case 'CHECKOUT.ORDER.COMPLETED':
+        await onOneTimeCompleted(event, resource)
+        break
       default:
-        console.log(`[PayPal Webhook] Unhandled event: ${eventType}`)
+        console.log(`[PayPal Webhook] 未处理的事件：${eventType}`)
     }
-  } catch (err) {
-    console.error('[PayPal Webhook] Error processing event:', err)
-    // 仍然返回 200，避免 PayPal 无限重试
+  } catch (err: any) {
+    console.error('[PayPal Webhook] 处理出错:', err?.message)
+    // 仍然返回 200，避免 PayPal 无限重试（但要留下日志）
   }
-  
+
   return { received: true }
 })
 
-// ============ 事件处理函数 ============
-
-async function handleSubscriptionActivated(resource: any) {
-  const subscriptionId = resource.id
-  const planId = resource.plan_id
-  
-  console.log(`[PayPal] Activating subscription: ${subscriptionId}, plan: ${planId}`)
-  
-  // TODO: 根据 paypal_subscription_id 查找用户并更新订阅
-  // 1. 根据 subscriptionId 查找 subscriptions 表
-  // 2. 更新 plan, status, current_period_start/end, credits_remaining
-  // 3. 记录支付历史
+function safeParse(s: string): any {
+  try {
+    return JSON.parse(s)
+  } catch {
+    return {}
+  }
 }
 
-async function handleSubscriptionCancelled(resource: any) {
-  const subscriptionId = resource.id
-  
-  console.log(`[PayPal] Cancelling subscription: ${subscriptionId}`)
-  
-  // TODO: 更新订阅状态为 canceled
+/** 订阅生效 → 找到对应用户并发额度（幂等） */
+async function onSubscriptionActivated(event: any, resource: any) {
+  const subscriptionId = resource?.id
+  if (!subscriptionId) return
+  const db = getDB(event)
+  if (!db) return
+
+  // 从 resource 里能拿到 plan_id 和 subscriber email
+  const planId = String(resource?.plan_id || '')
+  const email = String(resource?.subscriber?.email_address || resource?.email || '')
+
+  // 优先按 paypal_subscription_id 找（前端 activate 时已经写进去了）
+  let row = await db
+    .prepare('SELECT user_id, credits_remaining, plan FROM subscriptions WHERE paypal_subscription_id = ?')
+    .bind(subscriptionId)
+    .first<{ user_id: string; credits_remaining: number; plan: string }>()
+    .catch(() => null)
+
+  if (!row && email) {
+    row = await db
+      .prepare('SELECT user_id, credits_remaining, plan FROM subscriptions WHERE user_id = (SELECT id FROM users WHERE email = ?)')
+      .bind(email)
+      .first<{ user_id: string; credits_remaining: number; plan: string }>()
+      .catch(() => null)
+  }
+
+  if (!row) {
+    console.warn('[PayPal Webhook] 找不到该订阅对应的用户', { subscriptionId, email })
+    return
+  }
+
+  // 幂等：如果这条订阅已经发过额度（activate 端点已处理），就只更新状态
+  const already = await db
+    .prepare('SELECT paypal_subscription_id FROM subscriptions WHERE user_id = ?')
+    .bind(row.user_id)
+    .first<{ paypal_subscription_id: string | null }>()
+    .catch(() => null)
+
+  if (already?.paypal_subscription_id === subscriptionId) {
+    await db
+      .prepare('UPDATE subscriptions SET status = ?, updated_at = ? WHERE user_id = ?')
+      .bind('active', new Date().toISOString(), row.user_id)
+      .run()
+      .catch(() => {})
+    console.log(`[PayPal Webhook] 订阅已激活（此前已处理过），仅更新状态`)
+    return
+  }
+
+  const cards = PLAN_CARDS[planId] ?? 5
+  await db
+    .prepare(
+      `UPDATE subscriptions
+       SET plan = ?, status = 'active', paypal_subscription_id = ?,
+           credits_remaining = CASE WHEN credits_remaining = -1 THEN -1 ELSE credits_remaining + ? END,
+           current_period_start = ?, current_period_end = ?, updated_at = ?
+       WHERE user_id = ?`,
+    )
+    .bind(
+      planId || row.plan,
+      subscriptionId,
+      cards,
+      new Date().toISOString(),
+      resource?.billing_info?.next_billing_time || null,
+      new Date().toISOString(),
+      row.user_id,
+    )
+    .run()
+    .catch((e) => console.error('[PayPal Webhook] 更新订阅失败', e))
+
+  console.log(`[PayPal Webhook] ✅ 订阅生效 uid=${row.user_id} +${cards} 张`)
 }
 
-async function handleSubscriptionExpired(resource: any) {
-  const subscriptionId = resource.id
-  
-  console.log(`[PayPal] Expiring subscription: ${subscriptionId}`)
-  
-  // TODO: 降级到 free 计划
+/** 取消 / 暂停 / 过期 → 只改状态，不回收已发额度 */
+async function onSubscriptionStatus(event: any, resource: any, status: string) {
+  const subscriptionId = resource?.id
+  if (!subscriptionId) return
+  const db = getDB(event)
+  if (!db) return
+
+  await db
+    .prepare('UPDATE subscriptions SET status = ?, updated_at = ? WHERE paypal_subscription_id = ?')
+    .bind(status, new Date().toISOString(), subscriptionId)
+    .run()
+    .catch((e) => console.error('[PayPal Webhook] 更新状态失败', e))
+
+  console.log(`[PayPal Webhook] 订阅状态 → ${status}`)
+}
+
+/** 一次性付款成功 → 订单已经由 capture 端点处理过了，这里只做兜底标记 */
+async function onOneTimeCompleted(event: any, resource: any) {
+  const orderId = resource?.invoice_id || resource?.custom_id || resource?.id
+  if (!orderId) return
+  const db = getDB(event)
+  if (!db) return
+
+  // capture 端点已经把额度发过了；这里只更新订单状态（幂等）
+  await db
+    .prepare('UPDATE generated_images SET status = ?, updated_at = ? WHERE id = ?')
+    .bind('ready', new Date().toISOString(), `order_${orderId}`)
+    .run()
+    .catch(() => {})
+
+  console.log(`[PayPal Webhook] 一次性付款完成 order=${orderId}`)
 }
