@@ -150,6 +150,17 @@ describe('定价页不能有假承诺', () => {
     expect(paidFeatures).toContain('300 DPI')
   })
 
+  it('PayPal 按钮的备用按钮样式必须写在组件里（父页面的 scoped CSS 进不去）', () => {
+    // ⚠️ 踩过的坑：.ck-btn 写在 pages/pricing.vue 的 scoped 样式里，
+    //    但 PayPalButton 内部的 <button> 拿不到父组件的 scope 属性
+    //    → 渲染成浏览器默认按钮，插在卡片里特别怪。
+    const src = read('components/pricing/PayPalButton.vue')
+    const style = src.slice(src.indexOf('<style'))
+    expect(style).toContain('.pp-btn__fallback')
+    expect(style).toMatch(/\.pp-btn__fallback\s*\{[\s\S]*?background:/)
+    expect(style).toMatch(/\.pp-btn__fallback\s*\{[\s\S]*?border-radius:/)
+  })
+
   it('单张购买按钮接的是真的 PayPal 下单（不是跳转卡片页）', () => {
     // 单张那一段必须有 PayPalButton，否则用户点了还是得自己找入口
     const singleSection = pricing.slice(pricing.indexOf('ck-single'), pricing.indexOf('ck-faq-wrap'))
@@ -204,9 +215,21 @@ describe('档位列表', () => {
   it('每个档位都有文案（前端直接用，不许缺字段）', () => {
     for (const p of PLAN_LIST) {
       expect(p.name).toBeTruthy()
-      expect(p.blurb).toBeTruthy()
+      expect(p.description).toBeTruthy()
       expect(p.cta).toBeTruthy()
       expect(p.features.length).toBeGreaterThan(0)
+    }
+  })
+
+  it('档位说明不能跟特性列表说同一句话（之前 desc 和 blurb 重复渲染）', () => {
+    for (const p of PLAN_LIST) {
+      const desc = p.description.toLowerCase()
+      for (const f of p.features) {
+        const feat = f.toLowerCase()
+        // 同一句话不该既当说明又当特性
+        const same = desc.includes(feat) || feat.includes(desc)
+        expect(same, `${p.id}: 说明「${p.description}」和特性「${f}」重复了`).toBe(false)
+      }
     }
   })
 })

@@ -3,14 +3,17 @@
     <!-- 未登录 / 未配置：给替代入口 -->
     <button
       v-if="!ready && !errorMsg"
-      class="ck-btn ck-btn--primary ck-btn--full"
+      class="pp-btn__fallback"
       type="button"
       @click="handleClick"
     >
       {{ label }}
     </button>
 
-    <p v-else-if="errorMsg" class="pp-btn__error">{{ errorMsg }}</p>
+    <p v-else-if="errorMsg" class="pp-btn__note">
+      <span class="i-ph-info" />
+      <span>{{ errorMsg }}</span>
+    </p>
 
     <!-- PayPal 按钮挂载点 -->
     <div v-show="ready && !errorMsg" :id="containerId" class="pp-btn__host" />
@@ -34,6 +37,12 @@
  *       提价后要跑 node scripts/paypal-check.mjs --sync-price 同步。
  *
  * 没登录时先弹登录框（父组件通过 need-login 事件通知）。
+ *
+ * ⚠️ 为什么按钮样式写在这里而不写在页面里：
+ *   父页面的 scoped CSS **进不到子组件内部**（scoped 只给子组件的根节点加属性），
+ *   所以放在页面里的 .ck-btn 样式对这里的 <button> 完全无效 ——
+ *   渲染出来是个浏览器默认按钮（灰的、小的、系统字体），插在卡片里特别怪。
+ *   组件自带样式，谁用都长一样 ✅
  */
 const props = withDefaults(
   defineProps<{
@@ -161,16 +170,56 @@ onMounted(() => {
 
 <style scoped>
 .pp-btn { display: block; }
-.pp-btn__host { min-height: 44px; }
-.pp-btn__error {
-  margin: 0;
-  padding: 0.7rem 0.9rem;
-  border-radius: 0.6rem;
-  background: rgba(200, 84, 61, 0.1);
-  color: var(--ck-coral-deep, #a53f2c);
-  font-size: 0.875rem;
-  line-height: 1.5;
+
+/* 备用按钮（PayPal SDK 还没加载 / 用户没登录时先显示这个）
+   —— 样式必须写在组件里：父页面的 scoped CSS 进不到子组件内部 */
+.pp-btn__fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  min-width: 13rem;
+  padding: 0.85rem 1.6rem;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: var(--ck-coral, #c8543d);
+  color: #fff;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.14s ease, transform 0.14s ease;
+  box-shadow: 0 12px 26px -14px rgba(200, 84, 61, 0.8);
 }
+.pp-btn__fallback:hover { background: var(--ck-coral-deep, #a53f2c); }
+.pp-btn__fallback:active { transform: translateY(1px); }
+
+/* 没配好支付时的提示 —— 安静的一行小字，别做成「报错框」
+   （卡片里并排三个红框会非常难看） */
+.pp-btn__note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0;
+  color: var(--ck-ink-2, #6b5f55);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  text-align: center;
+}
+.pp-btn__note .i-ph-info { flex: none; color: var(--ck-ink-2, #6b5f55); }
+
+/* PayPal 官方按钮挂载点 —— 宽度撑满、居中，高度和备用按钮一致（不跳版） */
+.pp-btn__host {
+  min-height: 3.2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .pp-btn__sandbox {
   margin: 0.55rem 0 0;
   font-size: 0.78rem;

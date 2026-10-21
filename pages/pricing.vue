@@ -23,29 +23,32 @@
         >
           <span v-if="p.popular" class="ck-plan__badge">Most popular</span>
           <h2 class="ck-plan__name">{{ p.name }}</h2>
-          <p class="ck-plan__desc">{{ p.description }}</p>
+
           <p class="ck-plan__price">
-            <span class="ck-plan__amount">${{ p.price.toFixed(2) }}</span>
+            <span class="ck-plan__amount">{{ money(p.price) }}</span>
             <span v-if="p.interval" class="ck-plan__per">/ {{ p.interval }}</span>
           </p>
-          <p class="ck-plan__for">{{ p.blurb }}</p>
 
-          <PayPalButton
-            v-if="p.kind !== 'free'"
-            :plan-id="p.id"
-            :kind="p.kind === 'subscription' ? 'subscription' : 'one_time'"
-            :label="p.cta"
-            :logged-in="!!user"
-            @need-login="requireLogin"
-            @paid="onPaid"
-          />
-          <NuxtLink v-else to="/cards" class="ck-btn ck-btn--ghost ck-btn--full">
-            {{ p.cta }}
-          </NuxtLink>
+          <p class="ck-plan__desc">{{ p.description }}</p>
+
+          <div class="ck-plan__cta">
+            <PayPalButton
+              v-if="p.kind !== 'free'"
+              :plan-id="p.id"
+              :kind="p.kind === 'subscription' ? 'subscription' : 'one_time'"
+              :label="p.cta"
+              :logged-in="!!user"
+              @need-login="requireLogin"
+              @paid="onPaid"
+            />
+            <NuxtLink v-else to="/cards" class="ck-btn ck-btn--ghost ck-btn--full">
+              {{ p.cta }}
+            </NuxtLink>
+          </div>
 
           <ul class="ck-plan__list">
             <li v-for="f in p.features" :key="f">
-              <span class="i-ph-check" /> {{ f }}
+              <span class="i-ph-check" /> <span>{{ f }}</span>
             </li>
           </ul>
         </div>
@@ -71,18 +74,20 @@
         <div>
           <h2 class="ck-h2">Just one card?</h2>
           <p class="ck-sub">
-            A single card is <strong>${{ singlePlan.price.toFixed(2) }}</strong>. No account tricks, no
+            A single card is <strong>{{ money(singlePlan.price) }}</strong>. No account tricks, no
             "upgrade" prompts — you pay for the card and you are done.
           </p>
         </div>
-        <PayPalButton
-          :plan-id="singlePlan.id"
-          kind="one_time"
-          :label="`Pay once — $${singlePlan.price.toFixed(2)}`"
-          :logged-in="!!user"
-          @need-login="requireLogin"
-          @paid="onPaid"
-        />
+        <div class="ck-single__cta">
+          <PayPalButton
+            :plan-id="singlePlan.id"
+            kind="one_time"
+            :label="`Pay once — ${money(singlePlan.price)}`"
+            :logged-in="!!user"
+            @need-login="requireLogin"
+            @paid="onPaid"
+          />
+        </div>
       </section>
 
       <!-- FAQ -->
@@ -138,6 +143,11 @@ const payError = ref('')
 const planCards = [PLANS.free, PLANS.creator, PLANS.lifetime]
 const singlePlan = PLANS.single
 
+/** $0 不要写成 $0.00 */
+function money(n: number): string {
+  return n ? `$${n.toFixed(2)}` : '$0'
+}
+
 function requireLogin() {
   openLoginWithRedirect('/pricing')
 }
@@ -155,12 +165,12 @@ async function onPaid(info: any) {
 
 const faqs = [
   {
-    q: `What exactly do I get for $${PLANS.creator.price.toFixed(2)} a month?`,
+    q: `What exactly do I get for ${money(PLANS.creator.price)} a month?`,
     a: 'Five cards a month, at full print resolution — 300 DPI, sized for a 5 × 7 inch card — with no mark on the file. If you do not use all five, they roll over to the next month instead of disappearing.',
   },
   {
     q: 'What happens if I need more than five?',
-    a: `Each extra card is $${PLANS.single.price.toFixed(2)} — the same price as buying one card on its own. You can add them whenever you want, and you will always see the price before you pay.`,
+    a: `Each extra card is ${money(PLANS.single.price)} — the same price as buying one card on its own. You can add them whenever you want, and you will always see the price before you pay.`,
   },
   {
     q: 'What if I use all my cards?',
@@ -184,7 +194,7 @@ const faqs = [
   },
   {
     q: 'Is this a subscription trap?',
-    a: `No. The one-off pack of ${PLANS.lifetime.cards} cards is $${PLANS.lifetime.price.toFixed(2)}, it never expires, and there is nothing recurring about it. We would rather you pay once than cancel and ask for your money back.`,
+    a: `No. The one-off pack of ${PLANS.lifetime.cards} cards is ${money(PLANS.lifetime.price)}, it never expires, and there is nothing recurring about it. We would rather you pay once than cancel and ask for your money back.`,
   },
 ]
 
@@ -227,15 +237,15 @@ const promises = [
   background: var(--ck-bg);
   color: var(--ck-ink);
   font-family: 'Manrope', system-ui, sans-serif;
-  padding: 3.5rem 0 5rem;
+  padding: 4.5rem 0 6rem;
 }
 .ck-wrap { max-width: 70rem; margin: 0 auto; padding: 0 1.5rem; }
 
 .ck-h1 {
   font-family: var(--ck-serif);
-  font-size: clamp(2.1rem, 5vw, 3.2rem);
+  font-size: clamp(2.4rem, 5.5vw, 3.7rem);
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 1.08;
   letter-spacing: -0.015em;
 }
 .ck-h2 {
@@ -244,7 +254,7 @@ const promises = [
   font-weight: 600;
   line-height: 1.2;
 }
-.ck-lede { margin-top: 1rem; font-size: 1.0625rem; line-height: 1.65; color: var(--ck-ink-2); max-width: 48ch; }
+.ck-lede { margin-top: 1.3rem; font-size: 1.125rem; line-height: 1.65; color: var(--ck-ink-2); max-width: 48ch; }
 .ck-sub { margin-top: 0.75rem; font-size: 1rem; line-height: 1.65; color: var(--ck-ink-2); max-width: 48ch; }
 
 .ck-badge {
@@ -258,7 +268,7 @@ const promises = [
   font-size: 0.8125rem;
   font-weight: 600;
 }
-.ck-pricing__head { text-align: center; max-width: 44rem; margin: 0 auto 3rem; }
+.ck-pricing__head { text-align: center; max-width: 46rem; margin: 0 auto 3.75rem; }
 .ck-pricing__head .ck-lede { margin-left: auto; margin-right: auto; }
 
 .ck-btn {
@@ -286,7 +296,7 @@ const promises = [
 .ck-plans {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+  gap: 1.5rem;
   align-items: start;
 }
 @media (max-width: 900px) { .ck-plans { grid-template-columns: 1fr; } }
@@ -295,37 +305,79 @@ const promises = [
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.55rem;
-  padding: 1.75rem 1.5rem;
+  padding: 1.9rem 1.7rem 1.75rem;
   border: 1.5px solid var(--ck-line);
-  border-radius: 1.1rem;
+  border-radius: 1.25rem;
   background: var(--ck-white);
 }
 .ck-plan--popular {
   border-color: var(--ck-coral);
-  box-shadow: 0 20px 44px -26px rgba(200, 84, 61, 0.5);
+  box-shadow: 0 22px 48px -28px rgba(200, 84, 61, 0.55);
 }
+/* 主推徽章：压在卡片上边缘居中（原来贴左上角，像贴纸） */
 .ck-plan__badge {
   position: absolute;
-  top: -0.7rem;
-  left: 1.5rem;
-  padding: 0.2rem 0.7rem;
+  top: -0.8rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.3rem 0.9rem;
   border-radius: 999px;
   background: var(--ck-coral);
   color: #fff;
   font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
-.ck-plan__name { font-family: var(--ck-serif); font-size: 1.4rem; font-weight: 600; }
-.ck-plan__desc { font-size: 0.875rem; color: var(--ck-ink-2); }
-.ck-plan__price { display: flex; align-items: baseline; gap: 0.35rem; margin-top: 0.35rem; }
-.ck-plan__amount { font-family: var(--ck-serif); font-size: 2.6rem; font-weight: 600; line-height: 1; }
+.ck-plan__name {
+  font-family: var(--ck-serif);
+  font-size: 1.45rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+/* 价格是卡片里最重的一块 —— 顶到名字下面，别夹在中间 */
+.ck-plan__price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin-top: 0.75rem;
+}
+.ck-plan__amount {
+  font-family: var(--ck-serif);
+  font-size: 2.9rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
 .ck-plan__per { font-size: 0.9375rem; color: var(--ck-ink-2); }
-.ck-plan__for { font-size: 0.875rem; color: var(--ck-ink-2); margin-bottom: 0.35rem; }
-.ck-plan__list { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.85rem 0 0; padding: 0; list-style: none; }
-.ck-plan__list li { display: flex; align-items: flex-start; gap: 0.45rem; font-size: 0.9375rem; color: var(--ck-ink); }
-.ck-plan__list .i-ph-check { flex: none; margin-top: 0.2rem; color: var(--ck-coral); }
+.ck-plan__desc {
+  margin: 0.75rem 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--ck-ink-2);
+  min-height: 2.9em;      /* 三张卡的说明行数一致 → 下面的按钮对齐 */
+}
+.ck-plan__cta { margin-top: 1.35rem; }
+/* 特性列表用一条细分隔线跟价格区断开，层级就清楚了 */
+.ck-plan__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 1.5rem 0 0;
+  padding: 1.4rem 0 0;
+  border-top: 1px solid var(--ck-line);
+  list-style: none;
+}
+.ck-plan__list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--ck-ink);
+}
+.ck-plan__list li > span:last-child { min-width: 0; }
+.ck-plan__list .i-ph-check { flex: none; margin-top: 0.22rem; color: var(--ck-coral); }
 
 .ck-pay-note {
   margin: 0 0 1.2rem;
@@ -357,13 +409,15 @@ const promises = [
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1.75rem 3rem;
   margin-top: 3.5rem;
-  padding: 2rem;
-  border-radius: 1.1rem;
+  padding: 2.25rem 2.5rem;
+  border-radius: 1.25rem;
   background: var(--ck-cream);
 }
 .ck-single .ck-h2 { max-width: none; }
+.ck-single .ck-sub { max-width: 44ch; }
+.ck-single__cta { flex: none; width: min(100%, 17rem); }
 
 /* ---------- FAQ ---------- */
 .ck-faq-wrap { margin-top: 4rem; max-width: 52rem; }

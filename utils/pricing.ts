@@ -40,8 +40,6 @@ export interface PlanDef {
   /** PayPal 订单描述 */
   label: string
   description: string
-  /** 价格下面那行说明（给人话） */
-  blurb: string
   /** 按钮上的字 */
   cta: string
   features: string[]
@@ -59,7 +57,6 @@ export const PLANS: Record<PlanId, PlanDef> = {
     cards: 0,
     label: 'Free preview',
     description: 'Try it out. No card needed.',
-    blurb: '2 free cards a day, with a small mark on them.',
     cta: 'Start free',
     features: [
       '2 free cards a day (1 if your email is not verified)',
@@ -77,7 +74,6 @@ export const PLANS: Record<PlanId, PlanDef> = {
     cards: 1,
     label: 'One card',
     description: 'One card, printed and ready.',
-    blurb: 'One card. Yours to print, yours to keep.',
     cta: 'Buy one card',
     features: [
       '1 card — yours forever',
@@ -94,8 +90,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     cards: 5,
     interval: 'month',
     label: 'Monthly plan (5 cards a month)',
-    description: 'Five cards a month, for when it is your turn to send one.',
-    blurb: '5 cards a month, and extra cards whenever you need them.',
+    description: 'For when it is your turn to send one.',
     cta: 'Get Monthly',
     popular: true,
     features: [
@@ -114,8 +109,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     currency: 'USD',
     cards: 20,
     label: 'One-off pack (20 cards)',
-    description: 'Twenty cards. They never expire.',
-    blurb: '20 cards. They never expire.',
+    description: 'For the person who makes a few cards a year.',
     cta: 'Pay once — 20 cards',
     features: [
       '20 cards — no expiry',

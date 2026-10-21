@@ -31,7 +31,7 @@
 
     <div class="ck-wrap ck-cards__body">
       <!-- ==================== STEP 1 · 场合 ==================== -->
-      <section v-if="step === 1" class="ck-sec">
+      <section v-if="step === 1" class="ck-sec ck-sec--card">
         <h2 class="ck-sec__title">
           <span class="ck-sec__num">1</span>
           What is it for?
@@ -665,39 +665,44 @@ watch(step, (v) => {
   color: var(--ck-ink);
   font-family: 'Manrope', system-ui, sans-serif;
   min-height: 100vh;
+  /* 底部操作栏是 sticky 的 —— 内容不满一屏时它会飘在半空，
+     所以整页用 flex 纵向排，body 撑开，把操作栏压到屏幕底部 */
+  display: flex;
+  flex-direction: column;
 }
 
 .ck-wrap { max-width: 74rem; margin: 0 auto; padding: 0 1.5rem; }
 
 .ck-h1 {
   font-family: var(--ck-serif);
-  font-size: clamp(2.2rem, 5vw, 3.4rem);
+  font-size: clamp(2.5rem, 5.6vw, 3.9rem);
   font-weight: 600;
-  line-height: 1.1;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
   color: var(--ck-ink);
 }
 .ck-lede {
-  margin-top: 0.85rem;
-  font-size: 1.0625rem;
-  line-height: 1.6;
+  margin-top: 1.15rem;
+  font-size: 1.125rem;
+  line-height: 1.65;
   color: var(--ck-ink-2);
   max-width: 46ch;
 }
 
 /* ---------- 顶部 ---------- */
 .ck-cards__head {
-  padding: 3.5rem 0 1.5rem;
+  padding: 4.5rem 0 2.5rem;
   border-bottom: 1px solid var(--ck-line);
   background: linear-gradient(180deg, #f7efe4 0%, var(--ck-bg) 100%);
 }
 .ck-steps-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem 1.75rem;
-  margin: 1.75rem 0 0;
+  gap: 0.65rem 2rem;
+  margin: 2.5rem 0 0;
   padding: 0;
   list-style: none;
-  font-size: 0.9375rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #a08f81;
 }
@@ -705,10 +710,10 @@ watch(step, (v) => {
 .ck-steps-nav__btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   background: none;
   border: 0;
-  padding: 0.25rem 0;
+  padding: 0.35rem 0;
   font: inherit;
   color: inherit;
   cursor: pointer;
@@ -719,8 +724,8 @@ watch(step, (v) => {
 .ck-steps-nav__dot {
   display: grid;
   place-items: center;
-  width: 1.65rem;
-  height: 1.65rem;
+  width: 1.9rem;
+  height: 1.9rem;
   border-radius: 999px;
   border: 1.5px solid var(--ck-line);
   background: #fff;
@@ -756,7 +761,7 @@ watch(step, (v) => {
   background: rgba(251, 247, 241, 0.94);
   backdrop-filter: blur(12px);
   border-top: 1px solid var(--ck-line);
-  padding: 0.9rem 0 1.1rem;
+  padding: 1.1rem 0 1.3rem;
 }
 .ck-nav__inner {
   display: flex;
@@ -773,29 +778,31 @@ watch(step, (v) => {
 }
 
 /* ---------- 区块 ---------- */
-.ck-cards__body { padding: 2.5rem 0 5rem; display: flex; flex-direction: column; gap: 3rem; }
-.ck-sec { display: flex; flex-direction: column; gap: 0.6rem; }
+.ck-cards__body { padding: 4rem 0 6.5rem; display: flex; flex-direction: column; gap: 4rem; flex: 1 0 auto; }
+.ck-sec { display: flex; flex-direction: column; gap: 1rem; }
 .ck-sec--card {
-  padding: 2rem;
+  padding: 2.5rem;
   border: 1px solid var(--ck-line);
-  border-radius: 1.1rem;
+  border-radius: 1.25rem;
   background: var(--ck-white);
+  box-shadow: 0 20px 48px -36px rgba(58, 46, 38, 0.45);
 }
 .ck-sec__title {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.9rem;
   font-family: var(--ck-serif);
-  font-size: clamp(1.5rem, 2.6vw, 1.95rem);
+  font-size: clamp(1.7rem, 3vw, 2.2rem);
   font-weight: 600;
+  line-height: 1.15;
   color: var(--ck-ink);
 }
 .ck-sec__num {
   display: grid;
   place-items: center;
   flex: none;
-  width: 2.1rem;
-  height: 2.1rem;
+  width: 2.4rem;
+  height: 2.4rem;
   border-radius: 999px;
   background: var(--ck-coral);
   color: #fff;
@@ -803,18 +810,24 @@ watch(step, (v) => {
   font-size: 0.95rem;
   font-weight: 700;
 }
-.ck-sec__sub { font-size: 0.9375rem; color: var(--ck-ink-2); margin: 0 0 0.75rem; }
-.ck-mini-title { margin: 0; font-size: 0.875rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #a08f81; }
-.ck-mini-title--gap { margin-top: 1.25rem; }
+.ck-sec__sub {
+  margin: -0.35rem 0 0.75rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ck-ink-2);
+  max-width: 54ch;
+}
+.ck-mini-title { margin: 0; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #a08f81; }
+.ck-mini-title--gap { margin-top: 1.75rem; }
 
 /* ---------- tab ---------- */
-.ck-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.75rem 0 0.5rem; }
+.ck-tabs { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0.25rem 0 0.5rem; }
 .ck-tab {
-  padding: 0.45rem 0.95rem;
+  padding: 0.6rem 1.15rem;
   border: 1px solid var(--ck-line);
   border-radius: 999px;
-  background: #fff;
-  font-size: 0.875rem;
+  background: #faf6ef;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: var(--ck-ink-2);
   cursor: pointer;
@@ -824,32 +837,32 @@ watch(step, (v) => {
 /* ---------- 场景卡 ---------- */
 .ck-scene-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(11.5rem, 1fr));
-  gap: 0.85rem;
-  margin-top: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(14.5rem, 1fr));
+  gap: 1.1rem;
+  margin-top: 0.25rem;
 }
 .ck-scene {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 1.15rem 1rem;
+  gap: 0.4rem;
+  padding: 1.5rem 1.35rem;
   border: 1.5px solid var(--ck-line);
-  border-radius: 0.9rem;
-  background: #fff;
+  border-radius: 1rem;
+  background: #faf6ef;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.14s ease, transform 0.14s ease;
+  transition: border-color 0.14s ease, transform 0.14s ease, background 0.14s ease;
 }
-.ck-scene:hover { transform: translateY(-2px); border-color: rgba(200, 84, 61, 0.5); }
-.ck-scene--on { border-color: var(--ck-coral); background: rgba(200, 84, 61, 0.05); }
-.ck-scene__icon { font-size: 1.5rem; color: var(--ck-coral); }
-.ck-scene__label { font-size: 1.0625rem; font-weight: 700; color: var(--ck-ink); }
-.ck-scene__desc { font-size: 0.8125rem; line-height: 1.45; color: var(--ck-ink-2); }
+.ck-scene:hover { transform: translateY(-2px); border-color: rgba(200, 84, 61, 0.5); background: #fff; }
+.ck-scene--on { border-color: var(--ck-coral); background: rgba(200, 84, 61, 0.07); }
+.ck-scene__icon { font-size: 1.85rem; color: var(--ck-coral); }
+.ck-scene__label { font-size: 1.125rem; font-weight: 700; color: var(--ck-ink); }
+.ck-scene__desc { font-size: 0.875rem; line-height: 1.5; color: var(--ck-ink-2); }
 .ck-scene__tag {
   position: absolute;
-  top: 0.7rem;
-  right: 0.7rem;
+  top: 0.9rem;
+  right: 0.9rem;
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
@@ -859,27 +872,27 @@ watch(step, (v) => {
 }
 
 /* ---------- step2 ---------- */
-.ck-step2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.ck-step2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2.75rem; }
 @media (max-width: 760px) { .ck-step2 { grid-template-columns: 1fr; } }
 
 .ck-drop {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  padding: 2rem 1rem;
+  gap: 0.4rem;
+  padding: 2.5rem 1.25rem;
   border: 2px dashed rgba(58, 46, 38, 0.22);
-  border-radius: 0.9rem;
-  background: #fdfbf7;
+  border-radius: 1rem;
+  background: #faf6ef;
   text-align: center;
   cursor: pointer;
 }
 .ck-drop:hover { border-color: var(--ck-coral); }
-.ck-drop__icon { font-size: 1.8rem; color: var(--ck-coral); }
-.ck-drop__title { font-size: 1rem; font-weight: 700; color: var(--ck-ink); }
-.ck-drop__hint { font-size: 0.8125rem; color: var(--ck-ink-2); }
+.ck-drop__icon { font-size: 2.1rem; color: var(--ck-coral); }
+.ck-drop__title { font-size: 1.0625rem; font-weight: 700; color: var(--ck-ink); }
+.ck-drop__hint { font-size: 0.875rem; color: var(--ck-ink-2); }
 
-.ck-photo { position: relative; border-radius: 0.9rem; overflow: hidden; border: 1px solid var(--ck-line); }
+.ck-photo { position: relative; border-radius: 1rem; overflow: hidden; border: 1px solid var(--ck-line); }
 .ck-photo img { display: block; width: 100%; max-height: 22rem; object-fit: cover; }
 .ck-photo__clear {
   position: absolute;
@@ -911,10 +924,10 @@ watch(step, (v) => {
 
 .ck-input {
   width: 100%;
-  margin-top: 0.5rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid var(--ck-line);
-  border-radius: 0.6rem;
+  margin-top: 0.65rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(58, 46, 38, 0.16);
+  border-radius: 0.7rem;
   background: #fff;
   font-size: 1rem;
   font-family: inherit;
@@ -922,16 +935,16 @@ watch(step, (v) => {
 }
 .ck-input:focus { outline: 2px solid rgba(200, 84, 61, 0.4); outline-offset: 1px; }
 
-.ck-hint { display: flex; align-items: flex-start; gap: 0.35rem; margin-top: 0.6rem; font-size: 0.8125rem; line-height: 1.5; color: var(--ck-ink-2); }
+.ck-hint { display: flex; align-items: flex-start; gap: 0.4rem; margin-top: 0.75rem; font-size: 0.875rem; line-height: 1.55; color: var(--ck-ink-2); }
 .ck-hint--center { justify-content: center; }
 .ck-quota {
-  margin-top: 0.9rem;
-  padding: 1.15rem 1.25rem;
-  border-radius: 0.9rem;
+  margin-top: 1rem;
+  padding: 1.35rem 1.5rem;
+  border-radius: 1rem;
   background: #fff;
   border: 1px solid var(--ck-line, rgba(58, 46, 38, 0.12));
   box-shadow: 0 8px 22px -14px rgba(58, 46, 38, 0.35);
-  max-width: 30rem;
+  max-width: 34rem;
 }
 .ck-quota__title {
   margin: 0 0 0.35rem;
@@ -950,21 +963,23 @@ watch(step, (v) => {
 .ck-error--big { padding: 0.75rem 1rem; border-radius: 0.6rem; background: rgba(200, 84, 61, 0.1); font-size: 0.9375rem; }
 
 /* ---------- 画风 ---------- */
-.ck-styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.7rem; }
+.ck-styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.9rem; }
 .ck-style {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  padding: 0.85rem 0.9rem;
+  gap: 0.3rem;
+  padding: 1.15rem 1.2rem;
   border: 1.5px solid var(--ck-line);
-  border-radius: 0.75rem;
-  background: #fff;
+  border-radius: 0.9rem;
+  background: #faf6ef;
   text-align: left;
   cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease;
 }
-.ck-style--on { border-color: var(--ck-coral); background: rgba(200, 84, 61, 0.05); }
-.ck-style__name { font-size: 0.9375rem; font-weight: 700; color: var(--ck-ink); }
-.ck-style__desc { font-size: 0.75rem; line-height: 1.4; color: var(--ck-ink-2); }
+.ck-style:hover { border-color: rgba(200, 84, 61, 0.5); background: #fff; }
+.ck-style--on { border-color: var(--ck-coral); background: rgba(200, 84, 61, 0.07); }
+.ck-style__name { font-size: 1rem; font-weight: 700; color: var(--ck-ink); }
+.ck-style__desc { font-size: 0.8125rem; line-height: 1.45; color: var(--ck-ink-2); }
 
 /* ---------- 生成 ---------- */
 .ck-generate { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
@@ -989,7 +1004,7 @@ watch(step, (v) => {
 .ck-btn--lg { padding: 1rem 2rem; font-size: 1.0625rem; }
 
 /* ---------- 候选 ---------- */
-.ck-cands { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 0.85rem; }
+.ck-cands { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; }
 .ck-cand {
   position: relative;
   padding: 0;
@@ -1006,12 +1021,12 @@ watch(step, (v) => {
 
 /* ---------- 编辑器 ---------- */
 .ck-editor { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--ck-line); }
-.ck-msgpick { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.75rem 0 1.5rem; }
+.ck-msgpick { display: flex; flex-direction: column; gap: 0.6rem; margin: 0.9rem 0 1.75rem; }
 .ck-msgpick__item {
-  padding: 0.7rem 0.9rem;
+  padding: 0.85rem 1.05rem;
   border: 1px solid var(--ck-line);
-  border-radius: 0.65rem;
-  background: #fff;
+  border-radius: 0.75rem;
+  background: #faf6ef;
   font-size: 0.9375rem;
   line-height: 1.5;
   text-align: left;
