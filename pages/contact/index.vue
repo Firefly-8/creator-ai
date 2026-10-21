@@ -18,7 +18,7 @@
         <h2>Email us</h2>
         <div class="ck-ways">
           <a class="ck-way" href="mailto:hello@yozzytools.com">
-            <span class="ck-way__icon i-ph-chat-circle-text" />
+            <span class="ck-way__icon"><span class="ck-way__glyph i-ph-chat-circle-text" /></span>
             <span class="ck-way__body">
               <span class="ck-way__label">General questions</span>
               <span class="ck-way__value">hello@yozzytools.com</span>
@@ -26,7 +26,7 @@
             <span class="i-ph-arrow-up-right ck-way__go" />
           </a>
           <a class="ck-way" href="mailto:privacy@yozzytools.com">
-            <span class="ck-way__icon i-ph-lock-key" />
+            <span class="ck-way__icon"><span class="ck-way__glyph i-ph-lock-key" /></span>
             <span class="ck-way__body">
               <span class="ck-way__label">Privacy and your data</span>
               <span class="ck-way__value">privacy@yozzytools.com</span>
@@ -34,7 +34,7 @@
             <span class="i-ph-arrow-up-right ck-way__go" />
           </a>
           <a class="ck-way" href="mailto:refunds@yozzytools.com">
-            <span class="ck-way__icon i-ph-arrow-counter-clockwise" />
+            <span class="ck-way__icon"><span class="ck-way__glyph i-ph-arrow-counter-clockwise" /></span>
             <span class="ck-way__body">
               <span class="ck-way__label">Refunds and payments</span>
               <span class="ck-way__value">refunds@yozzytools.com</span>
@@ -169,6 +169,12 @@ useHead({
   transition: transform 0.14s ease, border-color 0.14s ease;
 }
 .ck-way:hover { transform: translateY(-2px); border-color: var(--ck-coral); }
+.ck-way__glyph {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  color: #c8543d;
+}
 .ck-way__icon {
   display: grid;
   place-items: center;

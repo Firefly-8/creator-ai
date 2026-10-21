@@ -4,7 +4,7 @@
     <header class="mk-top">
       <div class="mk-top__inner">
         <NuxtLink to="/" class="mk-brand">
-          <img src="/logo.png" alt="" class="mk-brand__logo" />
+          <img src="/logo-mark.png" alt="Create Keepsakes" class="mk-brand__logo" />
           <span class="mk-brand__name">Create Keepsakes</span>
         </NuxtLink>
 
@@ -51,7 +51,7 @@
     <footer class="mk-foot">
       <div class="mk-foot__inner">
         <div class="mk-foot__brand">
-          <img src="/logo.png" alt="" class="mk-brand__logo" />
+          <img src="/logo-mark.png" alt="Create Keepsakes" class="mk-brand__logo" />
           <p class="mk-foot__tag">
             Personalised cards and canvas prints for the people you love.
           </p>

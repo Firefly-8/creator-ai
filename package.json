@@ -4,12 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "nuxt dev",
-    "build": "node scripts/patch-unhead.mjs && nuxt build",
+    "build": "node scripts/patch-unhead.mjs && node scripts/gen-icon-safelist.mjs && nuxt build",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "node scripts/patch-unhead.mjs",
     "cf:dev": "nuxt dev --port 3000",
-    "cf:build": "node scripts/patch-unhead.mjs && nuxt build --preset cloudflare_pages",
+    "cf:build": "node scripts/patch-unhead.mjs && node scripts/gen-icon-safelist.mjs && nuxt build --preset cloudflare_pages",
     "cf:preview": "npx wrangler pages dev dist --compatibility-date=2025-01-01",
     "cf:deploy": "npm run cf:build && npx wrangler pages deploy dist --project-name craftai",
     "d1:generate": "drizzle-kit generate",
@@ -27,7 +27,9 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "icons:safelist": "node scripts/gen-icon-safelist.mjs",
+    "icons:check": "node scripts/gen-icon-safelist.mjs --check"
   },
   "dependencies": {
     "@iconify-json/ph": "^1.2.2",

@@ -134,7 +134,7 @@ export const AUDIENCES: AudienceDef[] = [
     tagline:
       'A card with his face on it, in his own front room. The kind he will show to the neighbours.',
     hero: 'showcase/person-grandpa.webp',
-    gallery: ['showcase/person-grandpa.webp', 'showcase/scene-wallart.webp', 'showcase/person-mum.webp'],
+    gallery: ['showcase/person-grandpa.webp', 'showcase/scene-wallart.webp?v=2', 'showcase/person-mum.webp'],
     scenarios: [
       { id: 'birthday', blurb: 'His birthday. Make it the one card he actually opens.' },
       { id: 'milestone', blurb: 'The big ones — 80, 90, 100.' },
@@ -238,7 +238,7 @@ export const AUDIENCES: AudienceDef[] = [
     tagline:
       'The card people actually want, and the one they cry at. Their face, your words, printed properly.',
     hero: 'showcase/person-pet.webp',
-    gallery: ['showcase/person-pet.webp', 'showcase/scene-wallart.webp', 'showcase/person-grandpa.webp'],
+    gallery: ['showcase/person-pet.webp', 'showcase/scene-wallart.webp?v=2', 'showcase/person-grandpa.webp'],
     scenarios: [
       { id: 'pet', blurb: 'Their birthday, and every other day.' },
       { id: 'sympathy', blurb: 'For when it is time to say goodbye.' },

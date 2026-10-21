@@ -3,18 +3,27 @@
     <!-- ============ 顶部 ============ -->
     <header class="ck-cards__head">
       <div class="ck-wrap">
-        <h1 class="ck-h1">Let's make their day.</h1>
-        <p class="ck-lede">
-          Three small steps. You do not need to write a prompt, pick a font
-          or know anything about design.
-        </p>
+        <p v-if="step < 4" class="ck-eyebrow">Step {{ step }} of 3</p>
+        <h1 class="ck-h1">{{ stepHeadline }}</h1>
+        <p class="ck-lede">{{ stepLede }}</p>
         <ol class="ck-steps-nav">
-          <li v-for="(s, i) in stepLabels" :key="s" :class="{ 'is-on': step >= i + 1, 'is-done': step > i + 1 }">
-            <span class="ck-steps-nav__dot">
-              <span v-if="step > i + 1" class="i-ph-check" />
-              <template v-else>{{ i + 1 }}</template>
-            </span>
-            {{ s }}
+          <li
+            v-for="(s, i) in stepLabels"
+            :key="s"
+            :class="{ 'is-on': step >= i + 1, 'is-done': step > i + 1, 'is-current': step === i + 1 }"
+          >
+            <button
+              type="button"
+              class="ck-steps-nav__btn"
+              :disabled="i + 1 > maxReached"
+              @click="goTo(i + 1)"
+            >
+              <span class="ck-steps-nav__dot">
+                <span v-if="step > i + 1" class="i-ph-check" />
+                <template v-else>{{ i + 1 }}</template>
+              </span>
+              {{ s }}
+            </button>
           </li>
         </ol>
       </div>
@@ -22,7 +31,7 @@
 
     <div class="ck-wrap ck-cards__body">
       <!-- ==================== STEP 1 · 场合 ==================== -->
-      <section class="ck-sec">
+      <section v-if="step === 1" class="ck-sec">
         <h2 class="ck-sec__title">
           <span class="ck-sec__num">1</span>
           What is it for?
@@ -61,7 +70,7 @@
       </section>
 
       <!-- ==================== STEP 2 · 照片 + 称呼 ==================== -->
-      <section v-if="scenario" class="ck-sec ck-sec--card">
+      <section v-if="step === 2 && scenario" class="ck-sec ck-sec--card">
         <h2 class="ck-sec__title">
           <span class="ck-sec__num">2</span>
           Add their photo and name
@@ -106,7 +115,7 @@
               class="ck-input"
               type="text"
               :value="name"
-              :placeholder="scenario.inputHint || 'e.g. Margaret'"
+              :placeholder="scenario?.inputHint || 'e.g. Margaret'"
               @input="name = ($event.target as HTMLInputElement).value"
             />
             <p class="ck-hint">
@@ -127,7 +136,7 @@
       </section>
 
       <!-- ==================== STEP 3 · 画风 + 生成 ==================== -->
-      <section v-if="scenario" class="ck-sec ck-sec--card">
+      <section v-if="step === 3 && scenario" class="ck-sec ck-sec--card">
         <h2 class="ck-sec__title">
           <span class="ck-sec__num">3</span>
           Choose a look, then make it
@@ -147,32 +156,14 @@
           </button>
         </div>
 
-        <div class="ck-generate">
-          <button
-            class="ck-btn ck-btn--primary ck-btn--lg"
-            :disabled="generating || !scenario || (outOfQuota && !usageUnlimited)"
-            @click="generate"
-          >
-            <span v-if="generating" class="i-ph-spinner animate-spin" />
-            <span v-else class="i-ph-magic-wand" />
-            {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? 'Daily limit reached' : `Make ${scenario.label.toLowerCase()}`) }}
-          </button>
-          <p class="ck-hint ck-hint--center">
-            <span class="i-ph-check-circle" />
-            <template v-if="usageUnlimited">Unlimited generations on your plan.</template>
-            <template v-else-if="usageLoaded">You have {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left today.</template>
-            <template v-else>Free to preview. Only pay when it is right.</template>
+        <!-- 免费额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
+        <div v-if="outOfQuota && !usageUnlimited" class="ck-quota">
+          <p class="ck-quota__title">You have used today's free generations.</p>
+          <p class="ck-quota__text">
+            Upgrade for 2K images with no watermark, ready to print at 300 DPI —
+            and more generations every day.
           </p>
-
-          <!-- 免费额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
-          <div v-if="outOfQuota && !usageUnlimited" class="ck-quota">
-            <p class="ck-quota__title">You have used today's free generations.</p>
-            <p class="ck-quota__text">
-              Upgrade for 2K images with no watermark, ready to print at 300 DPI —
-              and more generations every day.
-            </p>
-            <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">See plans</NuxtLink>
-          </div>
+          <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">See plans</NuxtLink>
         </div>
 
         <p v-if="genError" class="ck-error ck-error--big">{{ genError }}</p>
@@ -258,6 +249,49 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- ============ 底部操作栏：返回 / 继续 ============ -->
+    <div v-if="step <= 3" class="ck-nav">
+      <div class="ck-wrap ck-nav__inner">
+        <button
+          v-if="step > 1"
+          type="button"
+          class="ck-btn ck-btn--ghost ck-btn--lg"
+          @click="goBack"
+        >
+          <span class="i-ph-arrow-left" />
+          Back
+        </button>
+        <span v-else class="ck-nav__spacer" />
+
+        <button
+          v-if="step < 3"
+          type="button"
+          class="ck-btn ck-btn--primary ck-btn--lg"
+          :disabled="!canContinue"
+          @click="goNext"
+        >
+          Continue
+          <span class="i-ph-arrow-right" />
+        </button>
+        <button
+          v-else
+          type="button"
+          class="ck-btn ck-btn--primary ck-btn--lg"
+          :disabled="generating || !scenario || (outOfQuota && !usageUnlimited)"
+          @click="generate"
+        >
+          <span v-if="generating" class="i-ph-spinner animate-spin" />
+          <span v-else class="i-ph-magic-wand" />
+          {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? 'Daily limit reached' : `Make ${scenario?.label.toLowerCase() || 'card'}`) }}
+        </button>
+      </div>
+      <p v-if="step === 3" class="ck-nav__hint">
+        <template v-if="usageUnlimited">Unlimited generations on your plan.</template>
+        <template v-else-if="usageLoaded">You have {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left today.</template>
+        <template v-else>Free to preview. Only pay when it is right.</template>
+      </p>
+    </div>
   </div>
 </template>
 
@@ -280,6 +314,62 @@ useHead({
 })
 
 const stepLabels = ['The occasion', 'Photo & name', 'Style & make']
+
+// ── 分步向导 ─────────────────────────────────────────────
+// 以前三步是**滚动**的一整页（一个 section 接一个 section），
+// 引导太少、不知道自己在哪。现在一个步骤一个视图，带返回/继续。
+// ⚠️ step 以前**根本没定义** —— 模板里 `step >= i + 1` 全是 undefined >= 1，
+//    所以步骤指示器从来没点亮过。
+const step = ref(1)
+/** 走到过的最远步骤（只允许回退到走过的步骤） */
+const maxReached = ref(1)
+
+// 文案按步骤一一对应：index 0 = 第 1 步（选场合），依此类推
+const STEP_COPY = [
+  {
+    headline: "Let's make their day.",
+    lede: 'Three small steps — no prompt to write, no font to pick. Start with the occasion: it decides the picture. You can change it later.',
+  },
+  {
+    headline: 'Add their photo and name.',
+    lede: 'This is what makes it theirs. A photo is best, but you can skip it and still get a lovely card.',
+  },
+  {
+    headline: 'Choose a look, then make it.',
+    lede: 'Every style below has been tested — the result will look like the picture. Pick one and we will do the rest.',
+  },
+  {
+    headline: 'Pick the one you like.',
+    lede: 'Here are your cards. Add your words, then download it ready to print.',
+  },
+]
+
+const stepHeadline = computed(() => STEP_COPY[step.value - 1]?.headline || STEP_COPY[0].headline)
+const stepLede = computed(() => STEP_COPY[step.value - 1]?.lede || STEP_COPY[0].lede)
+
+/** 能不能继续：第 1 步必须先选了场合 */
+const canContinue = computed(() => {
+  if (step.value === 1) return !!scenario.value
+  return true
+})
+
+function goTo(n: number) {
+  if (n < 1 || n > 3) return
+  if (n > maxReached.value) return
+  step.value = n
+}
+
+function goNext() {
+  if (!canContinue.value) return
+  if (step.value >= 3) return
+  step.value += 1
+  if (step.value > maxReached.value) maxReached.value = step.value
+}
+
+function goBack() {
+  if (step.value <= 1) return
+  step.value -= 1
+}
 
 const group = ref<string>('birthday')
 const scenario = ref<ImageScenarioDef | null>(null)
@@ -463,6 +553,9 @@ async function generate() {
       url: im.url,
     }))
     picked.value = candidates.value[0]?.id || ''
+    // 出图了 → 切到结果页（第 4 步）
+    step.value = 4
+    maxReached.value = Math.max(maxReached.value, 4)
   } catch (e: any) {
     // 401 = 需要登录。判断放在服务端返回上，比读本地 auth 状态可靠
     //（useAuth 每次调用返回新 ref，组件里拿到的 user 常常是空的）
@@ -505,6 +598,20 @@ async function askAI() {
 // 额度：进入页面就读一次（未登录会失败，忽略即可 —— 生成时服务端会要求登录）
 onMounted(() => {
   loadUsage()
+  // 支持 /cards?step=2 直接落到某一步
+  const q = Number(route.query.step || 1)
+  if (Number.isFinite(q) && q >= 1 && q <= 3) {
+    step.value = q
+    maxReached.value = q
+  }
+})
+
+// 步骤写进 URL —— 刷新和浏览器后退都保持在同一步
+watch(step, (v) => {
+  const q = { ...route.query }
+  if (v > 1) q.step = String(v)
+  else delete q.step
+  navigateTo({ path: '/cards', query: q }, { replace: true })
 })
 </script>
 
@@ -561,6 +668,20 @@ onMounted(() => {
   color: #a08f81;
 }
 .ck-steps-nav li { display: inline-flex; align-items: center; gap: 0.5rem; }
+.ck-steps-nav__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 0;
+  padding: 0.25rem 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.ck-steps-nav__btn:disabled { cursor: default; opacity: 0.55; }
+.ck-steps-nav__btn:not(:disabled):hover { color: var(--ck-coral-deep); }
 .ck-steps-nav__dot {
   display: grid;
   place-items: center;
@@ -573,8 +694,49 @@ onMounted(() => {
 }
 .ck-steps-nav li.is-on { color: var(--ck-ink); }
 .ck-steps-nav li.is-on .ck-steps-nav__dot { border-color: var(--ck-coral); color: var(--ck-coral); }
+.ck-steps-nav li.is-current { color: var(--ck-ink); }
+.ck-steps-nav li.is-current .ck-steps-nav__dot {
+  background: var(--ck-coral);
+  border-color: var(--ck-coral);
+  color: #fff;
+  box-shadow: 0 0 0 4px rgba(200, 84, 61, 0.14);
+}
 .ck-steps-nav li.is-done { color: var(--ck-coral-deep); }
 .ck-steps-nav li.is-done .ck-steps-nav__dot { background: var(--ck-coral); border-color: var(--ck-coral); color: #fff; }
+
+/* ---------- 步骤眉标 ---------- */
+.ck-eyebrow {
+  margin: 0 0 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ck-coral);
+}
+
+/* ---------- 底部操作栏 ---------- */
+.ck-nav {
+  position: sticky;
+  bottom: 0;
+  z-index: 40;
+  background: rgba(251, 247, 241, 0.94);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--ck-line);
+  padding: 0.9rem 0 1.1rem;
+}
+.ck-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.ck-nav__spacer { display: block; }
+.ck-nav__hint {
+  margin: 0.7rem 0 0;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--ck-ink-2);
+}
 
 /* ---------- 区块 ---------- */
 .ck-cards__body { padding: 2.5rem 0 5rem; display: flex; flex-direction: column; gap: 3rem; }

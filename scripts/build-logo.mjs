@@ -28,23 +28,46 @@ const GOLD = '#c9a227'
 const PAPER = '#fffdfa'
 
 /**
- * 1024×1024 主图形
- * 构图：圆角方底 → 后面斜靠的画框 → 前面竖版贺卡（卡里一幅小风景 + 一行字）
+ * 小尺寸版（导航 logo / favicon 用）
+ *
+ * ⚠️ 2026-10-21 的问题：原来小尺寸版也是**奶油底**，和页面背景几乎同色，
+ * 缩到 32px 就是一个糊掉的浅色方块 —— 用户反馈「应用的新 logo 不见了」。
+ * 实际图片是加载成功的，问题是**看不见**。
+ *
+ * 所以小尺寸版改成**深墨底 + 浅色图形**：高对比，浅色导航上一眼就看到。
+ * 完整版（大图 / og:image）保持奶油底不变。
+ */
+function markSvg(size = 32) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 1024 1024">
+  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="${INK}"/>
+  <!-- 后层：斜靠的画框 -->
+  <g transform="rotate(11 700 470)">
+    <rect x="520" y="230" width="420" height="480" rx="40" fill="#f3e9da" stroke="${CREAM}" stroke-width="52"/>
+  </g>
+  <!-- 前层：竖版贺卡 -->
+  <g transform="rotate(-8 400 560)">
+    <rect x="176" y="252" width="452" height="612" rx="48" fill="${PAPER}" stroke="${CORAL}" stroke-width="64"/>
+  </g>
+</svg>`
+}
+
+/**
+ * 完整版加一圈深色描边 —— 大图用在浅色背景上也要有边界，
+ * 否则同样会「看起来像没显示」。
  */
 function logoSvg(size = 1024) {
   const s = size / 1024
   const px = (v) => (v * s).toFixed(2)
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 1024 1024">
-  <!-- 底：奶油色圆角方 -->
+  <!-- 底：奶油色圆角方 + 深色描边（浅背景上不会「消失」） -->
   <rect x="0" y="0" width="1024" height="1024" rx="228" fill="${CREAM}"/>
-  <rect x="6" y="6" width="1012" height="1012" rx="224" fill="none" stroke="#e9dfd0" stroke-width="12"/>
+  <rect x="16" y="16" width="992" height="992" rx="214" fill="none" stroke="${INK}" stroke-width="32"/>
 
   <!-- 后层：斜靠的画框（装饰画） -->
   <g transform="rotate(11 700 470)">
     <rect x="520" y="230" width="420" height="480" rx="26" fill="#f3e9da" stroke="${INK}" stroke-width="16"/>
     <rect x="566" y="276" width="328" height="388" rx="12" fill="#fdfaf4"/>
-    <!-- 画框里的小风景：地平线 + 太阳 -->
     <circle cx="672" cy="404" r="52" fill="${CORAL}"/>
     <path d="M566 560 Q 640 508 706 552 T 894 528 L 894 664 L 566 664 Z" fill="${SAGE}" opacity="0.9"/>
     <path d="M566 592 Q 660 556 742 592 T 894 574 L 894 664 L 566 664 Z" fill="${SAGE}"/>
@@ -53,36 +76,14 @@ function logoSvg(size = 1024) {
   <!-- 前层：竖版贺卡 -->
   <g transform="rotate(-8 400 560)">
     <rect x="176" y="252" width="452" height="612" rx="34" fill="${PAPER}" stroke="${CORAL}" stroke-width="18"/>
-    <!-- 卡里的画面 -->
     <rect x="228" y="308" width="348" height="330" rx="18" fill="#fdf8ef"/>
     <circle cx="352" cy="404" r="46" fill="${GOLD}"/>
     <path d="M228 512 Q 320 466 402 506 T 576 486 L 576 638 L 228 638 Z" fill="#8fa98f"/>
     <path d="M228 552 Q 330 516 430 550 T 576 532 L 576 638 L 228 638 Z" fill="${SAGE}"/>
-    <!-- 一行「文字」：我们排版的那行字 -->
     <rect x="228" y="690" width="220" height="26" rx="13" fill="${INK}" opacity="0.86"/>
     <rect x="228" y="736" width="300" height="18" rx="9" fill="${INK}" opacity="0.42"/>
     <rect x="228" y="770" width="180" height="18" rx="9" fill="${INK}" opacity="0.28"/>
-    <!-- 手写签名：一条起伏的线 -->
     <path d="M420 782 q 34 -30 62 -4 t 62 -6" stroke="${CORAL}" stroke-width="14" fill="none" stroke-linecap="round"/>
-  </g>
-</svg>`
-}
-
-/**
- * 简化版（favicon 用）
- *
- * 完整版在 16px 下会糊成一团 —— 内部的风景、文字行全是噪点。
- * favicon 只保留「两张叠着的卡片」的轮廓：小尺寸下能认出形状就够了。
- */
-function markSvg(size = 32) {
-  const s = size / 1024
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 1024 1024">
-  <rect x="0" y="0" width="1024" height="1024" rx="228" fill="${CREAM}"/>
-  <g transform="rotate(11 700 470)">
-    <rect x="520" y="230" width="420" height="480" rx="40" fill="#f3e9da" stroke="${INK}" stroke-width="52"/>
-  </g>
-  <g transform="rotate(-8 400 560)">
-    <rect x="176" y="252" width="452" height="612" rx="48" fill="${PAPER}" stroke="${CORAL}" stroke-width="64"/>
   </g>
 </svg>`
 }
@@ -103,8 +104,13 @@ async function main() {
   await writeFile(path.join(outDir, 'logo-512.png'), l512)
   console.log(`v public/logo-512.png (${(l512.length / 1024).toFixed(1)}KB)`)
 
+  // 导航用的深底 mark（32px 也能看清）
+  const mark = Buffer.from(markSvg(1024))
+  const mark512 = await sharp(mark).resize(512, 512).png().toBuffer()
+  await writeFile(path.join(outDir, 'logo-mark.png'), mark512)
+  console.log(`v public/logo-mark.png (512x512, ${(mark512.length / 1024).toFixed(1)}KB)`)
+
   // favicon：32 / 16 + ICO 容器（用简化版，完整版在 16px 下认不出）
-  const mark = Buffer.from(markSvg(32))
   const l32 = await sharp(mark).resize(32, 32).png().toBuffer()
   const l16 = await sharp(mark).resize(16, 16).png().toBuffer()
   const ico = await buildIco([
@@ -124,10 +130,10 @@ async function main() {
   console.log('v /workspace/output/logo-preview.png')
 
   // 简化版预览：16/24/32/48 并排，模拟真实使用
-  const mark32 = await sharp(mark).resize(32, 32).png().toBuffer()
-  const mark16 = await sharp(mark).resize(16, 16).png().toBuffer()
-  const mark24 = await sharp(mark).resize(24, 24).png().toBuffer()
-  const mark48 = await sharp(mark).resize(48, 48).png().toBuffer()
+  const mark32 = await sharp(Buffer.from(markSvg(32))).resize(32, 32).png().toBuffer()
+  const mark16 = await sharp(Buffer.from(markSvg(16))).resize(16, 16).png().toBuffer()
+  const mark24 = await sharp(Buffer.from(markSvg(24))).resize(24, 24).png().toBuffer()
+  const mark48 = await sharp(Buffer.from(markSvg(48))).resize(48, 48).png().toBuffer()
   await sharp({ create: { width: 260, height: 90, channels: 3, background: '#fbf7f1' } })
     .png()
     .composite([

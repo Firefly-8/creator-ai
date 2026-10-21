@@ -88,7 +88,11 @@ const CARDS = [
     message: "Rest up and take your time. We're thinking of you every day.",
     signature: 'The family',
   },
-  { id: 'scene-wallart', name: '', message: '', signature: '', noBand: true },
+  {
+    id: 'scene-wallart', name: 'Home',
+    message: 'The lane outside the old house, where we all grew up. We miss it.',
+    signature: 'Love from all of us',
+  },
 ]
 
 /* ------------------------------------------------------------------ */

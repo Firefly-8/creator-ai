@@ -210,7 +210,7 @@ const steps = [
 
 const whys = [
   {
-    icon: 'ph-spell-check',
+    icon: 'ph-check-square',
     title: 'Names and numbers, spelled right',
     text: '“Happy 70th Birthday, Margaret” comes out exactly as you typed it. No invented names, no wrong ages, no odd spelling.',
   },
@@ -238,9 +238,9 @@ const gallery = [
     caption: 'Milestone birthdays — for the big one',
   },
   {
-    image: 'https://assets.yozzytools.com/showcase/scene-wallart.webp',
-    alt: 'An impressionist painting of a small hometown street',
-    caption: 'Wall art — the place you grew up',
+    image: 'https://assets.yozzytools.com/showcase/scene-wallart.webp?v=2',
+    alt: 'An impressionist village street print with the words "Home" and a family message below',
+    caption: 'Wall art — the place you still miss',
   },
   {
     image: 'https://assets.yozzytools.com/showcase/person-pet.webp',

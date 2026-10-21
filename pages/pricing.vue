@@ -164,7 +164,7 @@ const faqs = [
 
 const promises = [
   {
-    icon: 'ph-spell-check',
+    icon: 'ph-check-square',
     title: 'Names spelled right',
     text: 'Every name, number and date is typeset by us, not painted by the picture. It comes out exactly as you typed it.',
   },

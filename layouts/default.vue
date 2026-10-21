@@ -4,7 +4,7 @@
     <aside class="studio-sidebar" :class="{ 'is-open': mobileNavOpen }">
       <div class="studio-sidebar__brand">
         <NuxtLink to="/" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
-          <img src="/logo.png" alt="Create Keepsakes" class="h-9 w-9 rounded-[11px] object-contain" />
+          <img src="/logo-mark.png" alt="Create Keepsakes" class="h-9 w-9 rounded-[11px] object-contain" />
           <span class="font-display text-[17px] font-700 tracking-tight text-white">Create Keepsakes</span>
         </NuxtLink>
         <NuxtLink to="/cards" class="studio-sidebar__note" @click="mobileNavOpen = false">

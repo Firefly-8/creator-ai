@@ -14,10 +14,12 @@
     >
       <div class="ck-audience__media">
         <img :src="a.image" :alt="a.alt" loading="lazy" decoding="async" />
-        <span class="ck-audience__icon" :class="`i-${a.icon}`" />
       </div>
       <div class="ck-audience__body">
-        <h3 class="ck-audience__title">{{ a.title }}</h3>
+        <h3 class="ck-audience__title">
+          <span class="ck-audience__icon"><span class="ck-audience__glyph" :class="`i-${a.icon}`" /></span>
+          {{ a.title }}
+        </h3>
         <p class="ck-audience__line">{{ a.line }}</p>
         <span class="ck-audience__cta">
           Make one
@@ -91,7 +93,7 @@ const audiences: Audience[] = [
     line: 'Fifty years of the same old story. Tell it beautifully.',
     image: 'https://assets.yozzytools.com/showcase/person-partner.webp',
     alt: 'An oil painting of white lace, ribbons and soft roses',
-    icon: 'ph-rings',
+    icon: 'ph-heart',
     href: '/for/partner',
   },
   {
@@ -158,18 +160,24 @@ const audiences: Audience[] = [
 }
 
 .ck-audience__icon {
-  position: absolute;
-  left: 0.75rem;
-  bottom: 0.75rem;
-  display: grid;
+  display: inline-grid;
   place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-right: 0.55rem;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.94);
+  background: rgba(200, 84, 61, 0.1);
+  vertical-align: -0.42em;
+}
+/* ⚠️ 图标必须放在**内层**元素上：
+   UnoCSS 的图标是 `background-color: currentcolor + mask-image` 画的，
+   而 scoped 样式的 `background` 简写（优先级 0,2,0 > UnoCSS 的 0,1,0）
+   会把它盖掉 → 图标被涂成和背景同色 = 隐形。 */
+.ck-audience__glyph {
+  display: block;
+  width: 1.15rem;
+  height: 1.15rem;
   color: #c8543d;
-  font-size: 1.15rem;
-  box-shadow: 0 4px 12px -4px rgba(58, 46, 38, 0.45);
 }
 
 .ck-audience__body {
@@ -180,6 +188,8 @@ const audiences: Audience[] = [
 }
 
 .ck-audience__title {
+  display: flex;
+  align-items: center;
   font-family: var(--font-display, Sora), sans-serif;
   font-size: 1.125rem;
   font-weight: 700;

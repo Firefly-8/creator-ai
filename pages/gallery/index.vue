@@ -158,7 +158,7 @@ const CARDS: Card[] = [
     cat: 'thanks', to: '/cards?scenario=get-well',
   },
   {
-    id: 'scene-wallart', image: `${ASSET}/scene-wallart.webp`,
+    id: 'scene-wallart', image: `${ASSET}/scene-wallart.webp?v=2`,
     alt: 'An impressionist painting of a small village street',
     tag: 'Wall art', caption: 'The village you grew up in, on a 16 × 20 canvas',
     cat: 'wall', to: '/cards?scenario=hometown',

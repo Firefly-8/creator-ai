@@ -643,7 +643,7 @@ function styleIcon(style: string): string {
   const map: Record<string, string> = {
     Comic: 'i-ph-smiley',
     Vibrant: 'i-ph-sun',
-    Medieval: 'i-ph-castle',
+    Medieval: 'i-ph-buildings',
     Watercolor: 'i-ph-drop',
   }
   return map[style] || 'i-ph-palette'

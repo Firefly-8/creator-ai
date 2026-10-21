@@ -38,7 +38,7 @@
 
         <div class="ck-principles">
           <div class="ck-principle">
-            <span class="ck-principle__icon i-ph-spell-check" />
+            <span class="ck-principle__icon"><span class="ck-principle__glyph i-ph-check-square" /></span>
             <h3>The words are typed, not painted</h3>
             <p>
               We let an image model paint the picture, but we typeset the
@@ -50,7 +50,7 @@
             </p>
           </div>
           <div class="ck-principle">
-            <span class="ck-principle__icon i-ph-lock-key" />
+            <span class="ck-principle__icon"><span class="ck-principle__glyph i-ph-lock-key" /></span>
             <h3>Your photos stay yours</h3>
             <p>
               Nothing you upload is published, sold, or used to train
@@ -61,7 +61,7 @@
             </p>
           </div>
           <div class="ck-principle">
-            <span class="ck-principle__icon i-ph-printer" />
+            <span class="ck-principle__icon"><span class="ck-principle__glyph i-ph-printer" /></span>
             <h3>It is made to be printed</h3>
             <p>
               Not a screen picture. A real file at a real size — 5 × 7 inches
@@ -182,6 +182,12 @@ useHead({
   border: 1px solid var(--ck-line);
   border-radius: 1rem;
   background: var(--ck-white);
+}
+.ck-principle__glyph {
+  display: block;
+  width: 1.4rem;
+  height: 1.4rem;
+  color: #c8543d;
 }
 .ck-principle__icon {
   display: inline-grid;
