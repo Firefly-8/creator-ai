@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
 
   // file.data is already Uint8Array in Nitro/CF Workers
   const { writeFile } = await import('../../utils/storage')
-  await writeFile('upload', uploadId, file.data as Uint8Array, ext === '.png' ? 'image/png' : 'image/jpeg')
+  await writeFile('upload', uploadId, file.data as Uint8Array, ext === '.png' ? 'image/png' : 'image/jpeg', event)
 
   return {
     uploadId,

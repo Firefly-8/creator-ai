@@ -13,6 +13,7 @@
  * 所以这里直接把文件读出来转成 data URI 传过去（无需暴露公网可访问的文件）。
  */
 
+import type { H3Event } from 'h3'
 import { readFile } from './storage'
 
 /** MiniMax 参考图上限 10MB，data URI 还要再放大 ~1.34 倍，这里留出余量 */
@@ -27,8 +28,8 @@ export interface SubjectReference {
  * 把 R2 里存好的上传图转成 MiniMax 可用的 subject_reference 数组
  * @param uploadId 上传接口返回的 id（形如 aBc123Xy.jpg）
  */
-export async function buildSubjectReference(uploadId: string): Promise<SubjectReference[]> {
-  const obj = await readFile('upload', uploadId)
+export async function buildSubjectReference(uploadId: string, event?: H3Event): Promise<SubjectReference[]> {
+  const obj = await readFile('upload', uploadId, event)
   if (!obj) {
     throw new Error(`Reference image not found: ${uploadId}`)
   }

@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const row = await getImage(id)
   if (!row?.image_path) throw createError({ statusCode: 404, statusMessage: 'Image not found' })
 
-  const obj = await readFile('image', row.image_path)
+  const obj = await readFile('image', row.image_path, event)
   if (!obj) throw createError({ statusCode: 404, statusMessage: 'Image file missing' })
 
   setHeader(event, 'Content-Type', inferContentType(row.image_path))

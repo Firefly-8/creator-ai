@@ -5,6 +5,7 @@
  */
 
 import { createError } from 'h3'
+import type { H3Event } from 'h3'
 import { nanoid } from 'nanoid'
 import { dbAll, dbGet, dbRun, nowIso, type ImageRow } from './db'
 import { generateImage, optimizeImagePrompt, MiniMaxError, resolveMiniMaxUserMessage } from './minimax'
@@ -13,18 +14,18 @@ import { deleteFile, readUploadBase64, writeFile } from './storage'
 /**
  * 下载图片到 R2
  */
-async function downloadImageToR2(url: string, filename: string): Promise<string> {
+async function downloadImageToR2(url: string, filename: string, event?: H3Event): Promise<string> {
   const res = await fetch(url)
   if (!res.ok || !res.body) throw new Error(`Failed to download image: ${res.status}`)
   const blob = await res.blob()
-  await writeFile('image', filename, blob, 'image/png')
+  await writeFile('image', filename, blob, 'image/png', event)
   return filename
 }
 
 /**
  * 写入 base64 图片到 R2 (CF Workers 兼容)
  */
-async function writeBase64ImageToR2(dataUrlOrB64: string, filename: string): Promise<string> {
+async function writeBase64ImageToR2(dataUrlOrB64: string, filename: string, event?: H3Event): Promise<string> {
   const raw = dataUrlOrB64.includes('base64,')
     ? dataUrlOrB64.split('base64,')[1]
     : dataUrlOrB64
@@ -33,14 +34,14 @@ async function writeBase64ImageToR2(dataUrlOrB64: string, filename: string): Pro
   for (let i = 0; i < binary.length; i++) {
     buffer[i] = binary.charCodeAt(i)
   }
-  await writeFile('image', filename, buffer, 'image/png')
+  await writeFile('image', filename, buffer, 'image/png', event)
   return filename
 }
 
 /**
  * 处理 MiniMax 返回的图片结果
  */
-export async function processImageResult(result: any): Promise<string[]> {
+export async function processImageResult(result: any, event?: H3Event): Promise<string[]> {
   const images = result?.data?.image_urls || result?.data?.image_base64 || []
   const outputs: string[] = []
 
@@ -49,9 +50,9 @@ export async function processImageResult(result: any): Promise<string[]> {
     const filename = `${nanoid(12)}.png`
 
     if (img.startsWith('http')) {
-      await downloadImageToR2(img, filename)
+      await downloadImageToR2(img, filename, event)
     } else {
-      await writeBase64ImageToR2(img, filename)
+      await writeBase64ImageToR2(img, filename, event)
     }
     outputs.push(filename)
   }

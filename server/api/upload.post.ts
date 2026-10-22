@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
   const id = `${nanoid(12)}${ext}`
 
   // 上传到 R2
-  await writeFile('upload', id, file.data as any, file.type || 'audio/mpeg')
+  await writeFile('upload', id, file.data as any, file.type || 'audio/mpeg', event)
 
   return {
     uploadId: id,

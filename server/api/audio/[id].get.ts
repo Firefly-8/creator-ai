@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
   const song = await getSong(id)
   if (!song?.audio_path) throw createError({ statusCode: 404, statusMessage: 'Audio not found' })
 
-  const obj = await readFile('audio', song.audio_path)
+  const obj = await readFile('audio', song.audio_path, event)
   if (!obj) throw createError({ statusCode: 404, statusMessage: 'Audio file missing' })
 
   const contentType = inferContentType(song.audio_path)

@@ -6,19 +6,21 @@
  * 签名有效期 15 分钟，过期需重新生成
  */
 
+import type { H3Event } from 'h3'
 import { sign, verifySignature, generateSecureNonce } from './crypto'
+import { requireR2 } from './storage-runtime'
 
 // ============ R2 存储辅助函数 ============
 
 /**
  * 获取 R2 binding
+ *
+ * ⚠️ 不要再直接读 globalThis.STORAGE —— Nitro 从不往那个键上写东西，
+ *    绑定在 event.context._platform.cloudflare.env / globalThis.__env__ 里。
+ *    统一走 storage-runtime.ts 的解析层（和 DB 的 db-runtime.ts 同一套模式）。
  */
-function getR2(): R2Bucket {
-  const r2 = (globalThis as any).STORAGE || (globalThis as any).__R2_BUCKET__
-  if (!r2) {
-    throw new Error('R2 binding not available. Ensure STORAGE binding is configured in wrangler.toml')
-  }
-  return r2
+function getR2(event?: H3Event): R2Bucket {
+  return requireR2(event)
 }
 
 /**
@@ -37,9 +39,10 @@ export async function writeFile(
   type: 'audio' | 'image' | 'cover' | 'upload',
   filename: string,
   data: ArrayBuffer | Uint8Array | Blob | string,
-  contentType?: string
+  contentType?: string,
+  event?: H3Event
 ): Promise<string> {
-  const r2 = getR2()
+  const r2 = getR2(event)
   const key = `${keyForType(type)}/${filename}`
   
   let body: ArrayBuffer | Uint8Array | string
@@ -61,9 +64,10 @@ export async function writeFile(
  */
 export async function readFile(
   type: 'audio' | 'image' | 'cover' | 'upload',
-  filename: string
+  filename: string,
+  event?: H3Event
 ): Promise<R2ObjectBody | null> {
-  const r2 = getR2()
+  const r2 = getR2(event)
   const key = `${keyForType(type)}/${filename}`
   return r2.get(key)
 }
@@ -73,9 +77,10 @@ export async function readFile(
  */
 export async function fileExists(
   type: 'audio' | 'image' | 'cover' | 'upload',
-  filename: string
+  filename: string,
+  event?: H3Event
 ): Promise<boolean> {
-  const r2 = getR2()
+  const r2 = getR2(event)
   const key = `${keyForType(type)}/${filename}`
   const obj = await r2.head(key)
   return obj !== null
@@ -86,9 +91,10 @@ export async function fileExists(
  */
 export async function deleteFile(
   type: 'audio' | 'image' | 'cover' | 'upload',
-  filename: string
+  filename: string,
+  event?: H3Event
 ): Promise<void> {
-  const r2 = getR2()
+  const r2 = getR2(event)
   const key = `${keyForType(type)}/${filename}`
   await r2.delete(key)
 }
@@ -101,7 +107,8 @@ export async function deleteFile(
 export async function downloadToR2(
   url: string,
   type: 'audio' | 'image' | 'cover',
-  filename: string
+  filename: string,
+  event?: H3Event
 ): Promise<string> {
   const res = await fetch(url)
   if (!res.ok || !res.body) {
@@ -110,7 +117,7 @@ export async function downloadToR2(
   
   const contentType = res.headers.get('content-type') || undefined
   const blob = await res.blob()
-  return writeFile(type, filename, blob, contentType)
+  return writeFile(type, filename, blob, contentType, event)
 }
 
 /**
@@ -164,8 +171,8 @@ export function writeUploadBuffer(filename: string, buffer: Buffer) {
 /**
  * @deprecated 使用 readFile 代替
  */
-export async function readUploadBase64(filename: string): Promise<string> {
-  const obj = await readFile('upload', filename)
+export async function readUploadBase64(filename: string, event?: H3Event): Promise<string> {
+  const obj = await readFile('upload', filename, event)
   if (!obj) throw new Error('Upload not found')
   const buffer = await obj.arrayBuffer()
   const bytes = new Uint8Array(buffer)

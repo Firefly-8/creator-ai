@@ -120,7 +120,7 @@ export default defineEventHandler(async (event) => {
     let subjectReference: SubjectReference[] | undefined
     let finalModel = model
     if (mode === 'i2i' && body?.uploadId) {
-      subjectReference = await buildSubjectReference(String(body.uploadId))
+      subjectReference = await buildSubjectReference(String(body.uploadId), event)
       // image-01-live 才是 i2i 的主力模型（实测 subject_reference 在它上面稳定生效）。
       // 高级模式里用户显式选了 image-01 就尊重用户选择（它支持自定义宽高，做打印尺寸用）；
       // 场景模式不传 model，这里默认走 image-01-live。
@@ -151,7 +151,7 @@ export default defineEventHandler(async (event) => {
     })
 
     // 6. 处理图片结果（下载到 R2）
-    const imagePaths = await processImageResult(result)
+    const imagePaths = await processImageResult(result, event)
 
     await updateImage(image.id, {
       status: 'ready',

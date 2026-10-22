@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
   }
   if (!song?.cover_path) throw createError({ statusCode: 404, statusMessage: 'Cover not found' })
 
-  const obj = await readFile('cover', song.cover_path)
+  const obj = await readFile('cover', song.cover_path, event)
   if (!obj) throw createError({ statusCode: 404, statusMessage: 'Cover file missing' })
 
   setHeader(event, 'Content-Type', 'image/svg+xml; charset=utf-8')

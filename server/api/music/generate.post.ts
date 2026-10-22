@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
     if (!audioRes.ok) throw new Error('Failed to download audio')
     const audioBlob = await audioRes.blob()
     const filename = `${song.id}.mp3`
-    await writeFile('audio', filename, audioBlob, 'audio/mpeg')
+    await writeFile('audio', filename, audioBlob, 'audio/mpeg', event)
 
     // 6. 更新状态
     await updateSong(song.id, {

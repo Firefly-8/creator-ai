@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
   const filename = `${id}-${nanoid(8)}.wav`
 
   // 上传到 R2
-  await writeFile('audio', filename, file.data as any, 'audio/wav')
+  await writeFile('audio', filename, file.data as any, 'audio/wav', event)
 
   // 记录版本
   const versionId = nanoid(12)
