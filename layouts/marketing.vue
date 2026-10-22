@@ -39,7 +39,7 @@
           <button class="mk-btn mk-btn--primary w-full" @click="openSignup(); mobileOpen = false">Start free</button>
         </template>
         <!-- 登录后：移动端也给出账号 + 登出入口（原来这里什么都没有，登不出去） -->
-        <UserMenu v-else-if="authReady && user" align="left" class="mt-2" :user="user" :links="[]" />
+        <UserMenu v-else-if="authReady && user" align="left" class="mt-2" :user="user" :links="menuLinks" />
       </div>
     </header>
 

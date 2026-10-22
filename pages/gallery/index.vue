@@ -57,10 +57,16 @@
             you decide otherwise — we never publish them on our own.
           </p>
         </div>
-        <NuxtLink to="/cards" class="ck-btn ck-btn--primary">
-          Make your own
-          <span class="i-ph-arrow-right" />
-        </NuxtLink>
+        <div class="flex flex-wrap items-center gap-2">
+          <NuxtLink v-if="loggedIn" to="/my-assets" class="ck-btn ck-btn--ghost">
+            <span class="i-ph-images" />
+            My creations
+          </NuxtLink>
+          <NuxtLink to="/cards" class="ck-btn ck-btn--primary">
+            Make your own
+            <span class="i-ph-arrow-right" />
+          </NuxtLink>
+        </div>
       </section>
     </div>
   </div>
@@ -68,6 +74,10 @@
 
 <script setup lang="ts">
 definePageMeta({ layout: 'marketing' })
+
+// 登录用户在公开画廊里也留一个「回自己作品」的出口
+const { user, authReady } = useAuth()
+const loggedIn = computed(() => authReady.value && !!user.value)
 
 useHead({
   title: 'Cards people made — Create Keepsakes',

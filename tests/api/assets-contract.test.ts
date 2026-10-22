@@ -106,4 +106,31 @@ describe('资产链路 — 资产入口', () => {
     expect(read('pages/my-assets.vue')).toContain('My creations')
     expect(read('pages/my-cards.vue')).toContain("navigateTo('/my-assets'")
   })
+
+  /**
+   * 入口要铺在「用户会想起来找作品」的所有地方：
+   * 侧栏 / 账号菜单 / 首页 / 公开画廊 / dashboard / 生成页 / 音乐库
+   */
+  it('关键页面都要有资产入口', () => {
+    const entryPoints: [string, string][] = [
+      ['layouts/default.vue', '侧边栏'],
+      ['layouts/marketing.vue', '营销站导航'],
+      ['pages/index.vue', '首页'],
+      ['pages/gallery/index.vue', '公开画廊'],
+      ['pages/dashboard/index.vue', '工作台首页'],
+      ['pages/cards.vue', '贺卡生成页'],
+      ['pages/image.vue', 'AI 图片工作台'],
+      ['pages/music-library.vue', '音乐库'],
+    ]
+    for (const [file, label] of entryPoints) {
+      expect(read(file), `${label}（${file}）缺资产入口`).toContain('/my-assets')
+    }
+  })
+
+  it('账号菜单里也要有（手机上侧栏是收起来的）', () => {
+    // default 布局原本是 :links="[]"，等于账号菜单里什么都没有
+    const src = read('layouts/default.vue')
+    expect(src).not.toContain(':links="[]"')
+    expect(src).toContain('accountLinks')
+  })
 })

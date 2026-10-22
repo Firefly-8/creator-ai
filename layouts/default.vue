@@ -39,8 +39,9 @@
           <button class="btn-primary w-full text-sm" @click="openSignup">{{ 'Sign up' }}</button>
         </template>
         <template v-else-if="authReady && user">
-          <!-- 账号菜单（头像 + 名字，点开有登出）—— 侧栏里所有页面都在导航里了，菜单只放登出 -->
-          <UserMenu tone="dark" align="left" :user="user" :links="[]" />
+          <!-- 账号菜单（头像 + 名字）—— 侧栏导航里已有全部页面，
+               菜单里再放一个「我的作品」入口，保证在任何页面都能一眼找到自己的东西 -->
+          <UserMenu tone="dark" align="left" :user="user" :links="accountLinks" />
         </template>
       </div>
 
@@ -176,9 +177,17 @@ const groups = computed(() => [
   },
 ])
 
+/**
+ * 账号菜单里的站内链接。
+ * ⚠️ 侧栏导航虽然已经有「My creations」，但账号菜单是「我在哪都能找到自己的东西」的
+ *    最后一道保险 —— 尤其手机上侧栏是收起来的。
+ */
+const accountLinks = [
+  { to: '/my-assets', label: 'My creations', icon: 'i-ph-images' },
+]
+
 const pageTitle = computed(() => {
-  const map: Record<string, string> = {
-    '/create': 'Create',
+  const map: Record<string, string> = {    '/create': 'Create',
     '/cover': 'Cover',
     '/library': 'Music library',
     '/music-library': 'Music library',

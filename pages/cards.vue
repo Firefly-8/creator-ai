@@ -222,6 +222,11 @@
             <span class="i-ph-arrow-clockwise" />
             Try again
           </button>
+          <!-- 生成完顺手给个「看全部作品」的出口 -->
+          <NuxtLink to="/my-assets" class="ck-btn ck-btn--ghost">
+            <span class="i-ph-images" />
+            All my creations
+          </NuxtLink>
         </div>
 
         <div v-if="pickedUrl" class="ck-editor">

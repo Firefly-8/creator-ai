@@ -7,7 +7,10 @@
           <h1 class="font-display text-2xl font-700 text-white">Dashboard</h1>
           <p class="mt-1 text-ink-300">{{ $t('dashboard.subtitle') }}</p>
         </div>
-        <NuxtLink to="/create" class="btn-primary">{{ $t('dashboard.createNew') }}</NuxtLink>
+        <div class="flex items-center gap-2">
+          <NuxtLink to="/my-assets" class="btn-secondary">{{ 'My creations' }}</NuxtLink>
+          <NuxtLink to="/create" class="btn-primary">{{ $t('dashboard.createNew') }}</NuxtLink>
+        </div>
       </div>
 
       <!-- Stats -->

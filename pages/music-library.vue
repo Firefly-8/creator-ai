@@ -22,6 +22,7 @@
       </div>
       <div class="flex items-center gap-2">
         <p v-if="actionError" class="max-w-[14rem] truncate text-[12px] text-danger">{{ actionError }}</p>
+        <NuxtLink to="/my-assets" class="btn-secondary !h-8 !px-3 text-[12px]">My creations</NuxtLink>
         <NuxtLink to="/create" class="btn-secondary !h-8 !px-3 text-[12px]">Create</NuxtLink>
       </div>
     </template>

@@ -25,6 +25,11 @@
             <NuxtLink to="/gallery" class="ck-btn ck-btn--ghost">
               See examples
             </NuxtLink>
+            <!-- 已经做过的人：直接回到自己的作品，不用重新找入口 -->
+            <NuxtLink v-if="loggedIn" to="/my-assets" class="ck-btn ck-btn--ghost">
+              <span class="i-ph-images text-[17px]" />
+              My creations
+            </NuxtLink>
           </div>
 
           <ul class="ck-hero__facts">
@@ -159,6 +164,10 @@ import HomeAudience from '~/components/home/HomeAudience.vue'
 import { PLANS } from '~/utils/pricing'
 
 definePageMeta({ layout: 'marketing' })
+
+// 登录用户才显示「我的作品」入口（未登录时给的是 Log in / Start free）
+const { user, authReady } = useAuth()
+const loggedIn = computed(() => authReady.value && !!user.value)
 
 useHead({
   title: 'Create Keepsakes — Personalised cards & canvas prints for the people you love',

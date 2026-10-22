@@ -305,10 +305,15 @@
 
     <template #results-header>
       <div>
-        <h2 class="font-display text-[16px] font-650 text-white">Gallery</h2>
+        <!-- ⚠️ 原来叫 "Gallery"，跟侧边栏那个公开 Gallery 撞名 ——
+             这里其实是「我自己的图」，改成 Your images 更准 -->
+        <h2 class="font-display text-[16px] font-650 text-white">Your images</h2>
         <p class="text-[12px] text-ink-400">{{ images.length }} results</p>
       </div>
-      <UiRefreshButton :loading="pending" @click="refresh" />
+      <div class="flex items-center gap-2">
+        <NuxtLink to="/my-assets" class="btn-secondary !h-8 !px-3 text-[12px]">My creations</NuxtLink>
+        <UiRefreshButton :loading="pending" @click="refresh" />
+      </div>
     </template>
 
     <template #results>
