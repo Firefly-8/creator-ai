@@ -1,31 +1,24 @@
 /**
  * POST /api/ops/firebase-test-user — 临时端点，造一个 Firebase 测试账号
  *
- * ⚠️⚠️ 这是**临时**端点，E2E 测完就删（别留在仓库里）⚠️⚠️
+ * ⚠️⚠️ 这是**临时**端点，E2E 测完就删（连同本文件）⚠️⚠️
  *
  * 为什么需要它：
  *   沙箱环境访问不了 identitytoolkit.googleapis.com（出口代理只放行白名单域名），
  *   而 E2E 支付测试需要一个真实登录用户（/api/paypal/order 和 /capture 都要求
  *   event.context.auth.uid）。这个端点跑在 Cloudflare 的网络里，能直连 Google。
  *
- * 鉴权：X-Ops-Secret 匹配 OPS_ALERT_SECRET（和 /api/ops/alert 同一套）。
+ * 鉴权：路径必须等于 FIREBASE_RELAY_TOKEN（随机一次性 token，部署时注入）。
+ *   不用 OPS_ALERT_SECRET 是为了不去改动运维密钥（会打断告警链路）。
  */
 import { defineEventHandler, readBody, getHeader, createError } from 'h3'
 import { envString } from '../../utils/env'
 
-function safeEqual(a: string, b: string): boolean {
-  if (!a || !b) return false
-  if (a.length !== b.length) return false
-  let diff = 0
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
-  return diff === 0
-}
-
 export default defineEventHandler(async (event) => {
-  const secret = envString(event, 'OPS_ALERT_SECRET', '')
-  const provided = String(getHeader(event, 'x-ops-secret') || '')
-  if (!safeEqual(provided, secret)) {
-    throw createError({ statusCode: 401, statusMessage: 'Invalid or missing X-Ops-Secret' })
+  const expected = envString(event, 'FIREBASE_RELAY_TOKEN', '')
+  const provided = String(getHeader(event, 'x-relay-token') || '')
+  if (!expected || provided !== expected) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid or missing X-Relay-Token' })
   }
 
   const body = await readBody(event).catch(() => ({}) as any)
