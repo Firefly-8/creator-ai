@@ -9,7 +9,8 @@
  *   这个端点跑在 Cloudflare 网络里，用生产环境真实的 process.env 去调 PayPal，
  *   一次性把「变量注入 + 出网 + 主机选对 + plan id 对不对」全验掉。
  *
- * 鉴权：X-Ops-Secret 匹配 OPS_ALERT_SECRET（跟 /api/ops/alert 同一套）。
+ * 鉴权：X-Probe-Token 的一次性 token（**只把 SHA-256 哈希写进代码**，
+ *   明文不进 git），或 X-Ops-Secret 匹配 OPS_ALERT_SECRET。
  *
  * action:
  *   status   → 环境变量状态 + token 往返 + live 侧 plan/product 列表（只读）
@@ -19,6 +20,7 @@
  *   sub      → 用环境变量里的 live plan id 建一个订阅（验 PAYPAL_CREATOR_PLAN_ID）
  */
 import { defineEventHandler, readBody, getHeader, createError } from 'h3'
+import { createHash } from 'node:crypto'
 import { envString } from '../../utils/env'
 import {
   getPayPalConfig,
@@ -49,10 +51,23 @@ function mask(v: string): string {
 
 export default defineEventHandler(async (event) => {
   // ── 鉴权 ──────────────────────────────────────────────
+  // 方式 A：一次性 probe token（只存哈希，明文不进仓库）
+  //   这是主路径 —— OPS_ALERT_SECRET 是 secret_text，CF 的 GET 永远读不出
+  //   明文，本地也没有；没必要为了探针去动生产上已经在用的密钥。
+  const PROBE_TOKEN_SHA256 = 'd1970c9e78f2963414d667e8cdcbab31312111d0b0d3cdcc339e05b1be6f5318'
+  const providedToken = String(getHeader(event, 'x-probe-token') || '')
+  const tokenHash = providedToken
+    ? createHash('sha256').update(providedToken).digest('hex')
+    : ''
+
+  // 方式 B：跟 /api/ops/alert 同一套 ops secret
   const secret = envString(event, 'OPS_ALERT_SECRET', '')
   const provided = String(getHeader(event, 'x-ops-secret') || '')
-  if (!safeEqual(provided, secret)) {
-    throw createError({ statusCode: 401, statusMessage: 'Invalid or missing X-Ops-Secret' })
+
+  const okProbe = !!tokenHash && tokenHash === probeHash
+  const okOps = safeEqual(provided, secret) && !!secret
+  if (!okProbe && !okOps) {
+    throw createError({ statusCode: 401, statusMessage: 'Invalid or missing probe token' })
   }
 
   const body = await readBody(event).catch(() => ({}) as any)
