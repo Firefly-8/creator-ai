@@ -820,8 +820,8 @@ function downloadImage(img: ImagePublic) {
   if (!img.imageUrl) return
   const a = document.createElement('a')
   a.href = img.imageUrl
-  a.download = `${img.title || 'image'}.jpg`
-  a.target = '_blank'
+  // ⚠️ 存进 R2 的一律是 PNG（writeFile 固定 image/png），别再写 .jpg
+  a.download = `${img.title || 'image'}.png`
   a.rel = 'noopener'
   a.click()
 }

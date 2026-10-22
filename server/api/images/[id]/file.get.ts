@@ -26,7 +26,8 @@ export default defineEventHandler(async (event) => {
 
   setHeader(event, 'Content-Type', inferContentType(row.image_path))
   setHeader(event, 'Content-Length', String(obj.size))
-  setHeader(event, 'Cache-Control', 'public, max-age=86400')
+  // private：这是签名 URL，授权给特定用户，别让共享缓存存
+  setHeader(event, 'Cache-Control', 'private, max-age=86400')
 
   return obj.body
 })
