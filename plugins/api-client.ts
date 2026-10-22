@@ -20,8 +20,9 @@ export default defineNuxtPlugin((nuxtApp) => {
       try {
         const auth = nuxtApp.$auth
         if (auth?.currentUser) {
-          // 强制刷新 token，避免过期导致 401
-          const token = await auth.currentUser.getIdToken(true)
+          // ⚠️ 不要用 getIdToken(true)：见 composables/useApi.ts 的说明
+          //    （true = 每次请求都强制网络刷新 + 触发 auth 监听死循环）
+          const token = await auth.currentUser.getIdToken()
           if (token) {
             const headers = options.headers || {}
             if (headers instanceof Headers) {

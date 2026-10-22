@@ -56,15 +56,24 @@ export default defineEventHandler(async (event) => {
       amount,
       currency: 'USD',
       description: `Create Keepsakes — ${plan.label}`,
-      returnUrl: `${base}/pricing?paid=1&order={id}`,
+      // ⚠️ return_url 里**不能**放 {id} 之类的占位符 ——
+      //    那是 Stripe 的写法，PayPal 会直接 400：
+      //      INVALID_PARAMETER_SYNTAX
+      //      field: /payment_source/paypal/experience_context/return_url
+      //    PayPal 自己会在回跳 URL 后面追加 ?token=<orderId>，够用了。
+      returnUrl: `${base}/pricing?paid=1`,
       cancelUrl: `${base}/pricing?cancelled=1`,
       referenceId: `${planId}:${auth.uid}`,
     })
   } catch (e: any) {
+    // ⚠️ statusMessage 会进 HTTP 状态行，只能放短且纯 ASCII 的内容；
+    //    详细原因放 message（进 JSON body），别把 PayPal 的原始报错
+    //    直接塞进 statusMessage。
     console.error('[paypal/order] create failed:', e?.message)
     throw createError({
       statusCode: 502,
-      statusMessage: `Could not start the payment: ${e?.message?.slice(0, 200) || 'PayPal error'}`,
+      statusMessage: 'Could not start the payment',
+      message: `PayPal rejected the order: ${String(e?.message || '').slice(0, 300)}`,
     })
   }
 

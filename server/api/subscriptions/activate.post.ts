@@ -40,9 +40,12 @@ export default defineEventHandler(async (event) => {
   try {
     sub = await getSubscription(subscriptionId)
   } catch (e: any) {
+    // ⚠️ statusMessage 是 HTTP 状态行，只能放短且纯 ASCII 的内容；
+    //    详细原因放 message（进 JSON body）。
     throw createError({
       statusCode: 502,
-      statusMessage: `Could not verify the subscription: ${e?.message?.slice(0, 200)}`,
+      statusMessage: 'Could not verify the subscription',
+      message: `PayPal subscription lookup failed: ${String(e?.message || '').slice(0, 300)}`,
     })
   }
 

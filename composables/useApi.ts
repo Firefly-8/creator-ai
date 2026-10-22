@@ -16,8 +16,12 @@ export function useApi() {
     try {
       const auth = nuxtApp.$auth
       if (auth?.currentUser) {
-        // 强制刷新 token，避免过期导致 401
-        const token = await auth.currentUser.getIdToken(true)
+        // ⚠️ 不要用 getIdToken(true)：
+        //    true = 每次都强制走一次网络刷新。Firebase SDK 本身会在
+        //    token 过期/临近过期时自动刷新（getIdToken() 内部管这个），
+        //    强制刷新会让**每个 API 请求**都多一次网络往返，
+        //    而且刷新本身会触发 onAuthStateChanged → 死循环。
+        const token = await auth.currentUser.getIdToken()
         if (token) headers['Authorization'] = `Bearer ${token}`
       }
     } catch { /* ignore */ }

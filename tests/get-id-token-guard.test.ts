@@ -20,7 +20,9 @@ import { join, relative } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const ROOT = process.cwd()
-const SKIP = new Set(['node_modules', 'dist', '.nuxt', '.output', '.git', '.wrangler', 'coverage', '.assets', 'scripts'])
+// ⚠️ 排除 tests/ —— 本文件自己的注释里就写着 getIdToken(true)，
+//    不排除会自己抓自己
+const SKIP = new Set(['node_modules', 'dist', '.nuxt', '.output', '.git', '.wrangler', 'coverage', '.assets', 'scripts', 'tests'])
 const EXTS = new Set(['.ts', '.vue', '.js', '.mjs'])
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -44,9 +46,11 @@ describe('getIdToken 不应该强制刷新', () => {
     if (/getIdToken\(\s*true\s*\)/.test(src)) {
       const lines = src.split('\n')
       lines.forEach((line, i) => {
-        if (/getIdToken\(\s*true\s*\)/.test(line)) {
-          offenders.push(`${relative(ROOT, f)}:${i + 1}  ${line.trim()}`)
-        }
+        if (!/getIdToken\(\s*true\s*\)/.test(line)) return
+        const trimmed = line.trim()
+        // 注释里提到 getIdToken(true) 是「说明别这么写」，不是真的这么写
+        if (trimmed.startsWith('//') || trimmed.startsWith('*') || trimmed.startsWith('/*')) return
+        offenders.push(`${relative(ROOT, f)}:${i + 1}  ${trimmed}`)
       })
     }
   }
