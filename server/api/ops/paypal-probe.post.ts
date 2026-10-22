@@ -64,7 +64,7 @@ export default defineEventHandler(async (event) => {
   const secret = envString(event, 'OPS_ALERT_SECRET', '')
   const provided = String(getHeader(event, 'x-ops-secret') || '')
 
-  const okProbe = !!tokenHash && tokenHash === probeHash
+  const okProbe = !!tokenHash && tokenHash === PROBE_TOKEN_SHA256
   const okOps = safeEqual(provided, secret) && !!secret
   if (!okProbe && !okOps) {
     throw createError({ statusCode: 401, statusMessage: 'Invalid or missing probe token' })
@@ -74,6 +74,21 @@ export default defineEventHandler(async (event) => {
   const action = String(body?.action || 'status')
   const cfg = getPayPalConfig()
 
+  // 整个业务体包 try/catch —— 探针崩了要能看到原因，不要只得到一个裸 500
+  try {
+    return await run(event, action, body, cfg)
+  } catch (e: any) {
+    return {
+      probeError: String(e?.message || e).slice(0, 500),
+      probeStack: String(e?.stack || '')
+        .split('\n')
+        .slice(0, 4)
+        .join(' | '),
+    }
+  }
+})
+
+async function run(event: any, action: string, body: any, cfg: any): Promise<any> {
   // ── status：环境 + 出网 + live 资源 ─────────────────────
   if (action === 'status') {
     const out: any = {
@@ -181,4 +196,4 @@ export default defineEventHandler(async (event) => {
   }
 
   throw createError({ statusCode: 400, statusMessage: `unknown action: ${action}` })
-})
+}
