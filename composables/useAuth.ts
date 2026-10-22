@@ -46,8 +46,11 @@ export function useAuth() {
   // 同步用户到 D1
   async function syncUser(firebaseUser: User) {
     try {
-      // 强制刷新 token，避免过期导致 401
-      const token = await firebaseUser.getIdToken(true)
+      // ⚠️ 不要用 getIdToken(true)：
+      //    这个函数是在 onAuthStateChanged 里调用的，而强制刷新会
+      //    **再触发一次 onAuthStateChanged** → 再调 syncUser → 无限循环。
+      //    不传 true 时 SDK 会在 token 过期时自己刷新，够用。
+      const token = await firebaseUser.getIdToken()
       await $fetch('/api/auth/sync', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
@@ -169,7 +172,8 @@ export function useAuth() {
 
   // 获取 ID Token
   async function getIdToken(): Promise<string | null> {
-    return user.value?.getIdToken(true) || null
+    // ⚠️ 同上：不要传 true（见 syncUser 的注释）
+    return user.value?.getIdToken() || null
   }
 
   return {

@@ -161,28 +161,50 @@ async function main() {
   }
 
   // ── 3. 计划 ──
+  // ⚠️ page_size 上限是 **20**，传 50 会 400：
+  //    { field: 'page_size', value: '50', issue: 'INVALID_PARAMETER_VALUE' }
+  //    （这是 /v1/billing/plans 的限制，/v1/catalogs/products 允许 50）
+  //
+  // ⚠️ 这个 bug 有连锁后果：下面 --create 用 plans 数组判断「计划是否已存在」，
+  //    plans 永远是空 → 每次 --create 都会重复建一个同名计划。
   let plans = []
   try {
-    const r = await api('GET', '/v1/billing/plans?page_size=50', null, token)
+    const r = await api('GET', '/v1/billing/plans?page_size=20', null, token)
     plans = r.plans || []
     console.log(`${C.ok('✓')} 有 ${plans.length} 个订阅计划`)
     for (const p of plans) {
-      const amt = p.billing_cycles?.[0]?.pricing_scheme?.fixed_price
+      // ⚠️ 列表接口返回的 plan **不含 billing_cycles**（没有价格！）。
+      //    必须再 GET /v1/billing/plans/{id} 拿详情，否则：
+      //      - 下面显示不出金额
+      //      - 3.5 的「价格一致吗」检查拿到 undefined → 静默跳过 → 少收钱没人拦
+      let full = p
+      try {
+        full = await api('GET', `/v1/billing/plans/${p.id}`, null, token)
+      } catch (e) {
+        console.log(`${C.warn('!')} 读计划 ${p.id} 详情失败：${e.message}`)
+      }
+      plans[plans.indexOf(p)] = { ...p, ...full }
+      const amt = full.billing_cycles?.[0]?.pricing_scheme?.fixed_price
       console.log(
         `    ${C.dim('-')} ${p.id}  ${p.name}  ${C.dim(
-          amt ? `${amt.value} ${amt.currency_code} / ${p.billing_cycles[0].frequency.interval_unit}` : '',
-        )}`,
+          amt ? `${amt.value} ${amt.currency_code} / ${full.billing_cycles[0].frequency.interval_unit}` : '(价格未知)',
+        )}  ${C.dim(p.status)}`,
       )
     }
   } catch (e) {
     console.log(`${C.warn('!')} 列计划失败：${e.message}`)
   }
 
+  // 同名计划可能有一个已被停用（历史遗留）→ 优先挑 ACTIVE 的那个
+  const findMonthly = () =>
+    plans.find(p => /monthly/i.test(p.name || '') && p.status === 'ACTIVE') ||
+    plans.find(p => /monthly/i.test(p.name || ''))
+
   // ── 3.5 价格对不对？──
   // 订阅的实际扣款金额就是 PayPal 后台 plan 里的价 —— 对不上就是少收钱。
   {
     const want = PRICING.creator.price.toFixed(2)
-    const monthly = plans.find(p => /monthly/i.test(p.name || ''))
+    const monthly = findMonthly()
     const amt = monthly?.billing_cycles?.[0]?.pricing_scheme?.fixed_price?.value
     if (monthly && amt) {
       if (String(amt) !== want) {
@@ -193,6 +215,10 @@ async function main() {
       } else {
         console.log(`${C.ok('✓')} 月付计划价格一致（$${amt}）`)
       }
+    } else {
+      // ⚠️ 查不到价格不能静默放过 —— 静默 = 少收钱没人发现
+      console.log(`${C.bad('✗')} 读不到月付计划的实际价格，无法校验（少收钱风险）`)
+      console.log(C.dim(`  期望 $${want}；先确认 PAYPAL_CREATOR_PLAN_ID 指向的 plan 是 ACTIVE 的`))
     }
   }
 
@@ -200,7 +226,7 @@ async function main() {
   if (WANT_SYNC_PRICE) {
     console.log(C.b('\n同步订阅计划价格…'))
     const want = PRICING.creator.price.toFixed(2)
-    const monthly = plans.find(p => /monthly/i.test(p.name || ''))
+    const monthly = findMonthly()
     if (!monthly) {
       console.log(`${C.bad('✗')} 找不到名为 "Create Keepsakes Monthly" 的计划，先跑 --create`)
     } else {
@@ -209,14 +235,25 @@ async function main() {
         console.log(`${C.ok('✓')} 已经是 $${want}，不用改`)
       } else {
         try {
-          await api('PATCH', `/v1/billing/plans/${monthly.id}`, {
-            billing_cycles: [
-              {
-                ...monthly.billing_cycles[0],
-                pricing_scheme: { fixed_price: { value: want, currency_code: 'USD' } },
-              },
-            ],
-          }, token)
+          // ⚠️ billing_cycles **不能 PATCH**（PayPal 只允许改 description /
+          //    name / payment_preferences.* / taxes.percentage）。
+          //    改价必须走 POST /v1/billing/plans/{id}/update-pricing-schemes。
+          //    （之前这里用 PATCH + billing_cycles，永远 400/422 —— 那条路径
+          //     正是为了防「前端显示 $19.99、实际只扣 $9.99」而写的，坏了等于没防。）
+          const seq = monthly.billing_cycles?.[0]?.sequence || 1
+          await api(
+            'POST',
+            `/v1/billing/plans/${monthly.id}/update-pricing-schemes`,
+            {
+              pricing_schemes: [
+                {
+                  billing_cycle_sequence: seq,
+                  pricing_scheme: { fixed_price: { value: want, currency_code: 'USD' } },
+                },
+              ],
+            },
+            token,
+          )
           console.log(`${C.ok('✓')} ${monthly.id} 价格已改成 $${want}（原来 $${cur}）`)
           console.log(C.dim('  注意：已有订阅者通常在**下一个周期**才按新价扣款（PayPal 的行为）'))
         } catch (e) {
@@ -261,7 +298,9 @@ async function main() {
       },
     ]
     for (const wp of wantPlans) {
-      const exists = plans.find(p => p.name === wp.name)
+      // 只认 ACTIVE 的 —— 历史上被停用的同名计划不算「已存在」，
+      // 否则会把新的有效计划判成重复
+      const exists = plans.find(p => p.name === wp.name && p.status === 'ACTIVE')
       if (exists) {
         console.log(`${C.ok('✓')} 已有计划 ${exists.id}  ${wp.name}`)
         continue

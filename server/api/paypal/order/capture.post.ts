@@ -53,9 +53,12 @@ export default defineEventHandler(async (event) => {
     try {
       order = await getOrder(orderId)
     } catch (e2: any) {
+      // ⚠️ statusMessage 是 HTTP 状态行，只能放短且纯 ASCII 的内容。
+      //    详细原因放 message（进 JSON body）。
       throw createError({
         statusCode: 502,
-        statusMessage: `Could not confirm the payment: ${e2?.message?.slice(0, 200)}`,
+        statusMessage: 'Could not confirm the payment',
+        message: `PayPal confirm failed: ${String(e2?.message || '').slice(0, 300)}`,
       })
     }
   }

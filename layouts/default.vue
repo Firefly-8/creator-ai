@@ -120,13 +120,17 @@ const { isOpen: feedbackOpen, openFeedback } = useFeedback()
 
 // 检查管理员权限
 const isAdmin = ref(false)
-watch([user, authReady], async () => {
+// ⚠️ 监听 **uid** 而不是整个 user 对象：
+//    每次 token 刷新 Firebase 都会给出新的 User 对象，
+//    监听 user 会导致 → getIdToken → 刷新 → user 变 → 再跑一遍 → 死循环。
+watch([() => user.value?.uid, authReady], async () => {
   if (!authReady.value || !user.value) {
     isAdmin.value = false
     return
   }
   try {
-    const token = await user.value.getIdToken(true)
+    // ⚠️ 同上：不要用 getIdToken(true)（强制刷新 = 每次都走网络 + 触发监听）
+    const token = await user.value.getIdToken()
     const res = await $fetch<{ role: string }>('/api/user/role', {
       headers: { Authorization: `Bearer ${token}` },
     })

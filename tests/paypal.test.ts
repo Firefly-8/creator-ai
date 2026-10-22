@@ -87,6 +87,24 @@ describe('PayPal Webhook 安全', () => {
     expect(src).not.toMatch(/TODO/)
     expect(src).toContain('UPDATE subscriptions')
   })
+
+  it('一次性付款 webhook 要能兜底发额度（不能只标记状态）', () => {
+    const src = read('server/api/subscriptions/webhook.post.ts')
+    // 兜底发额度 = 真的改 subscriptions 表，不只是 UPDATE generated_images
+    expect(src).toMatch(/UPDATE subscriptions/)
+    expect(src).toMatch(/INSERT INTO subscriptions/)
+    // PAYMENT.CAPTURE.COMPLETED 的 resource 里是 capture 信息，
+    // 订单 id 藏在 supplementary_data.related_ids.order_id
+    expect(src).toContain('supplementary_data')
+    expect(src).toContain('related_ids')
+  })
+
+  it('一次性付款 webhook 的兜底要和 capture 端点互斥（不能双发额度）', () => {
+    const src = read('server/api/subscriptions/webhook.post.ts')
+    // 原子抢占：只有把非 ready 改成 ready 的那一方才发额度
+    expect(src).toMatch(/status != 'ready'/)
+    expect(src).toContain('changes')
+  })
 })
 
 describe('PayPal 定价与前端', () => {

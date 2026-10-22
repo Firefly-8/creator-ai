@@ -121,11 +121,27 @@ export const paypalPost = <T = any>(path: string, body?: any) => request<T>('POS
 export const paypalPatch = <T = any>(path: string, body?: any) => request<T>('PATCH', path, body)
 export const paypalDelete = <T = any>(path: string) => request<T>('DELETE', path)
 
-/** 从 PayPal 响应里取某个 rel 的链接（H3/approve） */
+/**
+ * 从 PayPal 响应里取某个 rel 的链接（H3/approve）
+ *
+ * ⚠️ rel 名字有两种，取决于下单时用的是哪套字段：
+ *   - 旧写法（application_context）→ rel = 'approve'
+ *   - 新写法（payment_source.paypal）→ rel = 'payer-action'
+ *   两个都找，否则会拿到 undefined。
+ */
 export function findLink(links: any[] | undefined, rel: string): string | null {
   if (!links) return null
   const hit = links.find((l) => l?.rel === rel)
-  return hit?.href || null
+  if (hit) return hit.href || null
+  if (rel === 'approve') {
+    const alt = links.find((l) => l?.rel === 'payer-action')
+    if (alt) return alt.href || null
+  }
+  if (rel === 'payer-action') {
+    const alt = links.find((l) => l?.rel === 'approve')
+    if (alt) return alt.href || null
+  }
+  return null
 }
 
 // ── 一次性支付：Orders v2 ────────────────────────────────
@@ -155,6 +171,12 @@ export async function createOrder(input: CreateOrderInput) {
         },
       },
     ],
+    // ⚠️ 只能用 payment_source.paypal.experience_context，**不能**再带 application_context。
+    //    两个都发 PayPal 会判「字段冗余/冲突」直接 422：
+    //      UNPROCESSABLE_ENTITY
+    //      field: /payment_source/paypal/experience_context/brand_name
+    //      issue: INCOMPATIBLE_PARAMETER_VALUE
+    //    （application_context 是旧写法，payment_source 才是现在推荐的）
     payment_source: {
       paypal: {
         experience_context: {
@@ -169,14 +191,6 @@ export async function createOrder(input: CreateOrderInput) {
             : {}),
         },
       },
-    },
-    application_context: {
-      brand_name: 'Create Keepsakes',
-      user_action: 'PAY_NOW',
-      shipping_preference: 'NO_SHIPPING',
-      ...(input.returnUrl
-        ? { return_url: input.returnUrl, cancel_url: input.cancelUrl || input.returnUrl }
-        : {}),
     },
   })
 }
