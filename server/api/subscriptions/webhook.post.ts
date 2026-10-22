@@ -49,13 +49,14 @@ export default defineEventHandler(async (event) => {
   const resource = body?.resource || {}
 
   // ── 0. 临时：记录每次命中（验签之前），用来确认 PayPal 有没有真送到 ──
+  let hitId: number | null = null
   try {
     const db0 = getDB(event)
     if (db0) {
-      await db0
+      const ins = await db0
         .prepare(
-          `INSERT INTO tmp_hook_hits (ts, event_type, resource_id, order_id, has_sig)
-           VALUES (?, ?, ?, ?, ?)`,
+          `INSERT INTO tmp_hook_hits (ts, event_type, resource_id, order_id, has_sig, note)
+           VALUES (?, ?, ?, ?, ?, '')`,
         )
         .bind(
           new Date().toISOString(),
@@ -65,10 +66,20 @@ export default defineEventHandler(async (event) => {
           getHeader(event, 'paypal-transmission-sig') ? 1 : 0,
         )
         .run()
-        .catch(() => {})
+        .catch(() => null)
+      hitId = Number((ins as any)?.meta?.last_row_id ?? 0) || null
     }
   } catch {
     /* 临时日志，失败无所谓 */
+  }
+  const markHit = (note: string) => {
+    if (!hitId) return
+    try {
+      const db0 = getDB(event)
+      db0?.prepare('UPDATE tmp_hook_hits SET note = ? WHERE id = ?').bind(note, hitId).run().catch(() => {})
+    } catch {
+      /* ignore */
+    }
   }
 
   // ── 1. 签名验证 ──
@@ -85,9 +96,11 @@ export default defineEventHandler(async (event) => {
     }
     const result = await verifyPayPalWebhook(headers, webhookId, body, rawBody)
     if (!result.ok) {
+      markHit('verify-fail:' + String(result.reason).slice(0, 80))
       console.error('[PayPal Webhook] ❌ signature verification failed:', result.reason)
       throw createError({ statusCode: 401, statusMessage: 'Invalid webhook signature' })
     }
+    markHit('verified')
     console.log('[PayPal Webhook] ✅ signature verified')
   } else {
     console.warn(
