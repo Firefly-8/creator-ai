@@ -88,10 +88,16 @@ h3,
 }
 
 .studio-sidebar__brand {
+  /* ⚠️ 以前是横向 flex（display:flex + align-items:center），
+     但 .studio-sidebar__note（"Make a card / Back to the card maker" 提示条）
+     本意是排在 logo **下面**（它自己带 margin-top）——
+     横排时它被挤成一条竖排文字，还溢出侧边栏压住 logo 和页面标题。
+     改成竖排 + gap，两块各占一行。 */
   display: flex;
-  align-items: center;
-  min-height: 64px;
-  padding: 0 1.1rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.85rem;
+  padding: 0.9rem 1.1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 

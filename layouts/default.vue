@@ -5,7 +5,8 @@
       <div class="studio-sidebar__brand">
         <NuxtLink to="/" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
           <img src="/logo-mark.png" alt="Create Keepsakes" class="h-9 w-9 rounded-[11px] object-contain" />
-          <span class="font-display text-[17px] font-700 tracking-tight text-white">Create Keepsakes</span>
+          <!-- 侧栏只有 232px 宽，17px 会让 "Create Keepsakes" 折成两行 -->
+          <span class="font-display text-[15px] font-700 tracking-tight text-white whitespace-nowrap">Create Keepsakes</span>
         </NuxtLink>
         <NuxtLink to="/cards" class="studio-sidebar__note" @click="mobileNavOpen = false">
           <span class="i-ph-gift" />
@@ -91,6 +92,13 @@
         <slot />
       </main>
     </div>
+
+    <!-- 全局播放器（深色底栏）。
+         ⚠️ 以前**整个组件没被任何地方引用** → stores/player.ts 里
+         bindAudio() 永远绑不到 <audio> 元素 → 点「播放」只改状态不出声。
+         工作台的 .workspace 早就按 var(--player-h) 给底部留了位（tokens.css 里 92px），
+         说明它本来就该挂在这里。 -->
+    <AppPlayer />
   </div>
   <AuthModal v-model="authModalOpen" :initial-mode="authModalMode" />
   <FeedbackModal v-model="feedbackOpen" source="creator" />
@@ -237,7 +245,8 @@ watch(() => route.fullPath, () => {
   display: flex;
   align-items: center;
   gap: 0.55rem;
-  margin-top: 0.85rem;
+  /* margin-top 交给 .studio-sidebar__brand 的 gap 管（见 assets/css/main.css） */
+  margin-top: 0;
   padding: 0.6rem 0.7rem;
   border: 1px solid rgba(139, 124, 255, 0.28);
   border-radius: 0.7rem;

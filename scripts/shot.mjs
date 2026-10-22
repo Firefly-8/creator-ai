@@ -23,10 +23,24 @@ const H = Number(process.argv[6] || 900)
 const FULL = process.argv.includes('--full')
 
 function findChrome() {
-  const base = join(homedir(), '.cache/ms-playwright')
-  for (const c of ['chromium-1248/chrome-linux64/chrome', 'chromium-1243/chrome-linux64/chrome']) {
-    const p = join(base, c)
-    if (existsSync(p)) return p
+  // ⚠️ 沙箱里 HOME 可能不是 /root，浏览器缓存常常在 /root/.cache/ms-playwright。
+  //    而且同一个版本号下目录名可能是 chrome-linux 或 chrome-linux64（两种都见过）。
+  const bases = [
+    join(homedir(), '.cache/ms-playwright'),
+    '/root/.cache/ms-playwright',
+  ]
+  const rels = [
+    'chromium-1248/chrome-linux64/chrome',
+    'chromium-1248/chrome-linux/chrome',
+    'chromium-1243/chrome-linux64/chrome',
+    'chromium-1243/chrome-linux/chrome',
+    'chromium/chrome-linux/chrome',
+  ]
+  for (const base of bases) {
+    for (const rel of rels) {
+      const p = join(base, rel)
+      if (existsSync(p)) return p
+    }
   }
   throw new Error('找不到 chromium：npx playwright-core install chromium')
 }
