@@ -280,19 +280,119 @@ async function onSubscriptionStatus(event: any, resource: any, status: string) {
   console.log(`[PayPal Webhook] 订阅状态 → ${status}`)
 }
 
-/** 一次性付款成功 → 订单已经由 capture 端点处理过了，这里只做兜底标记 */
+/**
+ * 一次性付款成功 → 兜底发额度
+ *
+ * ⚠️ 为什么需要兜底（这才是 webhook 存在的意义）：
+ *   正常路径是「用户在 PayPal 批准 → 前端 onApprove → 调 capture 端点 → 发额度」。
+ *   但**用户批准后直接关掉浏览器**（或网络断了），capture 端点就永远不会被调
+ *   → 用户付了钱却拿不到卡。webhook 是 PayPal 服务器主动推的，不依赖浏览器，
+ *   所以它是唯一可靠的兜底。
+ *
+ * ⚠️ 幂等靠订单行的 status：
+ *   - capture 端点发完额度会把这行标成 'ready' → webhook 看到 ready 就跳过
+ *   - webhook 先用「UPDATE ... WHERE status != 'ready'」原子抢占（changes > 0
+ *     才算抢到），抢到才发额度 → 两边同时跑也不会双发
+ *
+ * ⚠️ order id 从多个地方兜着找：
+ *   PAYMENT.CAPTURE.COMPLETED 的 resource 里是 **capture** 的信息，
+ *   订单 id 藏在 supplementary_data.related_ids.order_id 里；
+ *   拿不到就退回 custom_id / invoice_id，最后才用 resource.id。
+ */
 async function onOneTimeCompleted(event: any, resource: any) {
-  const orderId = resource?.invoice_id || resource?.custom_id || resource?.id
+  const orderId =
+    resource?.invoice_id ||
+    resource?.custom_id ||
+    resource?.supplementary_data?.related_ids?.order_id ||
+    resource?.id
   if (!orderId) return
   const db = getDB(event)
   if (!db) return
 
-  // capture 端点已经把额度发过了；这里只更新订单状态（幂等）
+  const row = await db
+    .prepare('SELECT id, user_id, status, meta_json FROM generated_images WHERE id = ?')
+    .bind(`order_${orderId}`)
+    .first<{ id: string; user_id: string; status: string; meta_json: string }>()
+    .catch(() => null)
+
+  if (!row) {
+    // 找不到对应订单 —— 多半是别处的订单（不是我们平台下的），忽略
+    console.warn('[PayPal Webhook] 一次性付款事件找不到订单行', { orderId })
+    return
+  }
+
+  // ── 原子抢占：只有把 pending 改成 ready 成功的那一方才发额度 ──
+  const claimed = await db
+    .prepare("UPDATE generated_images SET status = 'ready', updated_at = ? WHERE id = ? AND status != 'ready'")
+    .bind(new Date().toISOString(), row.id)
+    .run()
+    .catch(() => null)
+
+  const changes = Number((claimed as any)?.meta?.changes ?? 0)
+  if (changes === 0) {
+    console.log('[PayPal Webhook] 一次性付款已处理过，跳过（幂等）', { orderId })
+    return
+  }
+
+  const meta = safeParse(row.meta_json || '{}')
+  const planId = String(meta.planId || '') as PlanId
+  const cards = Number(meta.cards || 0)
+  if (!planId || !cards) {
+    console.warn('[PayPal Webhook] 订单信息不全，没法发额度', { orderId, meta })
+    return
+  }
+
+  const nowIso = new Date().toISOString()
+  const hasSub = await db
+    .prepare('SELECT id, plan, status, credits_remaining, paypal_subscription_id FROM subscriptions WHERE user_id = ?')
+    .bind(row.user_id)
+    .first<{
+      id: string
+      plan: string | null
+      status: string | null
+      credits_remaining: number
+      paypal_subscription_id: string | null
+    }>()
+
+  if (hasSub) {
+    // 订阅优先：已有生效订阅时不能把 plan 改成一次性买断档
+    const subActive = hasSub.status === 'active' && !!hasSub.paypal_subscription_id
+    const nextPlan = subActive ? hasSub.plan || planId : planId
+    await db
+      .prepare(
+        `UPDATE subscriptions
+         SET plan = ?,
+             credits_remaining = CASE WHEN credits_remaining = -1 THEN -1 ELSE credits_remaining + ? END,
+             updated_at = ?
+         WHERE id = ?`,
+      )
+      .bind(nextPlan, cards, nowIso, hasSub.id)
+      .run()
+      .catch((e) => console.error('[PayPal Webhook] 一次性付款发额度失败:', e?.message))
+  } else {
+    await db
+      .prepare(
+        `INSERT INTO subscriptions (id, user_id, plan, status, credits_remaining, created_at, updated_at)
+         VALUES (?, ?, ?, 'active', ?, ?, ?)`,
+      )
+      .bind(
+        `sub_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
+        row.user_id,
+        planId,
+        cards,
+        nowIso,
+        nowIso,
+      )
+      .run()
+      .catch((e) => console.error('[PayPal Webhook] 一次性付款建订阅行失败:', e?.message))
+  }
+
+  // 补上 meta 里的 captured 标记
   await db
-    .prepare('UPDATE generated_images SET status = ?, updated_at = ? WHERE id = ?')
-    .bind('ready', new Date().toISOString(), `order_${orderId}`)
+    .prepare('UPDATE generated_images SET meta_json = ? WHERE id = ?')
+    .bind(JSON.stringify({ ...meta, captured: true, grantedBy: 'webhook' }), row.id)
     .run()
     .catch(() => {})
 
-  console.log(`[PayPal Webhook] 一次性付款完成 order=${orderId}`)
+  console.log(`[PayPal Webhook] ✅ 一次性付款兜底发额度 uid=${row.user_id} +${cards} 张（${planId}）`)
 }
