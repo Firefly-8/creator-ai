@@ -21,7 +21,6 @@ const PUBLIC_PATHS = [
   // PayPal webhook 是 PayPal 服务器调过来的，没有用户 token ——
   // 它靠**签名验证**保护（server/utils/paypal-webhook.ts）✅
   '/api/subscriptions/webhook',
-  '/api/robots',
   '/api/sitemap',
   // 运维端点：自己用 X-Ops-Secret 鉴权（跟 Firebase token 无关）
   '/api/ops',

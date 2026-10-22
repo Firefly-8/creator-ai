@@ -32,6 +32,7 @@ const RUNTIME_CONFIG_KEYS: Record<string, string> = {
   ALERT_COUNT_USER_ERRORS: 'alertCountUserErrors',
   OPS_ALERT_SECRET: 'opsAlertSecret',
   NUXT_PUBLIC_SITE_URL: 'public.siteUrl',
+  NUXT_PUBLIC_DISABLE_INDEX: 'public.disableIndex',
 }
 
 /**
