@@ -46,6 +46,9 @@ export default defineNuxtConfig({
       appName: 'Create Keepsakes',
       appVersion: '1.0.0',
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || '',
+      // 收录开关：预发布环境设成 'true' → robots.txt + meta robots 全部禁收录
+      // （判断逻辑在 utils/robots.ts，robots.txt 和 meta 共用同一套）
+      disableIndex: process.env.NUXT_PUBLIC_DISABLE_INDEX || '',
       firebaseApiKey: process.env.FIREBASE_API_KEY || 'AIzaSyAwoUulU3NBq7QsXr_wleNtvoHk534iwtM',
       firebaseAuthDomain: process.env.FIREBASE_AUTH_DOMAIN || 'creator-cab02.firebaseapp.com',
       firebaseProjectId: process.env.FIREBASE_PROJECT_ID || 'creator-cab02',

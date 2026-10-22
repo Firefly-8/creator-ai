@@ -4,8 +4,19 @@
  */
 import { getDB } from '../utils/db-runtime'
 import { AUDIENCES } from '../../utils/audiences'
+import { shouldDisallowIndex } from '../../utils/robots'
+import { envString } from '../utils/env'
 
 export default defineEventHandler(async (event) => {
+  // ⚠️ 预发布环境**不返回 sitemap**：
+  //   robots.txt 已经禁收录了，这里再把生产站点的 URL 列表喂出去没有意义，
+  //   而且 sitemap 里的 URL 全是生产域名 —— 别人拿预发布的 sitemap 提交到
+  //   Google Search Console 的话，等于替生产站做了一次提交。
+  const host = getRequestHost(event, { xForwardedHost: true })
+  if (shouldDisallowIndex(host, envString(event, 'NUXT_PUBLIC_DISABLE_INDEX', ''))) {
+    throw createError({ statusCode: 404, statusMessage: 'Not found' })
+  }
+
   const baseUrl = 'https://create.yozzytools.com'
 
   const routes = [
