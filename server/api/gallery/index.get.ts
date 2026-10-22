@@ -3,6 +3,7 @@
  */
 import { defineEventHandler, getQuery, createError } from 'h3'
 import { getDB } from '../../utils/db-runtime'
+import { generateSignedUrl } from '../../utils/storage'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
@@ -36,9 +37,10 @@ export default defineEventHandler(async (event) => {
             title: m.title,
             prompt: m.prompt,
             coverColor: m.cover_color,
-            coverUrl: m.cover_path ? '/api/cover-art/' + m.id : null,
+            // 签名 URL：浏览器 <img src> / <audio src> 带不了 Authorization 头
+            coverUrl: m.cover_path ? await generateSignedUrl(m.id, 'cover') : null,
             durationMs: m.duration_ms,
-            audioUrl: '/api/audio/' + m.id,
+            audioUrl: await generateSignedUrl(m.id, 'audio'),
             createdAt: m.created_at,
           })
         }
@@ -63,7 +65,7 @@ export default defineEventHandler(async (event) => {
             type: 'image',
             title: img.title,
             prompt: img.prompt,
-            imageUrl: img.image_path ? '/api/images/' + img.id + '/file' : null,
+            imageUrl: await generateSignedUrl(img.id, 'image', { path: `/api/images/${img.id}/file` }),
             aspectRatio: img.aspect_ratio,
             model: img.model,
             createdAt: img.created_at,

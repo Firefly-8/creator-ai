@@ -5,6 +5,7 @@
 
 import { defineEventHandler, readBody, createError } from 'h3'
 import { createJob, createSongDraft, updateJob, updateSong } from '../../utils/jobs'
+import { generateSignedUrl } from '../../utils/storage'
 import { generateMusic } from '../../utils/minimax'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { consumeDailyQuota, refundDailyQuota } from '../../utils/daily-usage'
@@ -89,7 +90,7 @@ export default defineEventHandler(async (event) => {
       jobId: job.id,
       songId: song.id,
       status: 'ready',
-      audioUrl: `/api/audio/${song.id}`,
+      audioUrl: await generateSignedUrl(song.id, 'audio'),
     }
   } catch (err: any) {
     // 失败流水 + 多用户失败告警判定

@@ -731,7 +731,7 @@ async function generate() {
   try {
     // 场景模式：prompt 由服务端按 scenario + style + name 拼，客户端不传
     const useScenario = scenarioMode.value && !!currentScenario.value
-    const res = await $fetch<{ images: ImagePublic[]; promptFinal: string }>('/api/image/generate', {
+    const res = await $fetch<{ images: ImagePublic[]; promptFinal: string; notes?: string }>('/api/image/generate', {
       method: 'POST',
       body: {
         prompt: useScenario ? '' : prompt.value,

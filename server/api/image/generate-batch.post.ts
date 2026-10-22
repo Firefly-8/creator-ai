@@ -7,6 +7,7 @@ import { defineEventHandler, readBody, createError } from 'h3'
 import { decomposePromptToBatch, generateImage } from '../../utils/minimax'
 import { createJob, updateJob } from '../../utils/jobs'
 import { createImageRecord, updateImage, processImageResult } from '../../utils/images'
+import { generateSignedUrl } from '../../utils/storage'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { consumeDailyQuota, consumeQuota, refundDailyQuota, refundQuota } from '../../utils/daily-usage'
 import { recordGenerationFailure } from '../../utils/failure-monitor'
@@ -122,7 +123,9 @@ export default defineEventHandler(async (event) => {
           colorMood: dir.colorMood,
           status: 'ready' as const,
           imageId: image.id,
-          imageUrl: imagePaths[0] ? `/api/images/${image.id}/file` : null,
+          imageUrl: imagePaths[0]
+            ? await generateSignedUrl(image.id, 'image', { path: `/api/images/${image.id}/file` })
+            : null,
           prompt: dir.prompt,
         }
       } catch (err: any) {

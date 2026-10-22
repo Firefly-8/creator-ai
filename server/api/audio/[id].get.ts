@@ -1,32 +1,27 @@
 /**
- * 音频文件服务 — R2 流式传输 + 签名 URL 验证
+ * 音频文件服务 — R2 流式传输
  * Cloudflare Workers 兼容版本
+ *
+ * 鉴权走 server/utils/file-access.ts：
+ *   - 签名 URL（页面里 <audio src> / 下载链接用的就是这个，浏览器带不了 Authorization 头）
+ *   - 或 Bearer token（此时校验歌曲归属）
  */
 
-import { defineEventHandler, getQuery, getHeader, setHeader, setResponseStatus, createError } from 'h3'
+import { defineEventHandler, getQuery, setHeader, createError } from 'h3'
 import { getSong } from '../../utils/jobs'
 import { readFile, inferContentType } from '../../utils/storage'
-import { verifySignedUrl } from '../../utils/storage'
+import { assertFileAccess } from '../../utils/file-access'
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id')
   if (!id) throw createError({ statusCode: 400, statusMessage: 'Missing id' })
 
-  // 验证签名 URL
-  const query = getQuery(event)
-  const { expires, signature } = query
-
-  if (!expires || !signature) {
-    throw createError({ statusCode: 403, statusMessage: 'Access denied: signed URL required' })
-  }
-
-  const isValid = await verifySignedUrl(id, 'audio', expires as string, signature as string)
-  if (!isValid) {
-    throw createError({ statusCode: 403, statusMessage: 'Access denied: invalid or expired URL' })
-  }
-
   const song = await getSong(id)
   if (!song?.audio_path) throw createError({ statusCode: 404, statusMessage: 'Audio not found' })
+
+  await assertFileAccess(event, { id, type: 'audio', ownerId: song.user_id })
+
+  const query = getQuery(event)
 
   const obj = await readFile('audio', song.audio_path, event)
   if (!obj) throw createError({ statusCode: 404, statusMessage: 'Audio file missing' })

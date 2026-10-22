@@ -8,6 +8,7 @@
 
 import type { H3Event } from 'h3'
 import { sign, verifySignature, generateSecureNonce } from './crypto'
+import { envString } from './env'
 import { requireR2 } from './storage-runtime'
 
 // ============ R2 存储辅助函数 ============
@@ -221,31 +222,57 @@ export function fileExtFromFormat(format?: string) {
 
 /**
  * 获取签名密钥
+ *
+ * ⚠️ 优先读运行时的 `URL_SIGNING_SECRET`（CF 注入，env 工具的取值链：
+ *    event context → globalThis.__env__ → 构建期内联的 runtimeConfig）。
+ *    之前只读 runtimeConfig，而 runtimeConfig 里的值是**构建期** process.env 内联的
+ *    —— CF Pages 不会把 APP_SECRET/URL_SIGNING_SECRET 注入到构建环境，
+ *    所以线上这个密钥一直是空的 → 签名 URL 机制从来没生效过。
  */
 function getSigningSecret(): string {
+  const fromEnv = envString(undefined, 'URL_SIGNING_SECRET', '')
+  if (fromEnv) return fromEnv
+
   const config = useRuntimeConfig()
   return config.urlSigningSecret || config.appSecret || ''
 }
 
 /**
- * 生成签名 URL（有效期 15 分钟）
+ * 签名 URL 有效期
+ *
+ * ⚠️ 文件服务的 URL 会被浏览器直接消费（`<img src>` / `<audio src>` / 下载链接），
+ *    这些请求**带不了 Authorization 头** —— 所以必须靠签名 URL 授权。
+ *    有效期要覆盖「用户开着页面发呆」的时间，所以给到 24 小时。
+ */
+export const SIGNED_URL_TTL_MS = 24 * 60 * 60 * 1000
+
+/**
+ * 生成签名 URL（有效期默认 24 小时）
  * @param fileId 文件 ID
  * @param type 文件类型: audio | image | cover
+ * @param opts.path 自定义路径（默认 `/api/${type}/${fileId}`）；
+ *        图片的实际路由是 `/api/images/{id}/file`，跟 type 对不上，要显式传
+ * @param opts.ttlMs 有效期（毫秒）
  */
-export async function generateSignedUrl(fileId: string, type: 'audio' | 'image' | 'cover'): Promise<string> {
+export async function generateSignedUrl(
+  fileId: string,
+  type: 'audio' | 'image' | 'cover',
+  opts?: { path?: string; ttlMs?: number }
+): Promise<string> {
   const secret = getSigningSecret()
   if (!secret) throw new Error('URL signing secret not configured')
-  
-  const expires = Date.now() + 15 * 60 * 1000 // 15 分钟
+
+  const expires = Date.now() + (opts?.ttlMs ?? SIGNED_URL_TTL_MS)
   const data = `${fileId}:${type}:${expires}`
   const signature = await sign(data, secret)
-  
+
   const params = new URLSearchParams({
     expires: expires.toString(),
     signature,
   })
-  
-  return `/api/${type}/${fileId}?${params.toString()}`
+
+  const path = opts?.path ?? `/api/${type}/${fileId}`
+  return `${path}?${params.toString()}`
 }
 
 /**

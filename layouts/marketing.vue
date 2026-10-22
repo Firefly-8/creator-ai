@@ -33,7 +33,7 @@
         <NuxtLink to="/gallery" class="mk-mobile__link" @click="mobileOpen = false">Gallery</NuxtLink>
         <NuxtLink to="/pricing" class="mk-mobile__link" @click="mobileOpen = false">Pricing</NuxtLink>
         <NuxtLink to="/blog" class="mk-mobile__link" @click="mobileOpen = false">Blog</NuxtLink>
-        <NuxtLink to="/my-cards" class="mk-mobile__link" @click="mobileOpen = false">My cards</NuxtLink>
+        <NuxtLink to="/my-assets" class="mk-mobile__link" @click="mobileOpen = false">My creations</NuxtLink>
         <template v-if="authReady && !user">
           <button class="mk-btn mk-btn--ghost w-full" @click="openLogin(); mobileOpen = false">Log in</button>
           <button class="mk-btn mk-btn--primary w-full" @click="openSignup(); mobileOpen = false">Start free</button>
@@ -59,7 +59,7 @@
           <div>
             <p class="mk-foot__label">Make</p>
             <NuxtLink to="/cards">Create a card</NuxtLink>
-            <NuxtLink to="/my-cards">My cards</NuxtLink>
+            <NuxtLink to="/my-assets">My creations</NuxtLink>
             <NuxtLink to="/gallery">Gallery</NuxtLink>
           </div>
           <div>
@@ -106,7 +106,7 @@ const audiences = AUDIENCES
 
 /** 账号菜单里的站内链接 */
 const menuLinks = [
-  { to: '/my-cards', label: 'My cards', icon: 'i-ph-images' },
+  { to: '/my-assets', label: 'My creations', icon: 'i-ph-images' },
 ]
 </script>
 

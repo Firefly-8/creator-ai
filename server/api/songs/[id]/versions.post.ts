@@ -5,7 +5,7 @@
 import { defineEventHandler, createError, readMultipartFormData } from 'h3'
 import { nanoid } from 'nanoid'
 import { getSong, publicSong, updateSong } from '../../../utils/jobs'
-import { writeFile } from '../../../utils/storage'
+import { writeFile, generateSignedUrl } from '../../../utils/storage'
 import { dbRun, nowIso } from '../../../utils/db'
 
 export default defineEventHandler(async (event) => {
@@ -51,11 +51,11 @@ export default defineEventHandler(async (event) => {
 
   const updated = await getSong(id)
   return {
-    song: publicSong(updated!),
+    song: await publicSong(updated!),
     version: {
       id: versionId,
       label,
-      audioUrl: `/api/audio/${id}`,
+      audioUrl: await generateSignedUrl(id, 'audio'),
       durationMs,
     },
   }

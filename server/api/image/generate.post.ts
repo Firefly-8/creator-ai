@@ -5,7 +5,7 @@
 
 import { defineEventHandler, readBody, createError } from 'h3'
 import { createJob, updateJob } from '../../utils/jobs'
-import { createImageRecord, updateImage, processImageResult } from '../../utils/images'
+import { createImageRecord, updateImage, processImageResult, publicImage } from '../../utils/images'
 import { rateLimitMiddleware } from '../../utils/rate-limit'
 import { generateImage, optimizeImagePrompt } from '../../utils/minimax'
 import { buildSubjectReference, type SubjectReference } from '../../utils/image-reference'
@@ -98,17 +98,22 @@ export default defineEventHandler(async (event) => {
   }
 
   // 4. 创建图片记录 + 任务
-  const image = await createImageRecord(auth.uid, {
+  //    ⚠️ n > 1 时**每张图一条记录**（以前只建一条、只记第一张，
+  //    前端拿不到多张候选，也没法分别下载）。
+  //    第一条记录先建好占着（失败时状态回写用），多余的图生成后再补记录。
+  const recordMeta = {
+    title: String(body?.title || ''),
     prompt,
     prompt_final: finalPrompt,
     // ⚠️ 存 scenario id（而不是 body.scene 的 'general'）——
-    //    「My cards」列表要按场景显示「给妈妈的生日卡」这类人话，
+    //    「我的资产」列表要按场景显示「给妈妈的生日卡」这类人话，
     //    存 'general' 就只能显示一个泛泛的标签。
     scene: scenarioUsed || scene,
     model,
     mode,
     aspectRatio,
-  })
+  }
+  const image = await createImageRecord(auth.uid, recordMeta)
 
   const job = await createJob(auth.uid, 'image', {
     prompt, prompt_final: finalPrompt, scene, model, mode, aspectRatio,
@@ -153,11 +158,35 @@ export default defineEventHandler(async (event) => {
     // 6. 处理图片结果（下载到 R2）
     const imagePaths = await processImageResult(result, event)
 
-    await updateImage(image.id, {
-      status: 'ready',
-      image_path: imagePaths[0] || null,
-      prompt_final: finalPrompt,
-    })
+    // 每张图一条记录 + 一个签名 URL
+    //    ⚠️ 前端要的是数组 { images: [...] }，以前只返回单个 imageUrl，
+    //    两边契约对不上 → 前端 `res.images` 是 undefined → 界面一片空白。
+    const candidates: any[] = []
+    for (let i = 0; i < imagePaths.length; i++) {
+      const path = imagePaths[i]
+      let rec
+      if (i === 0) {
+        rec = await updateImage(image.id, {
+          status: 'ready',
+          image_path: path,
+          prompt_final: finalPrompt,
+        })
+      } else {
+        const created = await createImageRecord(auth.uid, recordMeta)
+        rec = await updateImage(created.id, {
+          status: 'ready',
+          image_path: path,
+          prompt_final: finalPrompt,
+        })
+      }
+      if (rec) candidates.push(await publicImage(rec))
+    }
+
+    // 模型少给了图 → 把没出图的那几张额度退回去（用户没拿到就不该扣）
+    const missing = count - imagePaths.length
+    if (missing > 0) {
+      await refundQuota(event, auth.uid, 'image', missing, imageQuota.mode)
+    }
 
     await updateJob(job.id, {
       status: 'done',
@@ -167,9 +196,11 @@ export default defineEventHandler(async (event) => {
 
     return {
       jobId: job.id,
-      imageId: image.id,
+      imageId: candidates[0]?.id || image.id,
       status: 'ready',
-      imageUrl: imagePaths[0] ? `/api/images/${image.id}/file` : null,
+      // 单张的旧字段保留（别的地方可能在用），数组是新契约
+      imageUrl: candidates[0]?.imageUrl || null,
+      images: candidates,
       promptFinal: finalPrompt,
       notes: optimizeNotes,
       scenario: scenarioUsed || null,

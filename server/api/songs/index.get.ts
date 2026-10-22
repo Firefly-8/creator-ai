@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
   const result = []
   for (const song of songs) {
     const decrypted = await decryptSongFields(song)
-    result.push(publicSong(decrypted))
+    result.push(await publicSong(decrypted))
   }
 
   return { songs: result }

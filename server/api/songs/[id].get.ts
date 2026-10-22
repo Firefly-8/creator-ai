@@ -16,5 +16,5 @@ export default defineEventHandler(async (event) => {
   if (!song) throw createError({ statusCode: 404, statusMessage: 'Song not found' })
   
   const decrypted = await decryptSongFields(song)
-  return { song: publicSong(decrypted) }
+  return { song: await publicSong(decrypted) }
 })

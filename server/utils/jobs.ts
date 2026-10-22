@@ -11,7 +11,7 @@ import {
   nowIso, pickCoverColor,
   type JobStatus, type JobRow, type SongRow,
 } from './db'
-import { writeFile, deleteFile, readFile } from './storage'
+import { writeFile, deleteFile, readFile, generateSignedUrl } from './storage'
 import { writeSongCoverSvg } from './coverArt'
 
 // ============ 内存状态 ============
@@ -245,7 +245,23 @@ export async function abandonJob(job: JobRow, reason: string) {
 
 // ============ 公开格式 ============
 
-export function publicSong(song: SongRow) {
+/**
+ * 对外暴露的歌曲信息
+ *
+ * ⚠️ coverUrl / audioUrl / downloadUrl 都是**签名 URL**：
+ *    浏览器里的 <img src> / <audio src> / 下载链接带不了 Authorization 头。
+ *    签名密钥没配时返回 null —— 不能让整个列表接口跟着炸掉。
+ */
+export async function publicSong(song: SongRow) {
+  let coverUrl: string | null = null
+  let audioUrl: string | null = null
+  try {
+    if (song.cover_path) coverUrl = await generateSignedUrl(song.id, 'cover')
+    if (song.audio_path) audioUrl = await generateSignedUrl(song.id, 'audio')
+  } catch (err: any) {
+    console.error('[publicSong] 生成签名 URL 失败:', err?.message || err)
+  }
+
   return {
     id: song.id,
     title: song.title,
@@ -256,11 +272,11 @@ export function publicSong(song: SongRow) {
     status: song.status,
     durationMs: song.duration_ms,
     coverColor: song.cover_color,
-    coverUrl: song.cover_path ? `/api/cover-art/${song.id}` : null,
+    coverUrl,
     errorMessage: song.error_message,
     parentId: song.parent_id,
-    audioUrl: song.audio_path ? `/api/audio/${song.id}` : null,
-    downloadUrl: song.audio_path ? `/api/audio/${song.id}?download=1` : null,
+    audioUrl,
+    downloadUrl: audioUrl ? `${audioUrl}&download=1` : null,
     meta: safeJson(song.meta_json),
     isPublic: !!song.is_public,
     createdAt: song.created_at,

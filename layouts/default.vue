@@ -159,6 +159,14 @@ const groups = computed(() => [
     ],
   },
   {
+    // ⚠️ 资产入口：以前这一栏里只有 Gallery / Blog / Tools，
+    //    用户生成完根本找不到自己的作品（「也没有地方看资产」）
+    label: 'Yours',
+    items: [
+      { to: '/my-assets', label: 'My creations', icon: 'i-ph-images' },
+    ],
+  },
+  {
     label: 'Discover',
     items: [
       { to: '/gallery', label: 'Gallery', icon: 'i-ph-grid-four' },
@@ -174,7 +182,8 @@ const pageTitle = computed(() => {
     '/cover': 'Cover',
     '/library': 'Music library',
     '/music-library': 'Music library',
-    '/my-cards': 'My cards',
+    '/my-assets': 'My creations',
+    '/my-cards': 'My creations',
     '/cards': 'Create a Card',
     '/image': 'Image',
   }

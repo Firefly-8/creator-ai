@@ -589,7 +589,7 @@ async function generate() {
     // 出图张数不能超过今天剩余的免费额度 —— 服务端也会按实际张数扣，
     // 这里先按额度收敛，避免请求到一半才被拒。
     const maxN = usageUnlimited.value ? 4 : Math.max(1, Math.min(4, quotaRemaining.value))
-    const res = await api.post<{ images: { id: string; url: string }[] }>('/api/image/generate', {
+    const res = await api.post<{ images: { id: string; imageUrl: string | null }[] }>('/api/image/generate', {
       scenario: scenario.value.id,
       style: style.value,
       name: name.value,
@@ -600,10 +600,14 @@ async function generate() {
       promptOptimizer: false,
     })
     await loadUsage()
-    candidates.value = (res.images || []).map((im, i) => ({
-      id: im.id || String(i),
-      url: im.url,
-    }))
+    // ⚠️ 后端返回的是 { id, imageUrl }（签名 URL），
+    //    以前这里读的是 im.url → 永远是 undefined → 候选图一片空白
+    candidates.value = (res.images || [])
+      .filter((im) => !!im.imageUrl)
+      .map((im) => ({
+        id: im.id,
+        url: im.imageUrl as string,
+      }))
     picked.value = candidates.value[0]?.id || ''
     // 出图了 → 切到结果页（第 4 步）
     step.value = 4

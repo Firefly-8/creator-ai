@@ -28,6 +28,14 @@ const PUBLIC_PATHS = [
   // 上传是 i2i 流程的第一步，生成必须登录，所以上传也必须登录。
   // 前端已有「上传 401 → 降级成 t2i」的兜底，不会白屏。
   '/api/admin',
+  // ── 文件服务路由 ────────────────────────────────────
+  // 浏览器里的 <img src> / <audio src> / 下载链接**带不了 Authorization 头**，
+  // 所以这些路由靠**签名 URL** 授权（?expires=&signature=），不能靠中间件挡。
+  // 端点自己会校验：签名有效 → 放行；否则要求 Bearer token 并校验归属。
+  // （列表 / 删除 / 重生成这些数据接口也在同一前缀下，它们各自有独立的归属校验。）
+  '/api/images',
+  '/api/audio',
+  '/api/cover-art',
   '/_nuxt',
   '/logo.png',
   '/favicon.ico',
@@ -35,21 +43,39 @@ const PUBLIC_PATHS = [
 
 export default defineEventHandler(async (event) => {
   const path = event.path || ''
-  
-  // 白名单路径跳过
-  if (PUBLIC_PATHS.some(p => path.startsWith(p))) return
+  const isPublic = PUBLIC_PATHS.some(p => path.startsWith(p))
+
   // OPTIONS 请求跳过
   if (event.method === 'OPTIONS') return
-  
+
   // 只保护 /api/ 路径
   if (!path.startsWith('/api/')) return
 
   // 提取 Token
   const authHeader = getHeader(event, 'authorization')
   const token = typeof authHeader === 'string' ? authHeader.replace('Bearer ', '') : ''
-  
+
+  // 白名单路径：不强制登录，但**带了 token 就验一下并注入**。
+  // 文件服务路由靠这个拿到 event.context.auth 来校验资源归属。
+  if (isPublic) {
+    if (!token) return
+    try {
+      const { verifyFirebaseToken } = await import('../utils/firebase-verify')
+      const payload = await verifyFirebaseToken(token)
+      if (payload) {
+        event.context.auth = {
+          uid: payload.sub,
+          email: payload.email,
+          name: payload.name,
+          picture: payload.picture,
+        }
+      }
+    } catch { /* 白名单路径上 token 无效就当没登录 */ }
+    return
+  }
+
   console.log(`[Auth Middleware] ${event.method} ${path}, has token: ${!!token}`)
-  
+
   if (!token) {
     throw createError({ statusCode: 401, statusMessage: 'Missing authorization token' })
   }
@@ -57,7 +83,7 @@ export default defineEventHandler(async (event) => {
   // 验证 Token
   const { verifyFirebaseToken } = await import('../utils/firebase-verify')
   const payload = await verifyFirebaseToken(token)
-  
+
   if (!payload) {
     throw createError({ statusCode: 401, statusMessage: 'Invalid or expired token' })
   }
@@ -69,6 +95,6 @@ export default defineEventHandler(async (event) => {
     name: payload.name,
     picture: payload.picture,
   }
-  
+
   console.log(`[Auth Middleware] OK, uid=${payload.sub}`)
 })

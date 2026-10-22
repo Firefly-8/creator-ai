@@ -9,7 +9,7 @@ import type { H3Event } from 'h3'
 import { nanoid } from 'nanoid'
 import { dbAll, dbGet, dbRun, nowIso, type ImageRow } from './db'
 import { generateImage, optimizeImagePrompt, MiniMaxError, resolveMiniMaxUserMessage } from './minimax'
-import { deleteFile, readUploadBase64, writeFile } from './storage'
+import { deleteFile, readUploadBase64, writeFile, generateSignedUrl } from './storage'
 
 /**
  * 下载图片到 R2
@@ -137,7 +137,23 @@ export async function updateImage(id: string, patch: Partial<ImageRow>): Promise
   return next
 }
 
-export function publicImage(img: ImageRow) {
+/**
+ * 对外暴露的图片信息
+ *
+ * ⚠️ imageUrl 是**签名 URL**（带 expires + signature）：
+ *    浏览器里的 <img src> 带不了 Authorization 头，只能靠签名授权。
+ *    签名密钥没配时返回 null —— 不能让整个列表接口跟着炸掉。
+ */
+export async function publicImage(img: ImageRow) {
+  let imageUrl: string | null = null
+  if (img.image_path) {
+    try {
+      imageUrl = await generateSignedUrl(img.id, 'image', { path: `/api/images/${img.id}/file` })
+    } catch (err: any) {
+      console.error('[publicImage] 生成签名 URL 失败:', err?.message || err)
+    }
+  }
+
   return {
     id: img.id,
     title: img.title,
@@ -146,7 +162,7 @@ export function publicImage(img: ImageRow) {
     mode: img.mode,
     aspect_ratio: img.aspect_ratio,
     status: img.status,
-    imageUrl: img.image_path ? `/api/images/${img.id}/file` : null,
+    imageUrl,
     errorMessage: img.error_message,
     createdAt: img.created_at,
     updatedAt: img.updated_at,

@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
   const result = []
   for (const img of images) {
     const decrypted = await decryptImageFields(img)
-    result.push(publicImage(decrypted))
+    result.push(await publicImage(decrypted))
   }
 
   console.log('[Images] === Done ===')

@@ -59,6 +59,18 @@ export default defineEventHandler(async (event) => {
     }
   }
 
+  // 签名密钥状态：文件服务（图片/音频/封面）全靠它授权。
+  // 没配 → 页面上的图全是裂的（这个坑踩过一次，2026-10-22）
+  let signing: { configured: boolean; error: string | null } = { configured: false, error: null }
+  try {
+    const { envString } = await import('../utils/env')
+    const secret = envString(event, 'URL_SIGNING_SECRET', '')
+    signing.configured = secret.length > 0
+    if (!secret) signing.error = 'URL_SIGNING_SECRET is not set — file URLs cannot be signed'
+  } catch (err: any) {
+    signing.error = err?.message || String(err)
+  }
+
   return {
     ok: true,
     timestamp: new Date().toISOString(),
@@ -87,6 +99,7 @@ export default defineEventHandler(async (event) => {
       MINIMAX_BASE_URL: has('MINIMAX_BASE_URL'),
     },
     minimax,
+    signing,
     // 逐个键报告"有没有值"，不报值本身
     envPresent: Object.fromEntries(
       Object.keys(env)
