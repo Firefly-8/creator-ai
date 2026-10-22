@@ -48,6 +48,29 @@ export default defineEventHandler(async (event) => {
   const eventType = body?.event_type
   const resource = body?.resource || {}
 
+  // ── 0. 临时：记录每次命中（验签之前），用来确认 PayPal 有没有真送到 ──
+  try {
+    const db0 = getDB(event)
+    if (db0) {
+      await db0
+        .prepare(
+          `INSERT INTO tmp_hook_hits (ts, event_type, resource_id, order_id, has_sig)
+           VALUES (?, ?, ?, ?, ?)`,
+        )
+        .bind(
+          new Date().toISOString(),
+          String(eventType || ''),
+          String(resource?.id || ''),
+          String(resource?.supplementary_data?.related_ids?.order_id || ''),
+          getHeader(event, 'paypal-transmission-sig') ? 1 : 0,
+        )
+        .run()
+        .catch(() => {})
+    }
+  } catch {
+    /* 临时日志，失败无所谓 */
+  }
+
   // ── 1. 签名验证 ──
   const webhookId = process.env.PAYPAL_WEBHOOK_ID || ''
   const skip = shouldSkipVerification(process.env.NODE_ENV, webhookId)
