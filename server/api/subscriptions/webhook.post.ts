@@ -52,6 +52,27 @@ export default defineEventHandler(async (event) => {
   const record = async (note: string) => { await logHookHit(event, note, eventType, resource) }
   await record('hit')
 
+  // ── 0.1 临时：把原始 body 和签名头存下来，用来跟 PayPal 官方验签 API 对照 ──
+  try {
+    const db0 = getDB(event)
+    if (db0 && rawBody) {
+      const hdrs = {
+        'paypal-transmission-id': getHeader(event, 'paypal-transmission-id') || '',
+        'paypal-transmission-time': getHeader(event, 'paypal-transmission-time') || '',
+        'paypal-transmission-sig': getHeader(event, 'paypal-transmission-sig') || '',
+        'paypal-cert-url': getHeader(event, 'paypal-cert-url') || '',
+        'paypal-auth-algo': getHeader(event, 'paypal-auth-algo') || '',
+      }
+      await db0
+        .prepare('INSERT INTO tmp_hook_raw (ts, raw_body, headers) VALUES (?, ?, ?)')
+        .bind(new Date().toISOString(), rawBody, JSON.stringify(hdrs))
+        .run()
+        .catch(() => {})
+    }
+  } catch {
+    /* ignore */
+  }
+
   // ── 1. 签名验证 ──
   const webhookId = process.env.PAYPAL_WEBHOOK_ID || ''
   const skip = shouldSkipVerification(process.env.NODE_ENV, webhookId)
