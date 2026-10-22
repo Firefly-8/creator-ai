@@ -48,30 +48,7 @@ export default defineEventHandler(async (event) => {
   const eventType = body?.event_type
   const resource = body?.resource || {}
 
-  // ── 0. 临时：记录每次命中（验签之前），用来确认 PayPal 有没有真送到 ──
-  const record = async (note: string) => { await logHookHit(event, note, eventType, resource) }
-  await record('hit')
 
-  // ── 0.1 临时：把原始 body 和签名头存下来，用来跟 PayPal 官方验签 API 对照 ──
-  try {
-    const db0 = getDB(event)
-    if (db0 && rawBody) {
-      const hdrs = {
-        'paypal-transmission-id': getHeader(event, 'paypal-transmission-id') || '',
-        'paypal-transmission-time': getHeader(event, 'paypal-transmission-time') || '',
-        'paypal-transmission-sig': getHeader(event, 'paypal-transmission-sig') || '',
-        'paypal-cert-url': getHeader(event, 'paypal-cert-url') || '',
-        'paypal-auth-algo': getHeader(event, 'paypal-auth-algo') || '',
-      }
-      await db0
-        .prepare('INSERT INTO tmp_hook_raw (ts, raw_body, headers) VALUES (?, ?, ?)')
-        .bind(new Date().toISOString(), rawBody, JSON.stringify(hdrs))
-        .run()
-        .catch(() => {})
-    }
-  } catch {
-    /* ignore */
-  }
 
   // ── 1. 签名验证 ──
   const webhookId = process.env.PAYPAL_WEBHOOK_ID || ''
@@ -89,18 +66,14 @@ export default defineEventHandler(async (event) => {
     try {
       result = await verifyPayPalWebhook(headers, webhookId, body, rawBody)
     } catch (e: any) {
-      await record('verify-threw:' + String(e?.message || e).slice(0, 120))
       throw e
     }
     if (!result.ok) {
-      await record('verify-fail:' + String(result.reason).slice(0, 120))
       console.error('[PayPal Webhook] ❌ signature verification failed:', result.reason)
       throw createError({ statusCode: 401, statusMessage: 'Invalid webhook signature' })
     }
-    await record('verified')
     console.log('[PayPal Webhook] ✅ signature verified')
   } else {
-    await record('skip-verify')
     console.warn(
       '[PayPal Webhook] ⚠️ 跳过签名验证（未配置 PAYPAL_WEBHOOK_ID 且非 production）—— 绝不能这样上生产',
     )
@@ -132,45 +105,17 @@ export default defineEventHandler(async (event) => {
       case 'PAYMENT.CAPTURE.COMPLETED':
       case 'CHECKOUT.ORDER.COMPLETED':
         await onOneTimeCompleted(event, resource)
-        await record('processed')
         break
       default:
         console.log(`[PayPal Webhook] 未处理的事件：${eventType}`)
     }
   } catch (err: any) {
-    await record('error:' + String(err?.message || err).slice(0, 160))
     console.error('[PayPal Webhook] 处理出错:', err?.message)
     // 仍然返回 200，避免 PayPal 无限重试（但要留下日志）
   }
 
-  await record('done')
   return { received: true }
 })
-
-/** 临时：把 webhook 处理过程写进 D1，方便线上排查（测完删） */
-async function logHookHit(event: any, note: string, eventType?: string, resource?: any) {
-  try {
-    const db0 = getDB(event)
-    if (!db0) return
-    await db0
-      .prepare(
-        `INSERT INTO tmp_hook_hits (ts, event_type, resource_id, order_id, has_sig, note)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      )
-      .bind(
-        new Date().toISOString(),
-        String(eventType || ''),
-        String(resource?.id || ''),
-        String(resource?.supplementary_data?.related_ids?.order_id || ''),
-        getHeader(event, 'paypal-transmission-sig') ? 1 : 0,
-        note,
-      )
-      .run()
-      .catch(() => {})
-  } catch {
-    /* ignore */
-  }
-}
 
 function safeParse(s: string): any {
   try {
@@ -380,7 +325,6 @@ async function onOneTimeCompleted(event: any, resource: any) {
   if (!row) {
     // 找不到对应订单 —— 多半是别处的订单（不是我们平台下的），忽略
     console.warn('[PayPal Webhook] 一次性付款事件找不到订单行', { orderId })
-    await logHookHit(event, 'no-order-row', 'PAYMENT.CAPTURE.COMPLETED', resource)
     return
   }
 
@@ -394,7 +338,6 @@ async function onOneTimeCompleted(event: any, resource: any) {
   const changes = Number((claimed as any)?.meta?.changes ?? 0)
   if (changes === 0) {
     console.log('[PayPal Webhook] 一次性付款已处理过，跳过（幂等）', { orderId })
-    await logHookHit(event, 'already-claimed', 'PAYMENT.CAPTURE.COMPLETED', resource)
     return
   }
 
@@ -403,7 +346,6 @@ async function onOneTimeCompleted(event: any, resource: any) {
   const cards = Number(meta.cards || 0)
   if (!planId || !cards) {
     console.warn('[PayPal Webhook] 订单信息不全，没法发额度', { orderId, meta })
-    await logHookHit(event, 'no-plan-cards', 'PAYMENT.CAPTURE.COMPLETED', resource)
     return
   }
 
@@ -459,6 +401,5 @@ async function onOneTimeCompleted(event: any, resource: any) {
     .run()
     .catch(() => {})
 
-  await logHookHit(event, 'granted', 'PAYMENT.CAPTURE.COMPLETED', resource)
   console.log(`[PayPal Webhook] ✅ 一次性付款兜底发额度 uid=${row.user_id} +${cards} 张（${planId}）`)
 }
