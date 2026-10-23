@@ -92,3 +92,30 @@ describe('付费点 — 额度文案要说实话', () => {
     expect(src).not.toMatch(/No account tricks/i)
   })
 })
+
+describe('出图张数 — 用户能自己选', () => {
+  it('贺卡向导要能选出几张（以前写死 4 张，免费额度一天才 2 张）', () => {
+    const src = read('pages/cards.vue')
+    expect(src).toContain('COUNT_CHOICES')
+    expect(src).toContain('countChoice')
+    // 不能再是写死的 min(4, 剩余)
+    expect(src).not.toMatch(/const maxN = usageUnlimited\.value \? 4/)
+    expect(src).toContain('const maxN = actualCount.value')
+  })
+
+  it('选几张就扣几张（服务端按实际出图张数扣）', () => {
+    // 前端传的 n 必须来自用户选择
+    const src = read('pages/cards.vue')
+    expect(src).toMatch(/n: maxN/)
+    // 服务端拿 n 当扣费单位
+    const api = read('server/api/image/generate.post.ts')
+    expect(api).toContain('consumeQuota(event, auth.uid, \'image\', count)')
+  })
+
+  it('额度不够时要收敛并说清楚', () => {
+    const src = read('pages/cards.vue')
+    expect(src).toContain('actualCount')
+    expect(src).toContain('countShort')
+    expect(src).toMatch(/this go will make \{\{ actualCount \}\}/)
+  })
+})

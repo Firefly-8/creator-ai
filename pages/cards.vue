@@ -173,6 +173,29 @@
           </button>
         </div>
 
+        <!-- 出几张：选几张就扣几张额度 -->
+        <div class="ck-count">
+          <div class="ck-count__head">
+            <span class="ck-count__label">How many options?</span>
+            <span class="ck-count__note">More to choose from — each one uses one of your daily pictures.</span>
+          </div>
+          <div class="ck-count__opts">
+            <button
+              v-for="n in COUNT_CHOICES"
+              :key="n"
+              type="button"
+              class="ck-count__opt"
+              :class="{ 'ck-count__opt--on': countChoice === n }"
+              @click="countChoice = n"
+            >
+              {{ n }}
+            </button>
+          </div>
+          <p v-if="countShort" class="ck-count__hint">
+            You have {{ quotaRemaining }} left today — this go will make {{ actualCount }}.
+          </p>
+        </div>
+
         <!-- 额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
         <div v-if="outOfQuota && !usageUnlimited" class="ck-quota">
           <template v-if="outOfCards">
@@ -457,6 +480,27 @@ const usageMode = ref<'credit' | 'daily' | 'unlimited'>('daily')
 /** 有没有付费权益（决定下载是不是 2K 无水印） */
 const hasPaid = ref(false)
 const outOfQuota = computed(() => usageLoaded.value && !usageUnlimited.value && quotaRemaining.value <= 0)
+
+/**
+ * 一次出几张。
+ * ⚠️ 以前是写死的 min(4, 剩余额度) —— 用户没法主动要"只要 1 张"，
+ *    一次就把当天的免费额度烧光（免费档一天才 2 张）。
+ *    现在让用户自己选：**选几张就扣几张**。
+ */
+const COUNT_CHOICES = [1, 2, 4]
+const countChoice = ref(4)
+
+/** 实际会出几张：不能超过剩余额度（没读到额度时先按用户选的） */
+const actualCount = computed(() => {
+  if (!usageLoaded.value) return countChoice.value
+  if (usageUnlimited.value) return countChoice.value
+  return Math.max(1, Math.min(countChoice.value, quotaRemaining.value))
+})
+
+/** 选了 4 但额度不够 → 要说清楚这次会少出几张 */
+const countShort = computed(
+  () => usageLoaded.value && !usageUnlimited.value && actualCount.value < countChoice.value,
+)
 /** 付费档但张数用完了 —— 和「免费额度用完」要说不同的话 */
 const outOfCards = computed(() => usageMode.value === 'credit' && outOfQuota.value)
 
@@ -603,9 +647,10 @@ async function generate() {
   generating.value = true
   try {
     const uid = await uploadPhoto()
-    // 出图张数不能超过今天剩余的免费额度 —— 服务端也会按实际张数扣，
-    // 这里先按额度收敛，避免请求到一半才被拒。
-    const maxN = usageUnlimited.value ? 4 : Math.max(1, Math.min(4, quotaRemaining.value))
+    // 出图张数 = 用户选的（且不超过今天剩余的免费额度）。
+    // 服务端按**实际出图张数**扣，所以选几张就是扣几张 —— 这里先收敛，
+    // 避免请求到一半才被拒。
+    const maxN = actualCount.value
     const res = await api.post<{ images: { id: string; imageUrl: string | null }[] }>('/api/image/generate', {
       scenario: scenario.value.id,
       style: style.value,
@@ -1088,6 +1133,50 @@ onBeforeUnmount(() => {
 
 /* ---------- 画风 ---------- */
 .ck-styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.9rem; }
+
+/* ---------- 出图张数 ---------- */
+.ck-count {
+  margin-top: 1.5rem;
+  padding: 1.1rem 1.2rem;
+  border: 1.5px solid var(--ck-line);
+  border-radius: 0.9rem;
+  background: #faf6ef;
+}
+.ck-count__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.ck-count__label {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ck-ink);
+}
+.ck-count__note { font-size: 0.8125rem; color: var(--ck-ink-2); }
+.ck-count__opts { display: flex; gap: 0.5rem; }
+.ck-count__opt {
+  min-width: 3.1rem;
+  padding: 0.5rem 0.9rem;
+  border: 1.5px solid var(--ck-line);
+  border-radius: 0.7rem;
+  background: var(--ck-white);
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ck-ink-2);
+  cursor: pointer;
+  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
+}
+.ck-count__opt:hover { border-color: var(--ck-coral); color: var(--ck-coral-deep); }
+.ck-count__opt--on {
+  border-color: var(--ck-coral);
+  background: var(--ck-coral);
+  color: #fff;
+}
+.ck-count__opt--on:hover { color: #fff; }
+.ck-count__hint { margin: 0.7rem 0 0; font-size: 0.8125rem; color: var(--ck-ink-2); }
 .ck-style {
   display: flex;
   flex-direction: column;
