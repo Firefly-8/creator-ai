@@ -127,7 +127,8 @@
         <h3 class="ck-panel-sec__title">Download</h3>
         <p v-if="!hasPaid" class="ck-note">
           <span class="i-ph-info" />
-          The free download is 1024 px with a small mark.
+          The free version is 1024 px with a small mark — in the preview, in the
+          download and when you share it.
           <NuxtLink to="/pricing">Get the print-ready file</NuxtLink> for 300 DPI and no mark.
         </p>
         <div class="ck-panel-sec__actions">
@@ -162,7 +163,8 @@ const props = defineProps<{
 const {
   draft, spec, loading, exporting, error, previewCanvas, specs,
   addText, updateText, removeText, renderPreview,
-  downloadCard, startDrag, moveDrag, endDrag,
+  downloadCard, exportCard, watermark,
+  startDrag, moveDrag, endDrag,
 } = useCardCanvas({
   imageUrl: props.imageUrl,
   specId: '5x7',
@@ -174,6 +176,11 @@ const {
 })
 
 const hasPaid = computed(() => !!props.hasPaid)
+
+// 免费版：预览、下载、分享**三处都打标**（同一个开关）
+watch(hasPaid, (paid) => {
+  watermark.value = !paid
+}, { immediate: true })
 
 watch(() => props.imageUrl, async (u) => {
   if (!u) return
@@ -213,30 +220,31 @@ async function doDownload() {
 }
 
 async function doShare() {
-  const blob = await (hasPaid.value
-    ? await import('~/composables/useCardCanvas')
-    : null) as any
-  // 分享：先导出，再尝试 Web Share；不支持就复制提示
-  const canvas = previewCanvas.value
-  if (!canvas) return
-  canvas.toBlob(async (b) => {
-    if (!b) return
-    const file = new File([b], 'card.jpg', { type: 'image/jpeg' })
-    const nav = navigator as any
-    if (nav.canShare?.({ files: [file] })) {
-      try {
-        await nav.share({ files: [file], title: 'A card I made for you' })
-        return
-      } catch { /* 用户取消 */ }
-    }
-    // 降级：下载
-    const url = URL.createObjectURL(b)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'card.jpg'
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 3000)
-  }, 'image/jpeg', 0.9)
+  // ⚠️ 以前这里直接用 previewCanvas（**没有水印**）→ 免费用户点 Share
+  //    就能把干净成品发到微信/WhatsApp，付费点直接漏掉。
+  //    现在分享和下载走同一套导出：免费版同样 1024px + 打标。
+  const blob = await exportCard(
+    hasPaid.value
+      ? { format: 'jpeg' }                          // 付费：300 DPI，无水印
+      : { targetWidth: 1024, watermark: true, format: 'jpeg' },
+  )
+  if (!blob) return
+
+  const file = new File([blob], 'card.jpg', { type: 'image/jpeg' })
+  const nav = navigator as any
+  if (nav.canShare?.({ files: [file] })) {
+    try {
+      await nav.share({ files: [file], title: 'A card I made for you' })
+      return
+    } catch { /* 用户取消 */ }
+  }
+  // 降级：下载
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'card.jpg'
+  a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 3000)
 }
 </script>
 
@@ -381,8 +389,10 @@ async function doShare() {
 .ck-size__note { font-size: 0.75rem; color: #6b5f55; }
 
 .ck-note {
-  display: flex;
-  gap: 0.4rem;
+  /* ⚠️ 以前是 display:flex —— 文案一长，里面的 <a> 就被当成 flex item
+     压成一条竖排的窄条（2026-10-23 改文案时踩到）。
+     改成普通流：图标 inline 跟着第一行走，链接正常换行。 */
+  display: block;
   padding: 0.6rem 0.7rem;
   border-radius: 0.5rem;
   background: rgba(201, 162, 39, 0.12);
@@ -390,6 +400,7 @@ async function doShare() {
   line-height: 1.5;
   color: #6b5f55;
 }
+.ck-note .i-ph-info { vertical-align: -0.15em; margin-right: 0.25rem; }
 .ck-note a { color: #a53f2c; font-weight: 600; }
 .ck-error { font-size: 0.8125rem; color: #c8543d; }
 </style>

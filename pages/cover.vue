@@ -162,9 +162,10 @@
 // ⚠️ 不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，客户端拿到的
 // t 不是函数 → 整页 500。用 useT()（内部走 useNuxtApp().$i18n.t）。
 const { t } = useT()
-const requireAuth = useRequireAuth()
-const { user, authReady } = useAuth()
-const { openLoginWithRedirect } = useAuthModal()
+const requireAuth = useRequireAuth({
+  note: 'Sign in to make your cover — everything you have set up is kept.',
+  afterAuth: () => submit(),
+})
 const route = useRoute()
 import type { SongPublic } from '~/utils/types'
 
@@ -443,17 +444,8 @@ async function hydrateRemixFromQuery() {
 }
 
 onMounted(() => {
-  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
-  if (import.meta.client && authReady.value && !user.value) {
-    openLoginWithRedirect(route.fullPath)
-  }
+  // ⚠️ 不再进页面就弹登录框 —— 点 Generate 时才要登录（requireAuth()）。
   hydrateRemixFromQuery()
-})
-
-watch([authReady, user], ([ready, u]) => {
-  if (import.meta.client && ready && !u) {
-    openLoginWithRedirect(route.fullPath)
-  }
 })
 
 useHead({

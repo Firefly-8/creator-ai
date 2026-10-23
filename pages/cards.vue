@@ -303,7 +303,19 @@
         <template v-else-if="usageMode === 'credit' && usageLoaded">
           You have {{ quotaRemaining }} card{{ quotaRemaining === 1 ? '' : 's' }} left on your plan.
         </template>
-        <template v-else-if="usageLoaded">You have {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left today.</template>
+        <template v-else-if="usageLoaded">
+          <!-- ⚠️ 额度是按**出图张数**扣的。一次生成会出 min(4, 剩余) 张 ——
+               额度不足 4 张时，一次就把今天的用完了。
+               以前只写 "N free generations left"，用户会以为是"N 次机会"，
+               点一次就撞墙 → 必须说清楚是"张"。 -->
+          <template v-if="quotaRemaining < 4">
+            You have {{ quotaRemaining }} picture{{ quotaRemaining === 1 ? '' : 's' }} left today —
+            one go will make as many as you have left.
+          </template>
+          <template v-else>
+            You have {{ quotaRemaining }} free generations left today.
+          </template>
+        </template>
         <template v-else>Free to preview. Only pay when it is right.</template>
       </p>
     </div>

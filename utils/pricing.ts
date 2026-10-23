@@ -59,7 +59,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
     description: 'Try it out. No card needed.',
     cta: 'Start free',
     features: [
-      '2 free cards a day (1 if your email is not verified)',
+      '2 free pictures a day (1 if your email is not verified)',
+      'Each picture you generate uses one of them',
       '1024 px download',
       'Small mark on the file',
       'Your photos stay private',

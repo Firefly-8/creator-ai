@@ -138,8 +138,12 @@ describe('定价页不能有假承诺', () => {
     expect(FREE_DAILY_LIMITS.image.verified).toBe(2)
     expect(FREE_DAILY_LIMITS.image.unverified).toBe(1)
     // 文案在 pricing.ts（定价页是从那里渲染的）
-    expect(PLANS.free.features.join(' ')).toContain('2 free cards a day')
+    // ⚠️ 2026-10-23：额度实际按**出图张数**扣，所以写 "pictures" 不是 "cards" ——
+    //    "cards" 会让人以为是"能做 2 张贺卡"，实际是"能出 2 张图"。
+    expect(PLANS.free.features.join(' ')).toContain('2 free pictures a day')
     expect(PLANS.free.features.join(' ')).toContain('1 if your email is not verified')
+    // 必须说清楚"出一张消耗一个"，否则用户以为能生成 2 次、点一次就撞墙
+    expect(PLANS.free.features.join(' ')).toMatch(/each (picture|option) you generate uses one/i)
   })
 
   it('付费档的文案里说了「2K / 无水印 / 300 DPI」—— 那是真的付费点', () => {

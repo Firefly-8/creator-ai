@@ -155,11 +155,12 @@
 // ⚠️ 不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，客户端拿到的
 // t 不是函数 → 整页 500。用 useT()（内部走 useNuxtApp().$i18n.t）。
 const { t } = useT()
-const requireAuth = useRequireAuth()
+const requireAuth = useRequireAuth({
+  note: 'Sign in to write your track — everything you have set up is kept.',
+  afterAuth: () => submit(),
+})
 const { trackGenerateStart, trackGenerateSuccess } = useAnalytics()
 const { notifyGenerationComplete } = useNotification()
-const { user, authReady } = useAuth()
-const { openLoginWithRedirect } = useAuthModal()
 import { LYRIC_TAGS, type SongPublic } from '~/utils/types'
 import { SONG_PRESETS, type SongPreset } from '~/utils/presets'
 import { useAnalytics } from '~/composables/useAnalytics'
@@ -291,21 +292,12 @@ async function preparePresetLyrics(preset: SongPreset) {
 }
 
 onMounted(() => {
-  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
-  if (import.meta.client && authReady.value && !user.value) {
-    openLoginWithRedirect(route.fullPath)
-  }
+  // ⚠️ 不再进页面就弹登录框 —— 先让人看清编辑器长什么样，
+  //    点 Generate 时才要登录（generate() 里有 requireAuth()）。
   const presetId = typeof route.query.preset === 'string' ? route.query.preset : ''
   if (!presetId) return
   const found = SONG_PRESETS.find((p) => p.id === presetId)
   if (found) applyPreset(found)
-})
-
-// Auth guard watcher: 处理 auth 状态在 mount 之后才就绪的情况
-watch([authReady, user], ([ready, u]) => {
-  if (import.meta.client && ready && !u) {
-    openLoginWithRedirect(route.fullPath)
-  }
 })
 
 function insertTag(tag: string) {

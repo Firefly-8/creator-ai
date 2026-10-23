@@ -432,11 +432,29 @@
 // ⚠️ 不要用 useI18n()：auto-import 解析到 vue-i18n 原始实现，客户端拿到的
 // t 不是函数 → 整页 500。用 useT()（内部走 useNuxtApp().$i18n.t）。
 const { t } = useT()
-const requireAuth = useRequireAuth()
+/**
+ * 登录成功后要接着做的事。
+ * 点 Generate → 接着生成；点上传参考图 → 接着把那张图传上去。
+ */
+const pendingAction = ref<'generate' | 'upload' | null>(null)
+/** 待上传的参考图（登录后要接着传） */
+const pendingRefFile = ref<File | null>(null)
+
+const requireAuth = useRequireAuth({
+  note: 'Sign in to generate your picture — everything you have set up is kept.',
+  afterAuth: () => {
+    const action = pendingAction.value
+    pendingAction.value = null
+    if (action === 'upload' && pendingRefFile.value) {
+      const f = pendingRefFile.value
+      pendingRefFile.value = null
+      return uploadRefFile(f)
+    }
+    return generate()
+  },
+})
 import { useAnalytics } from '~/composables/useAnalytics'
 const { trackGenerateStart: trackImgStart, trackGenerateSuccess: trackImgSuccess } = useAnalytics()
-const { user, authReady } = useAuth()
-const { openLoginWithRedirect } = useAuthModal()
 const route = useRoute()
 import {
   IMAGE_ASPECT_RATIOS,
@@ -589,17 +607,12 @@ function onKeydown(e: KeyboardEvent) {
 }
 
 onMounted(() => {
-  // Auth guard: 未登录时弹出登录框，登录后跳回当前页
-  if (import.meta.client && authReady.value && !user.value) {
-    openLoginWithRedirect(route.fullPath)
-  }
+  // ⚠️ 以前这里（和下面的 watch）会在**进页面就弹登录框** ——
+  //    /image 是公开 SEO 落地页（/ai-image-generator、/tools 都链过来），
+  //    访客点 CTA 落地看到的是登录框，界面一眼都没见着 → 漏斗最上面漏水。
+  //    现在改成：**先进去看清楚能做什么，点 Generate 时才要登录**
+  //    （generate() 里已有 requireAuth()）。
   window.addEventListener('keydown', onKeydown)
-})
-
-watch([authReady, user], ([ready, u]) => {
-  if (import.meta.client && ready && !u) {
-    openLoginWithRedirect(route.fullPath)
-  }
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
@@ -674,9 +687,20 @@ async function shrinkImage(file: File, maxSide = 1024, quality = 0.85): Promise<
   return blob || file
 }
 
-async function onRefFile(e: Event) {
+function onRefFile(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  // ⚠️ 上传接口要登录。未登录时先登录，**登录后接着把这张图传上去**，
+  //    别让用户再选一次文件（手机端重新挑照片很烦）。
+  pendingAction.value = 'upload'
+  pendingRefFile.value = file
+  if (!requireAuth()) return
+  pendingAction.value = null
+  pendingRefFile.value = null
+  uploadRefFile(file)
+}
+
+async function uploadRefFile(file: File) {
   errorText.value = ''
   statusText.value = 'Uploading reference…'
   try {
@@ -728,7 +752,10 @@ async function optimizePrompt() {
 }
 
 async function generate() {
+  // 登录成功后接着做的是「生成」——别被上一次残留的 pendingAction 带偏
+  pendingAction.value = 'generate'
   if (!requireAuth()) return
+  pendingAction.value = null
   if (!canGenerate.value) return
   generating.value = true
   errorText.value = ''

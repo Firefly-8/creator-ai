@@ -55,6 +55,15 @@ export function useCardCanvas(initial?: Partial<CardDraft>) {
   const fontsReady = ref(false)
   const error = ref('')
 
+  /**
+   * 免费版要不要打标。
+   * ⚠️ 必须和导出用同一套逻辑：**预览也要有标**。
+   *    以前只有导出加水印 → 用户预览看到干净成品，下载才突然出现水印，
+   *    "预览和下载不一样" 是最容易招来差评/退款的一种落差。
+   *    它是 ref —— 付费状态是异步查出来的（/api/user/usage），会变。
+   */
+  const watermark = ref(false)
+
   const spec = ref<CardSpec>(getCardSpec(initial?.specId || defaultSpecFor('card')))
 
   const draft = ref<CardDraft>({
@@ -171,6 +180,24 @@ export function useCardCanvas(initial?: Partial<CardDraft>) {
     }
   }
 
+  /**
+   * 免费版的斜标。
+   * ⚠️ 预览、下载、分享**三处都要走这一个函数** ——
+   *    少一处就是一个"免费用户拿走了干净成品"的漏口。
+   */
+  function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number) {
+    ctx.save()
+    ctx.globalAlpha = 0.5
+    ctx.fillStyle = '#ffffff'
+    ctx.font = `${Math.round(width * 0.028)}px "Playfair Display", Georgia, serif`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.translate(width / 2, height * 0.5)
+    ctx.rotate(-Math.PI / 7)
+    ctx.fillText('Create Keepsakes', 0, 0)
+    ctx.restore()
+  }
+
   function renderPreview() {
     const canvas = previewCanvas.value
     if (!canvas) return
@@ -185,6 +212,8 @@ export function useCardCanvas(initial?: Partial<CardDraft>) {
     if (!ctx) return
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     paint(ctx, w, h)
+    // 免费版预览也要打标 —— 预览 = 交付
+    if (watermark.value) drawWatermark(ctx, w, h)
   }
 
   /* ---------------- 导出 ---------------- */
@@ -217,16 +246,7 @@ export function useCardCanvas(initial?: Partial<CardDraft>) {
       paint(ctx, targetW, targetH)
 
       if (opts.watermark) {
-        ctx.save()
-        ctx.globalAlpha = 0.5
-        ctx.fillStyle = '#ffffff'
-        ctx.font = `${Math.round(targetW * 0.028)}px "Playfair Display", Georgia, serif`
-        ctx.textAlign = 'center'
-        ctx.textBaseline = 'middle'
-        ctx.translate(targetW / 2, targetH * 0.5)
-        ctx.rotate(-Math.PI / 7)
-        ctx.fillText('Create Keepsakes', 0, 0)
-        ctx.restore()
+        drawWatermark(ctx, targetW, targetH)
       }
 
       const mime = opts.format === 'png' ? 'image/png' : 'image/jpeg'
@@ -332,6 +352,8 @@ export function useCardCanvas(initial?: Partial<CardDraft>) {
   })
   watch(() => draft.value.texts, renderPreview, { deep: true })
   watch(() => draft.value.band, renderPreview)
+  // 付费状态是异步查出来的 → 变成付费用户时要把预览上的标去掉
+  watch(watermark, renderPreview)
   watch(() => draft.value.specId, () => {
     spec.value = getCardSpec(draft.value.specId)
     renderPreview()
@@ -345,6 +367,8 @@ export function useCardCanvas(initial?: Partial<CardDraft>) {
     error,
     fontsReady,
     previewCanvas,
+    /** 免费版打标开关（预览 / 下载 / 分享共用） */
+    watermark,
     addText,
     updateText,
     removeText,

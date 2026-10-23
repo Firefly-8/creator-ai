@@ -76,8 +76,9 @@
         <div>
           <h2 class="ck-h2">Just one card?</h2>
           <p class="ck-sub">
-            A single card is <strong>{{ money(singlePlan.price) }}</strong>. No account tricks, no
-            "upgrade" prompts — you pay for the card and you are done.
+            A single card is <strong>{{ money(singlePlan.price) }}</strong>. One payment and the
+            print file is yours — no "upgrade" prompts, no nagging. We do ask you to sign in, so
+            you can find the file again later and download it a second time if you need to.
           </p>
         </div>
         <div class="ck-single__cta">
