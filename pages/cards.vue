@@ -271,7 +271,7 @@
             :key="c.id"
             class="ck-cand"
             :class="{ 'ck-cand--on': picked === c.id }"
-            @click="picked = c.id"
+            @click="pickCandidate(c.id)"
           >
             <img :src="c.url" :alt="`Generated option ${c.id}`" loading="lazy" />
             <span v-if="picked === c.id" class="ck-cand__tick i-ph-check-circle" />
@@ -478,6 +478,20 @@ const generating = ref(false)
 const genError = ref('')
 const candidates = ref<{ id: string; url: string }[]>([])
 const picked = ref('')
+
+/**
+ * 选一张候选图 → 顺手把「写字」那一段带进视野。
+ *
+ * ⚠️ 为什么要：候选图 + 编辑区是上下排的，选完图用户还得自己往下找
+ * 「Now add your words」，中间要滚一两屏 —— 每次生成都白费一次。
+ * 用 block:'nearest'：候选图还留在视野里，不会跳太远。
+ */
+function pickCandidate(id: string) {
+  picked.value = id
+  nextTick(() => {
+    document.querySelector('.ck-editor')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  })
+}
 const pickedUrl = computed(() => candidates.value.find(c => c.id === picked.value)?.url || '')
 
 const messageOptions = ref<string[]>([])
@@ -1411,7 +1425,9 @@ onBeforeUnmount(() => {
 .ck-btn--lg { padding: 1rem 2rem; font-size: 1.0625rem; }
 
 /* ---------- 候选 ---------- */
-.ck-cands { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); gap: 1rem; }
+/* ⚠️ 上限 16rem：以前是 minmax(11rem, 1fr) → 一张图就拉满整行，
+   选完图要滚一整屏才够得到下面的「写字」区。 */
+.ck-cands { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 16rem)); gap: 1rem; }
 .ck-cand {
   position: relative;
   padding: 0;
