@@ -162,6 +162,7 @@
     "model": "Model",
     "aspectRatio": "Aspect Ratio",
     "count": "Count",
+    "countCapped": "Kostenloser Tarif: bis zu 2 Bilder pro Durchgang.",
     "styleType": "Style (live)",
     "generateFailed": "Failed to generate image",
     "noImages": "No images yet",

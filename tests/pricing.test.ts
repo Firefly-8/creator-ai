@@ -24,6 +24,8 @@ import {
   resolvePlanId,
   planAmount,
   planCards,
+  FREE_MAX_IMAGES_PER_RUN,
+  PAID_MAX_IMAGES_PER_RUN,
 } from '../utils/pricing'
 
 const ROOT = join(__dirname, '..')
@@ -134,16 +136,25 @@ describe('定价页不能有假承诺', () => {
     expect(pricing).not.toMatch(/1 card per day/i)
   })
 
-  it('免费档的文案说的是真话（2 张/天，未验证 1 张）', () => {
+  it('免费档的文案说的是真话（2 次/天，未验证 1 次）', () => {
     expect(FREE_DAILY_LIMITS.image.verified).toBe(2)
     expect(FREE_DAILY_LIMITS.image.unverified).toBe(1)
     // 文案在 pricing.ts（定价页是从那里渲染的）
-    // ⚠️ 2026-10-23：额度实际按**出图张数**扣，所以写 "pictures" 不是 "cards" ——
-    //    "cards" 会让人以为是"能做 2 张贺卡"，实际是"能出 2 张图"。
-    expect(PLANS.free.features.join(' ')).toContain('2 free pictures a day')
+    // ⚠️ 2026-10-27：额度改成**按次**扣 —— 一次生成 = 1 次，不管出几张图。
+    //    所以写 "generations"（次数），不是 "pictures"（张数）：
+    //    写张数会让用户以为"选 4 张就扣 4 次"。
+    expect(PLANS.free.features.join(' ')).toContain('2 free generations a day')
     expect(PLANS.free.features.join(' ')).toContain('1 if your email is not verified')
-    // 必须说清楚"出一张消耗一个"，否则用户以为能生成 2 次、点一次就撞墙
-    expect(PLANS.free.features.join(' ')).toMatch(/each (picture|option) you generate uses one/i)
+    // 必须说清楚"一次生成消耗一次"
+    expect(PLANS.free.features.join(' ')).toMatch(/each go makes up to \d+ pictures/i)
+  })
+
+  it('免费档单次出图张数有上限（成本闸门，且文案要说到）', () => {
+    // MiniMax 按张收费：不限张数的话，2 次 × 4 张 = 成本 4 倍
+    expect(FREE_MAX_IMAGES_PER_RUN).toBe(2)
+    expect(PAID_MAX_IMAGES_PER_RUN).toBe(4)
+    // 文案里要出现这个上限，用户才知道一次能拿几个候选
+    expect(PLANS.free.features.join(' ')).toContain(`${FREE_MAX_IMAGES_PER_RUN} pictures`)
   })
 
   it('付费档的文案里说了「2K / 无水印 / 300 DPI」—— 那是真的付费点', () => {

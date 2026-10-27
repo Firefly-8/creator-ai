@@ -162,6 +162,7 @@
     "model": "Model",
     "aspectRatio": "Aspect Ratio",
     "count": "Count",
+    "countCapped": "Offre gratuite : jusqu’à 2 images par génération.",
     "styleType": "Style (live)",
     "generateFailed": "Failed to generate image",
     "noImages": "No images yet",

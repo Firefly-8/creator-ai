@@ -162,6 +162,7 @@
     "model": "Model",
     "aspectRatio": "Aspect Ratio",
     "count": "Count",
+    "countCapped": "無料プランは1回につき最大2枚まで。",
     "styleType": "Style (live)",
     "generateFailed": "Failed to generate image",
     "noImages": "No images yet",

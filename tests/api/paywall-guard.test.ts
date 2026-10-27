@@ -75,16 +75,21 @@ describe('付费点 — 登录墙的位置', () => {
 })
 
 describe('付费点 — 额度文案要说实话', () => {
-  it('免费额度按张数扣 → 文案不能说成"几张卡片"', () => {
+  it('免费额度按**次**扣 → 文案要说"几次"不是"几张"', () => {
     const src = read('utils/pricing.ts')
-    expect(src).toContain('2 free pictures a day')
+    // ⚠️ 2026-10-27 改成按次：一次生成 = 1 次，出几张都算这 1 次。
+    //    写 "pictures" 会让用户以为"选 4 张就扣 4 次"。
+    expect(src).toContain('2 free generations a day')
     expect(src).not.toContain('2 free cards a day')
+    expect(src).not.toContain('2 free pictures a day')
   })
 
-  it('生成页在额度不足 4 张时要说清楚是"张"不是"次"', () => {
+  it('生成页要说清楚额度是"次"，并说清一次能出几张', () => {
     const src = read('pages/cards.vue')
-    expect(src).toMatch(/quotaRemaining < 4/)
-    expect(src).toMatch(/one go will make as many as you have left/i)
+    expect(src).toMatch(/free generation/)
+    // 单次上限也要露出来（用户得知道一次能拿几个候选）
+    expect(src).toContain('maxPerRun')
+    expect(src).not.toMatch(/one go will make as many as you have left/i)
   })
 
   it('定价页不能承诺"无需注册"（下单接口是要登录的）', () => {
@@ -103,19 +108,22 @@ describe('出图张数 — 用户能自己选', () => {
     expect(src).toContain('const maxN = actualCount.value')
   })
 
-  it('选几张就扣几张（服务端按实际出图张数扣）', () => {
+  it('一次生成 = 1 次额度（不管出几张），服务端按次扣', () => {
     // 前端传的 n 必须来自用户选择
     const src = read('pages/cards.vue')
     expect(src).toMatch(/n: maxN/)
-    // 服务端拿 n 当扣费单位
+    // 服务端按**次**扣（1），不是按张数扣
     const api = read('server/api/image/generate.post.ts')
-    expect(api).toContain('consumeQuota(event, auth.uid, \'image\', count)')
+    expect(api).toContain("consumeQuota(event, auth.uid, 'image', 1)")
+    expect(api).not.toContain("consumeQuota(event, auth.uid, 'image', count)")
   })
 
-  it('额度不够时要收敛并说清楚', () => {
+  it('免费档单次张数要被收窄，并说清楚', () => {
     const src = read('pages/cards.vue')
     expect(src).toContain('actualCount')
     expect(src).toContain('countShort')
-    expect(src).toMatch(/this go will make \{\{ actualCount \}\}/)
+    expect(src).toContain('maxPerRun')
+    // 选项要跟单次上限走（免费只给 1/2）
+    expect(src).toContain('countChoices')
   })
 })

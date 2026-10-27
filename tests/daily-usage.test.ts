@@ -42,20 +42,25 @@ function makeDb(opts: {
           return {
             async first() {
               // 每日额度 UPSERT 自增（INSERT ... ON CONFLICT ... RETURNING）
+              // ⚠️ 自增量是**参数**（units），不是写死的 1 ——
+              //   按次扣传 1，按张扣传张数。mock 必须跟上，否则测的是假行为。
               if (sql.includes('ON CONFLICT') && sql.includes('RETURNING')) {
-                const col = sql.match(/SET\s+(\w+)\s*=\s*\1 \+ 1/)?.[1] || 'image_count'
+                const col = sql.match(/SET\s+(\w+)\s*=\s*\1\s*\+\s*(\d+|\?)/)?.[1] || 'image_count'
+                // bind(user_id, date, units, units) → 自增量取最后一个
+                const inc = Number(args[args.length - 1]) || 1
                 if (!state.usage) state.usage = { image_count: 0, music_count: 0, text_count: 0 }
-                state.usage[col] = (state.usage[col] || 0) + 1
+                state.usage[col] = (state.usage[col] || 0) + inc
                 state.runs.push({ sql, args })
                 return { count: state.usage[col] }
               }
               if (sql.includes('FROM users')) return state.user
               if (sql.includes('FROM daily_usage')) return state.usage
-              // 扣 1 张付费卡：UPDATE ... RETURNING credits_remaining
+              // 扣付费卡：UPDATE ... RETURNING credits_remaining（扣 units 张）
               if (sql.includes('UPDATE subscriptions') && sql.includes('RETURNING')) {
                 const u = state.user
-                if (!u || (u.credits_remaining ?? 0) <= 0) return null
-                u.credits_remaining = u.credits_remaining - 1
+                const need = Number(args[args.length - 1]) || 1
+                if (!u || (u.credits_remaining ?? 0) < need) return null
+                u.credits_remaining = u.credits_remaining - need
                 return { credits_remaining: u.credits_remaining }
               }
               return null
@@ -80,15 +85,18 @@ function makeDb(opts: {
               }
               // 每日额度 UPSERT 自增
               if (sql.includes('ON CONFLICT') && sql.includes('RETURNING')) {
-                const col = sql.match(/SET\s+(\w+)\s*=\s*\1 \+ 1/)?.[1] || 'image_count'
+                const col = sql.match(/SET\s+(\w+)\s*=\s*\1\s*\+\s*(\d+|\?)/)?.[1] || 'image_count'
+                const inc = Number(args[args.length - 1]) || 1
                 if (!state.usage) state.usage = { image_count: 0, music_count: 0, text_count: 0 }
-                state.usage[col] = (state.usage[col] || 0) + 1
+                state.usage[col] = (state.usage[col] || 0) + inc
                 return { count: state.usage[col] }
               }
-              // 每日额度退还（减 1）
+              // 每日额度退还（减 units）
               if (sql.includes('SET') && sql.includes('CASE WHEN')) {
                 const col = sql.match(/SET\s+(\w+)\s*=\s*CASE/)?.[1] || 'image_count'
-                if (state.usage) state.usage[col] = Math.max(0, (state.usage[col] || 0) - 1)
+                // bind(units, units, uid, date) → 扣减量取前两个
+                const back = Number(args[0]) || 1
+                if (state.usage) state.usage[col] = Math.max(0, (state.usage[col] || 0) - back)
                 return {}
               }
               return {}
@@ -246,15 +254,25 @@ describe('付费额度（credits）—— 2026-10-21 提价重构的核心', () 
     expect(q.remaining).toBe(20)
   })
 
-  it('一次生成只扣 1 张卡（不管出几张图）', async () => {
+  it('一次生成只扣 1 张卡（4 个候选让用户挑，用户只拿走 1 张）', async () => {
     const { db, state } = makeDb({ user: paidUser() })
     mockGetDB.mockReturnValue(db)
 
-    // 一次出 4 张候选 = 1 张卡
-    const r = await consumeQuota(event, 'u1', 'image', 4)
+    // ⚠️ 2026-10-27 起 units 语义统一：**units = 消耗多少单位**
+    //   generate 端点传 1（一次生成 = 1 张卡，出几张候选都算这 1 张）
+    const r = await consumeQuota(event, 'u1', 'image', 1)
     expect(r.mode).toBe('credit')
     expect(r.credits).toBe(19)
     expect(state.user.credits_remaining).toBe(19)
+  })
+
+  it('批量出图按**张数**扣卡（units=8 → 扣 8 张，不是 1 张）', async () => {
+    const { db, state } = makeDb({ user: paidUser() })
+    mockGetDB.mockReturnValue(db)
+
+    // 批量一次能出 4 方向 × 2 张 = 8 张图 —— 收 1 张卡等于白送 7 张
+    await consumeQuota(event, 'u1', 'image', 8)
+    expect(state.user.credits_remaining).toBe(12)
   })
 
   it('卡用完了 → 402 OUT_OF_CREDITS（不是 429，也不是放行）', async () => {
@@ -268,11 +286,11 @@ describe('付费额度（credits）—— 2026-10-21 提价重构的核心', () 
     })
   })
 
-  it('付费用户没有「每日免费额度」这回事 —— 一次出 4 张也只扣 1 张', async () => {
+  it('付费用户没有「每日免费额度」这回事 —— 5 次生成 = 5 张卡', async () => {
     const { db, state } = makeDb({ user: paidUser() })
     mockGetDB.mockReturnValue(db)
 
-    for (let i = 0; i < 5; i++) await consumeQuota(event, 'u1', 'image', 4)
+    for (let i = 0; i < 5; i++) await consumeQuota(event, 'u1', 'image', 1)
     // 5 次生成 = 5 张卡（不是 20 张）
     expect(state.user.credits_remaining).toBe(15)
     // 每日额度表根本没被写
@@ -283,9 +301,33 @@ describe('付费额度（credits）—— 2026-10-21 提价重构的核心', () 
     const { db, state } = makeDb({ user: paidUser() })
     mockGetDB.mockReturnValue(db)
 
-    const q = await consumeQuota(event, 'u1', 'image', 4)
-    await refundQuota(event, 'u1', 'image', 4, q.mode)
+    const q = await consumeQuota(event, 'u1', 'image', 1)
+    await refundQuota(event, 'u1', 'image', 1, q.mode)
     expect(state.user.credits_remaining).toBe(20)
+  })
+
+  it('⚠️ 退款必须和扣的量一样多（扣 1 退 4 = 白嫖漏洞）', async () => {
+    const { db, state } = makeDb({ user: freeUser() })
+    mockGetDB.mockReturnValue(db)
+
+    // 一次生成扣 1 次（按次）
+    const q = await consumeQuota(event, 'u1', 'image', 1)
+    expect(state.usage!.image_count).toBe(1)
+
+    // 失败时退的数量 > 扣的数量 → 额度凭空增加（以前就是这么被刷的）
+    await refundQuota(event, 'u1', 'image', 4, q.mode)
+    expect(state.usage!.image_count).toBe(0)
+  })
+
+  it('免费档按次：一次生成出 4 张候选也只扣 1 次', async () => {
+    const { db, state } = makeDb({ user: freeUser() })
+    mockGetDB.mockReturnValue(db)
+
+    await consumeQuota(event, 'u1', 'image', 1)
+    expect(state.usage!.image_count).toBe(1)
+    // 2 次/天 → 第 3 次被拒
+    await consumeQuota(event, 'u1', 'image', 1)
+    await expect(consumeQuota(event, 'u1', 'image', 1)).rejects.toMatchObject({ statusCode: 429 })
   })
 
   it('订阅周期到期 → 惰性续发新一轮额度', async () => {

@@ -162,6 +162,7 @@
     "model": "النموذج",
     "aspectRatio": "نسبة العرض",
     "count": "العدد",
+    "countCapped": "الخطة المجانية: صورتان كحد أقصى في كل مرة.",
     "styleType": "الأسلوب (live)",
     "generateFailed": "فشل توليد الصورة",
     "noImages": "لا توجد صور بعد",

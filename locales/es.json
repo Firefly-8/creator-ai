@@ -162,6 +162,7 @@
     "model": "Modelo",
     "aspectRatio": "Relación de aspecto",
     "count": "Cantidad",
+    "countCapped": "Plan gratuito: hasta 2 imágenes por vez.",
     "styleType": "Estilo (live)",
     "generateFailed": "Error al generar imagen",
     "noImages": "Sin imágenes aún",

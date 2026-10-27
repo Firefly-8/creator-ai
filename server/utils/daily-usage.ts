@@ -335,13 +335,17 @@ export async function getUserQuota(event: any, uid: string, kind: UsageKind): Pr
 /**
  * 消耗额度
  *
- * units = 这次要出几张图（客户端可以传 n，所以要按张数扣）
+ * units = 这次消耗多少「单位」。**两种模式都按 units 扣**（以前 daily 模式忽略
+ * 这个参数、每次只 +1，而退款按 units 退 —— 扣 1 退 4，白嫖漏洞）。
  *
- * 扣法分两种：
- *   - credit 模式（付费）：**一次生成扣 1 张卡**。
- *     一次生成会出 4 个候选让用户挑，但用户只拿走 1 张 ——
- *     按张数扣等于「做 1 张卡要付 4 张的钱」，那是欺诈性定价。
- *   - daily 模式（免费）：按张数扣每日额度（防「一次掏空一天」）。
+ * 调用点怎么传：
+ *   - 一次出图会话（generate）：传 **1** → 一次生成 = 1 个单位
+ *     （4 个候选让用户挑，用户只拿走 1 张，按张扣等于「做 1 张卡付 4 张的钱」）
+ *   - 批量出图（generate-batch）：传**实际张数** → 8 张图就是 8 个单位
+ *
+ * 模式决定单位是什么：
+ *   - credit（付费）：单位 = 张卡（credits）
+ *   - daily（免费）：单位 = 当天次数
  *
  * 顺序很重要：**先自增再判断**。D1 单条 UPSERT 是原子的，
  * 两个并发请求不会同时读到同一个旧值，所以不会超发。
@@ -352,7 +356,7 @@ export async function consumeQuota(
   event: any,
   uid: string,
   kind: UsageKind,
-  units = 1,
+  unitsArg = 1,
 ): Promise<UserQuota> {
   const db = getDB(event)
   if (!db) {
@@ -362,21 +366,23 @@ export async function consumeQuota(
   const quota = await getUserQuota(event, uid, kind)
   if (quota.unlimited) return quota
 
-  // ── 付费档的图片：扣 credits（原子自减，条件 > 0）──
+  const units = Math.max(1, Math.floor(unitsArg))
+
+  // ── 付费档的图片：扣 credits（原子自减，条件够用）──
   if (quota.mode === 'credit') {
     const row = await db
       .prepare(
         `UPDATE subscriptions
-         SET credits_remaining = credits_remaining - 1, updated_at = ?
-         WHERE user_id = ? AND credits_remaining > 0
+         SET credits_remaining = credits_remaining - ?, updated_at = ?
+         WHERE user_id = ? AND credits_remaining >= ?
          RETURNING credits_remaining`,
       )
-      .bind(new Date().toISOString(), uid)
+      .bind(units, new Date().toISOString(), uid, units)
       .first<{ credits_remaining: number }>()
 
     const left = row ? Number(row.credits_remaining) : 0
     if (row) {
-      console.log(`[daily-usage] OK uid=${uid} kind=${kind} 扣 1 张，剩 ${left}`)
+      console.log(`[daily-usage] OK uid=${uid} kind=${kind} 扣 ${units} 张，剩 ${left}`)
       return {
         ...quota,
         remaining: left,
@@ -386,7 +392,7 @@ export async function consumeQuota(
     }
 
     // 并发把额度抢完了（或者本来就没有）→ 拒绝
-    console.warn(`[daily-usage] DENY(无卡) uid=${uid} kind=${kind}`)
+    console.warn(`[daily-usage] DENY(无卡) uid=${uid} kind=${kind} need=${units}`)
     throw createError({
       statusCode: 402,
       statusMessage: 'You have used all your cards',
@@ -399,7 +405,11 @@ export async function consumeQuota(
     })
   }
 
-  // ── 免费档：按张数扣每日额度 ──
+  // ── 免费档：按 units 扣每日额度 ──
+  //   ⚠️ units 现在**真的生效**（以前这个参数被忽略，每次只 +1）：
+  //     按次扣的调用点传 1（一次生成 = 1 次），
+  //     按张扣的调用点传张数（批量出图）—— 两种语义要分得开，
+  //     否则「一次批量出 8 张只扣 1 次」就是白送。
   const col = `${kind}_count`
   const date = todayUTC()
 
@@ -407,13 +417,13 @@ export async function consumeQuota(
   const row = await db
     .prepare(
       `INSERT INTO daily_usage (user_id, usage_date, ${col}, updated_at)
-       VALUES (?, ?, 1, datetime('now'))
+       VALUES (?, ?, ?, datetime('now'))
        ON CONFLICT(user_id, usage_date) DO UPDATE SET
-         ${col} = ${col} + 1,
+         ${col} = ${col} + ?,
          updated_at = datetime('now')
        RETURNING ${col} AS count`,
     )
-    .bind(uid, date)
+    .bind(uid, date, units, units)
     .first<{ count: number }>()
 
   const used = Number(row?.count || 0)
@@ -424,11 +434,11 @@ export async function consumeQuota(
     //   （UPSERT 已经加过了，这里减回来，净效果是「没通过检查就不计数」）
     await db
       .prepare(
-        `UPDATE daily_usage SET ${col} = CASE WHEN ${col} > 0 THEN ${col} - 1 ELSE 0 END,
+        `UPDATE daily_usage SET ${col} = CASE WHEN ${col} >= ? THEN ${col} - ? ELSE 0 END,
          updated_at = datetime('now')
          WHERE user_id = ? AND usage_date = ?`,
       )
-      .bind(uid, date)
+      .bind(units, units, uid, date)
       .run()
       .catch(() => {})
 

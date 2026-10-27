@@ -77,12 +77,21 @@ describe('每日额度闸门', () => {
     ).toBe(true)
   })
 
-  it('出图接口必须把实际张数交给额度层（不能一次 n=4 只算 1 次）', () => {
+  it('出图接口按**次**扣额度（一次生成 = 1 次，不管出几张）', () => {
     const src = read('server/api/image/generate.post.ts')
-    // 一次调用，但把 count 传进去 —— 服务端据此决定扣几张
-    expect(src).toMatch(/consumeQuota\([^)]*'image'[^)]*count/)
-    // 失败时按同样的张数退还
-    expect(src).toMatch(/refundQuota\([^)]*'image'[^)]*count/)
+    // ⚠️ 2026-10-27 改成按次：4 个候选是草稿，用户只拿走 1 张
+    expect(src).toMatch(/consumeQuota\([^)]*'image'[^)]*1\s*\)/)
+    // 失败时退的数量必须和扣的**一样多**（以前扣 1 退 count → 白嫖漏洞）
+    expect(src).toMatch(/refundQuota\([^)]*'image'[^)]*1\s*,/)
+    expect(src).not.toMatch(/refundQuota\([^)]*'image'[^)]*count/)
+  })
+
+  it('免费档单次出图张数要收窄（成本闸门：MiniMax 按张收费）', () => {
+    const src = read('server/api/image/generate.post.ts')
+    // 免费档一次最多 FREE_MAX_IMAGES_PER_RUN 张
+    expect(src).toContain('FREE_MAX_IMAGES_PER_RUN')
+    // 且 count 必须被这个上限 clamp（客户端传 n=4 也只能出 2）
+    expect(src).toMatch(/count\s*=\s*Math\.min\(maxPerRun/)
   })
 
   it('批量生图必须把实际张数交给额度层', () => {

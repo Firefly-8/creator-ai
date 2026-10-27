@@ -217,6 +217,7 @@
     "model": "Model",
     "aspectRatio": "Aspect Ratio",
     "count": "Count",
+    "countCapped": "Free plan: up to 2 pictures per go.",
     "styleType": "Style (live)",
     "generateFailed": "Failed to generate image",
     "noImages": "No images yet",

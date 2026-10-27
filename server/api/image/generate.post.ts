@@ -11,6 +11,7 @@ import { generateImage, optimizeImagePrompt } from '../../utils/minimax'
 import { buildSubjectReference, type SubjectReference } from '../../utils/image-reference'
 import { buildScenarioPrompt } from '../../../utils/imageScenarios'
 import { consumeQuota, refundQuota } from '../../utils/daily-usage'
+import { FREE_MAX_IMAGES_PER_RUN } from '../../../utils/pricing'
 import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 export default defineEventHandler(async (event) => {
@@ -34,7 +35,6 @@ export default defineEventHandler(async (event) => {
   const model = modelExplicit === 'image-01-live' ? 'image-01-live' : 'image-01'
   const mode = body?.uploadId ? 'i2i' : 't2i'
   const aspectRatio = body?.aspect_ratio || body?.aspectRatio || '1:1'
-  const count = Math.min(4, Math.max(1, body?.n || 1))
   const deepOptimize = !!body?.deepOptimize
   // 客户端可以显式传 true/false；不传时 t2i 开、i2i 关（参考图会压制画风）
   const promptOptimizerRaw = body?.promptOptimizer
@@ -61,13 +61,17 @@ export default defineEventHandler(async (event) => {
   }
 
   // 2.2 额度（服务端强制，客户端绕不过）
-  //     ⚠️ 免费档必须按**实际出图张数**扣 —— 客户端可以传 n（最多 4），
-  //     一次请求出 4 张图，扣 1 次额度就是白送 3 张。
+  //     ⚠️ **按次扣**：一次生成 = 1 个单位，不管出几张。
+  //        4 个候选是草稿，用户只拿走 1 张 —— 按张扣等于「做 1 张卡付 4 张的钱」。
+  //        免费档每天 2 次 → 一次最多出 FREE_MAX_IMAGES_PER_RUN 张（成本闸门，
+  //        否则一次 4 张 = 成本 4 倍）；付费档一次出 4 个候选。
   //     必须在调 MiniMax 之前扣 —— 否则并发请求会超发。
-  //     失败时在 catch 里按张数退还（用户没拿到图就不该扣）。
-  //     付费档：一次生成扣 **1 张卡**（4 个候选是草稿，用户只拿走 1 张，
-  //     按张数扣等于「做 1 张卡付 4 张的钱」）。
-  const imageQuota = await consumeQuota(event, auth.uid, 'image', count)
+  //     失败时按同样的单位数退还（用户没拿到就不该扣）。
+  const imageQuota = await consumeQuota(event, auth.uid, 'image', 1)
+
+  // 单次出图张数上限：免费档收窄（成本闸门），付费/无限档 4 张
+  const maxPerRun = imageQuota.mode === 'daily' ? FREE_MAX_IMAGES_PER_RUN : 4
+  const count = Math.min(maxPerRun, Math.max(1, body?.n || 1))
 
   // 3. 自动 Prompt 优化（深度优化走两步，普通优化走一步）
   //    场景化生图的 prompt 已经按「场景+画风」拼好了，不能再被优化器改写，
@@ -182,11 +186,9 @@ export default defineEventHandler(async (event) => {
       if (rec) candidates.push(await publicImage(rec))
     }
 
-    // 模型少给了图 → 把没出图的那几张额度退回去（用户没拿到就不该扣）
-    const missing = count - imagePaths.length
-    if (missing > 0) {
-      await refundQuota(event, auth.uid, 'image', missing, imageQuota.mode)
-    }
+    // 模型少给了图 → 按次语义下**不退差额**：
+    //   这次生成确实发生了，用户也拿到了图（要 2 张给了 1 张也是有的），
+    //   额度算 1 次。完全没拿到的情况在下面的 catch 里退。
 
     await updateJob(job.id, {
       status: 'done',
@@ -216,8 +218,9 @@ export default defineEventHandler(async (event) => {
     }).catch((e) => console.error('[failure-monitor] 记录失败出错:', e))
 
     // 生成失败 → 把额度退回去（用户什么都没拿到）
-    //   免费档退 count 次每日额度；付费档退 1 张卡
-    await refundQuota(event, auth.uid, 'image', count, imageQuota.mode)
+    //   ⚠️ 必须退**和扣的一样多**（1 个单位）。
+    //   以前这里退 count 次，而扣只扣了 1 次 → 生成失败反而白赚额度（可被刷）。
+    await refundQuota(event, auth.uid, 'image', 1, imageQuota.mode)
     await updateImage(image.id, {
       status: 'failed',
       error_message: err.message?.slice(0, 500) || 'Generation failed',

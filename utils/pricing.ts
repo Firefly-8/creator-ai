@@ -59,8 +59,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
     description: 'Try it out. No card needed.',
     cta: 'Start free',
     features: [
-      '2 free pictures a day (1 if your email is not verified)',
-      'Each picture you generate uses one of them',
+      '2 free generations a day (1 if your email is not verified)',
+      'Each go makes up to 2 pictures — pick the one you like',
       '1024 px download',
       'Small mark on the file',
       'Your photos stay private',
@@ -188,6 +188,19 @@ export const FREE_DAILY_LIMITS: Record<UsageKind, { unverified: number; verified
   music: { unverified: 1, verified: 1 },
   text: { unverified: 3, verified: 10 },
 }
+
+/**
+ * 免费档**单次生成最多出几张**
+ *
+ * ⚠️ 为什么要有这个上限（成本闸门）：
+ *   免费额度是「按次」计的（2 次/天），但 MiniMax 是**按张**收钱的。
+ *   不收窄的话，免费用户一天 2 次 × 4 张 = 8 张图 = 成本 4 倍。
+ *   收窄到 2 张 → 一天最多 4 张（成本 2 倍），用户仍能一次出 2 个候选挑一张。
+ *
+ * 付费档一次出 4 个候选（草稿，用户只拿走 1 张），不收窄。
+ */
+export const FREE_MAX_IMAGES_PER_RUN = 2
+export const PAID_MAX_IMAGES_PER_RUN = 4
 
 /**
  * 付费用户每天的额度（**只有文案和音乐**，图片走 credits）

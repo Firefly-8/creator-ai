@@ -253,7 +253,7 @@
           <span class="field-label">{{ $t('image.count') }}</span>
           <div class="flex gap-2">
             <button
-              v-for="n in 4"
+              v-for="n in countOptions"
               :key="n"
               type="button"
               class="count-btn"
@@ -263,6 +263,8 @@
               {{ n }}
             </button>
           </div>
+          <!-- ⚠️ 免费档单次最多出 2 张（成本闸门）：别让用户选了 4 只出 2 却不解释 -->
+          <p v-if="countCapped" class="field-hint">{{ $t('image.countCapped') }}</p>
         </div>
 
         <!-- Style Type (icon buttons, only for image-01-live) -->
@@ -528,6 +530,14 @@ const deepOptimize = ref(false)
 const model = ref<'image-01' | 'image-01-live'>('image-01')
 const aspectRatio = ref('1:1')
 const count = ref(1)
+/**
+ * 单次最多出几张 —— 免费档 2 张、付费 4 张（服务端也会 clamp）。
+ * ⚠️ 场景预设里全是 count: 4，不收窄的话免费用户选场景就被静默砍成 2 张，
+ *    而且界面上看不出来为什么。
+ */
+const maxPerRun = ref(4)
+const countOptions = computed(() => [1, 2, 3, 4].filter(n => n <= maxPerRun.value))
+const countCapped = computed(() => maxPerRun.value < 4)
 const styleType = ref<(typeof IMAGE_LIVE_STYLES)[number]>('Comic')
 const uploadId = ref<string | null>(null)
 const refName = ref('')
@@ -613,6 +623,17 @@ onMounted(() => {
   //    现在改成：**先进去看清楚能做什么，点 Generate 时才要登录**
   //    （generate() 里已有 requireAuth()）。
   window.addEventListener('keydown', onKeydown)
+  // 拉一次额度：只为知道「单次最多出几张」（免费 2 / 付费 4）
+  // 失败就算了 —— 服务端还会 clamp，最多出 2 张而已。
+  useApi().get<{ image?: { maxPerRun?: number } }>('/api/user/usage')
+    .then((res) => {
+      const m = res.image?.maxPerRun
+      if (m && m > 0) {
+        maxPerRun.value = m
+        if (count.value > m) count.value = m
+      }
+    })
+    .catch(() => {})
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 

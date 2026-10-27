@@ -173,15 +173,17 @@
           </button>
         </div>
 
-        <!-- 出几张：选几张就扣几张额度 -->
+        <!-- 出几张：一次生成 = 1 次额度（不管出几张），张数只是给你多几个候选挑 -->
         <div class="ck-count">
           <div class="ck-count__head">
             <span class="ck-count__label">How many options?</span>
-            <span class="ck-count__note">More to choose from — each one uses one of your daily pictures.</span>
+            <span class="ck-count__note">
+              {{ countNote }}
+            </span>
           </div>
           <div class="ck-count__opts">
             <button
-              v-for="n in COUNT_CHOICES"
+              v-for="n in countChoices"
               :key="n"
               type="button"
               class="ck-count__opt"
@@ -192,7 +194,8 @@
             </button>
           </div>
           <p v-if="countShort" class="ck-count__hint">
-            You have {{ quotaRemaining }} left today — this go will make {{ actualCount }}.
+            Free plan lets you make {{ maxPerRun }} at a time — you have
+            {{ quotaRemaining }} generation{{ quotaRemaining === 1 ? '' : 's' }} left today.
           </p>
         </div>
 
@@ -327,17 +330,11 @@
           You have {{ quotaRemaining }} card{{ quotaRemaining === 1 ? '' : 's' }} left on your plan.
         </template>
         <template v-else-if="usageLoaded">
-          <!-- ⚠️ 额度是按**出图张数**扣的。一次生成会出 min(4, 剩余) 张 ——
-               额度不足 4 张时，一次就把今天的用完了。
-               以前只写 "N free generations left"，用户会以为是"N 次机会"，
-               点一次就撞墙 → 必须说清楚是"张"。 -->
-          <template v-if="quotaRemaining < 4">
-            You have {{ quotaRemaining }} picture{{ quotaRemaining === 1 ? '' : 's' }} left today —
-            one go will make as many as you have left.
-          </template>
-          <template v-else>
-            You have {{ quotaRemaining }} free generations left today.
-          </template>
+          <!-- ⚠️ 额度是**按次**扣的（2026-10-27 改）：一次生成 = 1 次，
+               出几张都算这 1 次。所以直接说"几次"，别再混着说"张"——
+               说错会让用户以为"选 4 张就扣 4 次"。 -->
+          You have {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left today —
+          each go makes up to {{ maxPerRun }} pictures to choose from.
         </template>
         <template v-else>Free to preview. Only pay when it is right.</template>
       </p>
@@ -483,23 +480,42 @@ const outOfQuota = computed(() => usageLoaded.value && !usageUnlimited.value && 
 
 /**
  * 一次出几张。
- * ⚠️ 以前是写死的 min(4, 剩余额度) —— 用户没法主动要"只要 1 张"，
- *    一次就把当天的免费额度烧光（免费档一天才 2 张）。
- *    现在让用户自己选：**选几张就扣几张**。
+ *
+ * ⚠️ 额度语义（2026-10-27 改成**按次**）：
+ *   一次生成 = 1 次额度，不管出几张。用户选张数只是为了**多几个候选挑**，
+ *   不是「选几张就扣几张」。
+ *   免费档每天 2 次，但单次最多出 FREE_MAX_IMAGES_PER_RUN 张（成本闸门，
+ *   MiniMax 按张收费，不收窄的话 2 次 × 4 张 = 成本 4 倍）。
+ *   付费档一次出 4 个候选，用户只拿走 1 张。
  */
 const COUNT_CHOICES = [1, 2, 4]
 const countChoice = ref(4)
 
-/** 实际会出几张：不能超过剩余额度（没读到额度时先按用户选的） */
+/** 单次上限（服务端也会 clamp，这里只是让 UI 先说清楚） */
+const maxPerRun = ref(4)
+
+/** 给用户看的档位：不超过单次上限 */
+const countChoices = computed(() => COUNT_CHOICES.filter(n => n <= maxPerRun.value))
+
+/** 实际会出几张：受单次上限约束（不跟剩余额度挂钩 —— 那是按次的） */
 const actualCount = computed(() => {
-  if (!usageLoaded.value) return countChoice.value
-  if (usageUnlimited.value) return countChoice.value
-  return Math.max(1, Math.min(countChoice.value, quotaRemaining.value))
+  if (!usageLoaded.value) return Math.min(countChoice.value, 4)
+  return Math.max(1, Math.min(countChoice.value, maxPerRun.value))
 })
 
-/** 选了 4 但额度不够 → 要说清楚这次会少出几张 */
+/** 选项区的那句说明 */
+const countNote = computed(() => {
+  if (!usageLoaded.value) return 'More to choose from — each one is part of the same go.'
+  if (usageUnlimited.value) return 'More to choose from — each one is part of the same go.'
+  if (usageMode.value === 'credit') {
+    return `One go uses one card, no matter how many options you get.`
+  }
+  return `One go uses one of your ${quotaRemaining} daily generations, no matter how many options you get.`
+})
+
+/** 选了超出单次上限的档位 → 要说清楚（免费用户选了 4 但只能出 2） */
 const countShort = computed(
-  () => usageLoaded.value && !usageUnlimited.value && actualCount.value < countChoice.value,
+  () => usageLoaded.value && !usageUnlimited.value && countChoice.value > maxPerRun.value,
 )
 /** 付费档但张数用完了 —— 和「免费额度用完」要说不同的话 */
 const outOfCards = computed(() => usageMode.value === 'credit' && outOfQuota.value)
@@ -513,12 +529,17 @@ async function loadUsage() {
         remaining: number | null
         unlimited: boolean
         mode?: 'credit' | 'daily' | 'unlimited'
+        maxPerRun?: number
       }
       paid?: boolean
     }>('/api/user/usage')
     quotaRemaining.value = res.image?.remaining ?? 0
     usageUnlimited.value = !!res.image?.unlimited
     usageMode.value = res.image?.mode || (res.image?.unlimited ? 'unlimited' : 'daily')
+    // 单次最多出几张（免费 2 / 付费 4）
+    maxPerRun.value = res.image?.maxPerRun ?? (usageUnlimited.value ? 4 : 2)
+    // 默认档位不能超过单次上限
+    if (countChoice.value > maxPerRun.value) countChoice.value = maxPerRun.value
     // ⚠️ 付费权益 = 是不是付费档，**不看他卡够不够** ——
     //    付过钱的人做过的卡，永远能下 2K 无水印的打印文件。
     hasPaid.value = !!res.paid

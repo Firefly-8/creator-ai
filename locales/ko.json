@@ -162,6 +162,7 @@
     "model": "Model",
     "aspectRatio": "Aspect Ratio",
     "count": "Count",
+    "countCapped": "무료 플랜: 한 번에 최대 2장.",
     "styleType": "Style (live)",
     "generateFailed": "Failed to generate image",
     "noImages": "No images yet",
