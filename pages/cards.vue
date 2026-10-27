@@ -1,5 +1,39 @@
 <template>
   <div class="ck-cards">
+    <!--
+      ============ 步进器（吸顶） ============
+      ⚠️ 原来步骤条在 hero 里，往下走几步就滚出视野了 ——
+      用户在第 3 步（选画风）时看不到自己在第几步、回不去了。
+      现在提到页面最上方 + sticky：任何时候都在视野里。
+    -->
+    <div class="ck-stepsbar">
+      <div class="ck-wrap ck-stepsbar__inner">
+        <ol class="ck-steps-nav">
+          <li
+            v-for="(s, i) in stepLabels"
+            :key="s"
+            :class="{ 'is-on': step >= i + 1, 'is-done': step > i + 1, 'is-current': step === i + 1 }"
+          >
+            <button
+              type="button"
+              class="ck-steps-nav__btn"
+              :disabled="i + 1 > maxReached"
+              @click="goTo(i + 1)"
+            >
+              <span class="ck-steps-nav__dot">
+                <span v-if="step > i + 1" class="i-ph-check" />
+                <template v-else>{{ i + 1 }}</template>
+              </span>
+              <span class="ck-steps-nav__label">{{ s }}</span>
+            </button>
+          </li>
+        </ol>
+        <p class="ck-stepsbar__now">
+          {{ step <= 3 ? `Step ${step} of 3 · ${stepLabels[step - 1]}` : 'Last step · add your words' }}
+        </p>
+      </div>
+    </div>
+
     <!-- ============ 顶部 ============ -->
     <header class="ck-cards__head">
       <div class="ck-wrap ck-cards__headgrid">
@@ -7,26 +41,6 @@
           <p v-if="step < 4" class="ck-eyebrow">Step {{ step }} of 3</p>
           <h1 class="ck-h1">{{ stepHeadline }}</h1>
           <p class="ck-lede">{{ stepLede }}</p>
-          <ol class="ck-steps-nav">
-            <li
-              v-for="(s, i) in stepLabels"
-              :key="s"
-              :class="{ 'is-on': step >= i + 1, 'is-done': step > i + 1, 'is-current': step === i + 1 }"
-            >
-              <button
-                type="button"
-                class="ck-steps-nav__btn"
-                :disabled="i + 1 > maxReached"
-                @click="goTo(i + 1)"
-              >
-                <span class="ck-steps-nav__dot">
-                  <span v-if="step > i + 1" class="i-ph-check" />
-                  <template v-else>{{ i + 1 }}</template>
-                </span>
-                {{ s }}
-              </button>
-            </li>
-          </ol>
         </div>
 
         <!-- 真实成品卡示例：光有文字会显得又窄又空（跟首页 hero 同一个配方） -->
@@ -946,11 +960,41 @@ onBeforeUnmount(() => {
   font-style: italic;
   color: var(--ck-ink);
 }
+/* ---------- 吸顶步进器 ---------- */
+.ck-stepsbar {
+  position: sticky;
+  /* 顶栏 (.mk-top) 是 sticky top:0，高约 3.5rem —— 步进器要排在它下面 */
+  top: 3.5rem;
+  z-index: 45;
+  background: rgba(253, 250, 244, 0.94);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ck-line);
+}
+.ck-stepsbar__inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+.ck-stepsbar__now {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #a08f81;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  /* 窄屏：只留圆点，标签藏起来（否则一行放不下） */
+  .ck-steps-nav__label { display: none; }
+  .ck-stepsbar__now { font-size: 0.75rem; }
+}
+
 .ck-steps-nav {
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem 2rem;
-  margin: 2.5rem 0 0;
+  margin: 0;
   padding: 0;
   list-style: none;
   font-size: 1rem;

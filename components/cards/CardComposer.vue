@@ -32,17 +32,50 @@
 
     <!-- ============ 编辑面板 ============ -->
     <div class="ck-comp__panel">
-      <!-- 文字 -->
+      <!-- ① 选版式：位置/字体/颜色/字号都定好了，用户只管填字 -->
+      <section class="ck-panel-sec">
+        <h3 class="ck-panel-sec__title">Pick a layout</h3>
+        <p class="ck-panel-sec__hint">
+          Every layout is set up for you — just write the words.
+        </p>
+        <div class="ck-layouts">
+          <button
+            v-for="l in CARD_LAYOUTS"
+            :key="l.id"
+            type="button"
+            class="ck-layout"
+            :class="{ 'ck-layout--on': layoutId === l.id }"
+            :aria-pressed="layoutId === l.id"
+            @click="applyLayout(l.id)"
+          >
+            <span class="ck-layout__thumb" :class="`ck-layout__thumb--${l.id}`">
+              <span class="ck-layout__t ck-layout__t--name" />
+              <span class="ck-layout__t ck-layout__t--msg" />
+              <span class="ck-layout__t ck-layout__t--sig" />
+            </span>
+            <span class="ck-layout__label">{{ l.label }}</span>
+            <span class="ck-layout__desc">{{ l.desc }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ② 只填两个必要字段：给谁的名字 + 想说的话 -->
       <section class="ck-panel-sec">
         <h3 class="ck-panel-sec__title">The words</h3>
         <p class="ck-panel-sec__hint">
-          Type the words, then pick how they look. Drag them on the card to move them.
+          Two things to write. You can drag them on the card to nudge them.
         </p>
 
         <div v-for="t in draft.texts" :key="t.id" class="ck-field">
           <label class="ck-field__label">
             {{ labelOf(t.kind) }}
-            <button class="ck-field__del" title="Remove" :aria-label="`Remove ${labelOf(t.kind)}`" @click="removeText(t.id)">
+            <button
+              v-if="t.kind === 'signature'"
+              class="ck-field__del"
+              title="Remove"
+              :aria-label="`Remove ${labelOf(t.kind)}`"
+              @click="removeText(t.id)"
+            >
               <span class="i-ph-x" />
             </button>
           </label>
@@ -62,84 +95,11 @@
             :placeholder="placeholderOf(t.kind)"
             @input="updateText(t.id, { text: ($event.target as HTMLInputElement).value })"
           />
-          <div class="ck-field__opts">
-            <div class="ck-opt">
-              <span class="ck-opt__label">Style</span>
-              <div class="ck-opt__body">
-                <button
-                  v-for="f in FONT_OPTIONS"
-                  :key="f.id"
-                  type="button"
-                  class="ck-font"
-                  :class="[`ck-font--${f.id}`, { 'ck-font--on': t.font === f.id }]"
-                  :title="f.title"
-                  :aria-pressed="t.font === f.id"
-                  @click="updateText(t.id, { font: f.id })"
-                >
-                  <span class="ck-font__aa">Aa</span>
-                  <span class="ck-font__name">{{ f.name }}</span>
-                </button>
-              </div>
-            </div>
-
-            <div class="ck-opt">
-              <span class="ck-opt__label">Colour</span>
-              <div class="ck-opt__body">
-                <button
-                  v-for="c in COLOR_OPTIONS"
-                  :key="c.value"
-                  type="button"
-                  class="ck-swatch"
-                  :class="{ 'ck-swatch--on': t.color === c.value }"
-                  :style="{ background: c.value, color: c.ink }"
-                  :title="c.name"
-                  :aria-label="c.name"
-                  :aria-pressed="t.color === c.value"
-                  @click="updateText(t.id, { color: c.value })"
-                >
-                  <span v-if="t.color === c.value" class="i-ph-check" />
-                </button>
-              </div>
-            </div>
-
-            <div class="ck-opt">
-              <span class="ck-opt__label">Size</span>
-              <div class="ck-opt__body">
-                <button
-                  type="button"
-                  class="ck-size-btn"
-                  title="Make it smaller"
-                  aria-label="Make it smaller"
-                  @click="updateText(t.id, { size: Math.max(0.012, t.size - 0.006) })"
-                >
-                  A−
-                </button>
-                <button
-                  type="button"
-                  class="ck-size-chip"
-                  :title="`Back to ${sizeLabel(t.size)}`"
-                  @click="updateText(t.id, { size: sizeStep(t.size) })"
-                >
-                  {{ sizeLabel(t.size) }}
-                </button>
-                <button
-                  type="button"
-                  class="ck-size-btn"
-                  title="Make it bigger"
-                  aria-label="Make it bigger"
-                  @click="updateText(t.id, { size: Math.min(0.2, t.size + 0.006) })"
-                >
-                  A+
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
-        <div class="ck-panel-sec__actions">
-          <button class="ck-btn-mini" @click="addText('message')">+ Add a message</button>
-          <button class="ck-btn-mini" @click="addText('name')">+ Add a name</button>
-          <button class="ck-btn-mini" @click="addText('signature')">+ Add a signature</button>
+        <!-- 签名是可选的：默认只给两个必填字段，想加签名再点 -->
+        <div v-if="!hasSignatureText" class="ck-panel-sec__actions">
+          <button class="ck-btn-mini" @click="addSignature">+ Add a signature</button>
         </div>
       </section>
 
@@ -190,6 +150,7 @@
 <script setup lang="ts">
 import { useCardCanvas, type CardTextItem } from '~/composables/useCardCanvas'
 import { CARD_SPECS } from '~/utils/cardSpecs'
+import { CARD_LAYOUTS, getCardLayout } from '~/utils/cardLayouts'
 
 const props = defineProps<{
   imageUrl: string
@@ -207,50 +168,63 @@ const {
 } = useCardCanvas({
   imageUrl: props.imageUrl,
   specId: '5x7',
+  // ⚠️ 默认**只有两个必填字段**（名字 + 留言）。
+  //    签名是可选的 → 用户点了「+ Add a signature」才加。
+  //    （以前默认三条，等于给用户塞了三个输入框）
   texts: [
-    { id: 'name', kind: 'name', text: '', x: 0.5, y: 0.795, size: 0.07, color: '#c8543d', align: 'center', font: 'display', rotate: 0 },
+    { id: 'name', kind: 'name', text: '', x: 0.5, y: 0.79, size: 0.075, color: '#c8543d', align: 'center', font: 'display', rotate: 0 },
     { id: 'message', kind: 'message', text: '', x: 0.5, y: 0.868, size: 0.028, color: '#3a2f28', align: 'center', font: 'body', rotate: 0 },
-    { id: 'signature', kind: 'signature', text: '', x: 0.5, y: 0.945, size: 0.047, color: '#3a2f28', align: 'center', font: 'script', rotate: 0 },
   ],
 })
 
 const hasPaid = computed(() => !!props.hasPaid)
 
-/** 字体选项 —— 按钮里用真实字体渲染，所见即所得 */
-const FONT_OPTIONS = [
-  { id: 'display', name: 'Serif', title: 'Elegant serif — good for a name' },
-  { id: 'body', name: 'Plain', title: 'Easy to read — good for a message' },
-  { id: 'script', name: 'Hand', title: 'Handwriting — good for a signature' },
-] as const
+/** 当前版式 id */
+const layoutId = ref('classic')
 
-/** 颜色选项 —— ink 是色块上对勾的颜色（浅色块要用深色对勾） */
-const COLOR_OPTIONS = [
-  { value: '#3a2f28', name: 'Ink', ink: '#ffffff' },
-  { value: '#c8543d', name: 'Coral', ink: '#ffffff' },
-  { value: '#2f4034', name: 'Forest', ink: '#ffffff' },
-  { value: '#c9a227', name: 'Gold', ink: '#3a2f28' },
-  { value: '#ffffff', name: 'White', ink: '#3a2f28' },
-] as const
+// 初始值已跟 classic 对齐（见上面的 texts）—— 这里再套一次，
+// 保证以后改版式数据时初始态不会跟版式脱节
+onMounted(() => applyLayout(layoutId.value))
 
-/** 字号档位（size 是相对卡宽的比例） */
-const SIZE_STEPS = [
-  { label: 'Small', value: 0.026 },
-  { label: 'Medium', value: 0.042 },
-  { label: 'Large', value: 0.065 },
-  { label: 'Huge', value: 0.11 },
-] as const
+/** 签名在不在版式里（不在就用户自己加） */
+/** 当前有没有签名文本（没有才显示「+ Add a signature」的按钮） */
+const hasSignatureText = computed(() => draft.value.texts.some(t => t.kind === 'signature'))
 
-function sizeLabel(size: number): string {
-  if (size < 0.032) return 'Small'
-  if (size < 0.055) return 'Medium'
-  if (size < 0.09) return 'Large'
-  return 'Huge'
+/**
+ * 换版式：把位置/字体/颜色/字号全部套上去，**但保留用户已经写的字**。
+ *
+ * ⚠️ 这是整个交互的核心：换版式 = 换个成品样子，不是把用户填的字清空。
+ */
+function applyLayout(id: string) {
+  const layout = getCardLayout(id)
+  layoutId.value = id
+
+  for (const t of draft.value.texts) {
+    const spec = layout.texts[t.kind as keyof typeof layout.texts]
+    if (!spec) continue
+    updateText(t.id, {
+      x: spec.x,
+      y: spec.y,
+      size: spec.size,
+      color: spec.color,
+      align: spec.align,
+      font: spec.font,
+      rotate: spec.rotate ?? 0,
+    })
+  }
 }
 
-/** 点档位名字 → 回到该档的标准大小 */
-function sizeStep(size: number): number {
-  const label = sizeLabel(size)
-  return SIZE_STEPS.find(s => s.label === label)?.value ?? size
+/** 用户自己加一个签名（版式里没有时的可选入口） */
+function addSignature() {
+  const layout = getCardLayout(layoutId.value)
+  const spec = layout.texts.signature || {
+    x: 0.5, y: 0.945, size: 0.047, color: '#3a2f28', align: 'center' as CanvasTextAlign, font: 'script' as const,
+  }
+  const item = addText('signature')
+  updateText(item.id, {
+    x: spec.x, y: spec.y, size: spec.size, color: spec.color,
+    align: spec.align, font: spec.font, rotate: spec.rotate ?? 0,
+  })
 }
 
 // 免费版：预览、下载、分享**三处都打标**（同一个开关）
@@ -433,116 +407,76 @@ async function doShare() {
   padding: 0.1rem 0.25rem;
 }
 .ck-field__del:hover { color: #c8543d; }
-/* ---------- 文字选项（Style / Colour / Size） ---------- */
-.ck-field__opts {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-top: 0.1rem;
-}
-.ck-opt {
+/* ---------- 版式选择 ---------- */
+.ck-layouts {
   display: grid;
-  grid-template-columns: 3.2rem minmax(0, 1fr);
-  align-items: center;
-  gap: 0.5rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
 }
-.ck-opt__label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #8a7d72;
-  letter-spacing: 0.01em;
-}
-.ck-opt__body { display: flex; gap: 0.3rem; min-width: 0; }
-
-/* 字体：按钮里直接用真字体渲染，所见即所得 */
-.ck-font {
-  flex: 1 1 0;
-  min-width: 0;
+.ck-layout {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0.05rem;
-  padding: 0.35rem 0.15rem 0.3rem;
-  border: 1px solid rgba(58, 46, 38, 0.16);
-  border-radius: 0.45rem;
+  gap: 0.35rem;
+  padding: 0.6rem 0.6rem 0.7rem;
+  border: 1.5px solid rgba(58, 46, 38, 0.14);
+  border-radius: 0.7rem;
   background: #fff;
+  text-align: left;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
-.ck-font:hover { border-color: rgba(200, 84, 61, 0.55); }
-.ck-font--on {
+.ck-layout:hover { border-color: rgba(200, 84, 61, 0.5); }
+.ck-layout--on {
   border-color: #c8543d;
-  background: rgba(200, 84, 61, 0.08);
+  background: rgba(200, 84, 61, 0.05);
 }
-.ck-font__aa { font-size: 0.95rem; line-height: 1.15; color: #2a2420; }
-.ck-font__name {
-  max-width: 100%;
-  font-size: 0.625rem;
-  line-height: 1.2;
-  color: #8a7d72;
-  white-space: nowrap;
+/* 缩略示意：一个迷你卡 */
+.ck-layout__thumb {
+  position: relative;
+  display: block;
+  height: 4.2rem;
+  border-radius: 0.35rem;
+  background: linear-gradient(180deg, #faf3e8 0%, #f1e3cd 100%);
   overflow: hidden;
-  text-overflow: ellipsis;
 }
-.ck-font--on .ck-font__name { color: #a53f2c; font-weight: 700; }
-.ck-font--display .ck-font__aa { font-family: 'Playfair Display', Georgia, serif; }
-.ck-font--body .ck-font__aa { font-family: 'Lora', Georgia, serif; }
-.ck-font--script .ck-font__aa { font-family: 'Caveat', 'Segoe Script', cursive; font-size: 1.05rem; }
-
-/* 颜色 */
-.ck-swatch {
-  flex: 0 0 auto;
-  width: 1.55rem;
-  height: 1.55rem;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid rgba(58, 46, 38, 0.32);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: box-shadow 0.15s ease;
+.ck-layout__t {
+  position: absolute;
+  border-radius: 2px;
+  background: rgba(58, 46, 38, 0.55);
 }
-.ck-swatch .i-ph-check { font-size: 0.75rem; }
-/* 白色块在深色/奶油底上都看不见 → 给它一圈深色描边 */
-.ck-swatch[style*='#ffffff'] { border-color: rgba(58, 46, 38, 0.55); }
-.ck-swatch--on { box-shadow: 0 0 0 2px #fffdfa, 0 0 0 3.5px #c8543d; }
+.ck-layout__t--name { background: rgba(200, 84, 61, 0.85); }
+.ck-layout__t--msg { background: rgba(58, 46, 38, 0.38); }
+.ck-layout__t--sig { background: rgba(47, 64, 52, 0.55); }
 
-/* 字号 */
-.ck-size-btn {
-  flex: 0 0 auto;
-  width: 2.1rem;
-  height: 2rem;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  border: 1px solid rgba(58, 46, 38, 0.16);
-  border-radius: 0.45rem;
-  background: #fff;
-  color: #6b5f55;
-  font-family: inherit;
+/* classic：名字居中大字 + 下面一行话 + 签名 */
+.ck-layout__thumb--classic .ck-layout__t--name { left: 28%; top: 42%; width: 44%; height: 0.42rem; }
+.ck-layout__thumb--classic .ck-layout__t--msg { left: 22%; top: 60%; width: 56%; height: 0.2rem; }
+.ck-layout__thumb--classic .ck-layout__t--sig { left: 38%; top: 76%; width: 24%; height: 0.18rem; }
+/* modern：左上角名 + 下面的话 */
+.ck-layout__thumb--modern .ck-layout__t--name { left: 12%; top: 34%; width: 34%; height: 0.3rem; }
+.ck-layout__thumb--modern .ck-layout__t--msg { left: 12%; top: 52%; width: 48%; height: 0.16rem; }
+.ck-layout__thumb--modern .ck-layout__t--sig { display: none; }
+/* handwritten：两行手写，右下签名 */
+.ck-layout__thumb--handwritten .ck-layout__t--name { left: 26%; top: 36%; width: 48%; height: 0.3rem; transform: rotate(-2deg); }
+.ck-layout__thumb--handwritten .ck-layout__t--msg { left: 18%; top: 55%; width: 60%; height: 0.16rem; transform: rotate(-1deg); }
+.ck-layout__thumb--handwritten .ck-layout__t--sig { right: 14%; top: 76%; width: 22%; height: 0.16rem; }
+/* minimal：只有一行大字 */
+.ck-layout__thumb--minimal .ck-layout__t--name { left: 30%; top: 46%; width: 40%; height: 0.34rem; }
+.ck-layout__thumb--minimal .ck-layout__t--msg { left: 24%; top: 66%; width: 52%; height: 0.16rem; }
+.ck-layout__thumb--minimal .ck-layout__t--sig { display: none; }
+
+.ck-layout__label {
   font-size: 0.875rem;
   font-weight: 700;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease;
+  color: #2a2420;
 }
-.ck-size-btn:hover { border-color: #c8543d; color: #a53f2c; }
-.ck-size-chip {
-  flex: 0 1 5.5rem;
-  min-width: 0;
-  height: 2rem;
-  padding: 0 0.4rem;
-  border: 1px solid rgba(58, 46, 38, 0.12);
-  border-radius: 0.45rem;
-  background: rgba(58, 46, 38, 0.04);
-  color: #6b5f55;
-  font-family: inherit;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease;
+.ck-layout--on .ck-layout__label { color: #a53f2c; }
+.ck-layout__desc {
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  color: #8a7d72;
 }
-.ck-size-chip:hover { border-color: rgba(200, 84, 61, 0.5); color: #a53f2c; }
+
 
 .ck-input {
   width: 100%;
