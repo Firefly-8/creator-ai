@@ -156,9 +156,20 @@
       <section v-if="step === 3 && scenario" class="ck-sec ck-sec--card">
         <h2 class="ck-sec__title">
           <span class="ck-sec__num">3</span>
-          Choose a look, then make it
+          Pick a look
         </h2>
         <p class="ck-sec__sub">Every style below has been tested — the result will look like the picture.</p>
+
+        <!-- 不知道选哪个？给个逃生口（giftsong 的 "Pick for me"） -->
+        <div class="ck-pickrow">
+          <button type="button" class="ck-pickme" @click="surpriseMe">
+            <span class="i-ph-sparkle" />
+            Pick one for me
+          </button>
+          <span class="ck-pickrow__hint">
+            {{ pickMeHint }}
+          </span>
+        </div>
 
         <div class="ck-styles">
           <button
@@ -173,31 +184,41 @@
           </button>
         </div>
 
-        <!-- 出几张：一次生成 = 1 次额度（不管出几张），张数只是给你多几个候选挑 -->
-        <div class="ck-count">
-          <div class="ck-count__head">
-            <span class="ck-count__label">How many options?</span>
-            <span class="ck-count__note">
-              {{ countNote }}
-            </span>
+        <!--
+          出几张 = 候选数，不是创作决定（额度改成按次后，张数不扣额度了）。
+          所以它不该跟「选画风」平级摆在这 —— 折进「More options」。
+        -->
+        <details class="ck-more">
+          <summary class="ck-more__summary">
+            <span class="i-ph-sliders-horizontal" />
+            More options
+            <span class="ck-more__tail">{{ countChoice }} picture{{ countChoice === 1 ? '' : 's' }} each go</span>
+          </summary>
+          <div class="ck-count">
+            <div class="ck-count__head">
+              <span class="ck-count__label">How many options?</span>
+              <span class="ck-count__note">
+                {{ countNote }}
+              </span>
+            </div>
+            <div class="ck-count__opts">
+              <button
+                v-for="n in countChoices"
+                :key="n"
+                type="button"
+                class="ck-count__opt"
+                :class="{ 'ck-count__opt--on': countChoice === n }"
+                @click="countChoice = n"
+              >
+                {{ n }}
+              </button>
+            </div>
+            <p v-if="countShort" class="ck-count__hint">
+              Free plan lets you make {{ maxPerRun }} at a time — you have
+              {{ quotaRemaining }} generation{{ quotaRemaining === 1 ? '' : 's' }} left today.
+            </p>
           </div>
-          <div class="ck-count__opts">
-            <button
-              v-for="n in countChoices"
-              :key="n"
-              type="button"
-              class="ck-count__opt"
-              :class="{ 'ck-count__opt--on': countChoice === n }"
-              @click="countChoice = n"
-            >
-              {{ n }}
-            </button>
-          </div>
-          <p v-if="countShort" class="ck-count__hint">
-            Free plan lets you make {{ maxPerRun }} at a time — you have
-            {{ quotaRemaining }} generation{{ quotaRemaining === 1 ? '' : 's' }} left today.
-          </p>
-        </div>
+        </details>
 
         <!-- 额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
         <div v-if="outOfQuota && !usageUnlimited" class="ck-quota">
@@ -257,6 +278,9 @@
 
         <div v-if="pickedUrl" class="ck-editor">
           <h3 class="ck-mini-title ck-mini-title--gap">Now add your words</h3>
+          <p class="ck-hint ck-hint--lead">
+            Pick one below, or let us write it for you. You can change every word after.
+          </p>
           <div class="ck-msgpick">
             <button
               v-for="(m, i) in messageOptions"
@@ -360,7 +384,10 @@ useHead({
   description: 'Make a birthday card, thank you card or wall print for someone you love. Add their photo, their name and your words. Ready to print.',
 })
 
-const stepLabels = ['The occasion', 'Photo & name', 'Style & make']
+// ⚠️ 名字要**名词化**（一个名字 = 一件事），别把两件事塞一个名字：
+//    旧 'Style & make' = 选画风 + 生成，两件事挤在一起 → 用户不知道自己在第几步。
+//    （giftsong 用的是 Style / Recipient / Story / Song，每个都是一件事）
+const stepLabels = ['Occasion', 'Name & photo', 'Look']
 
 // ── 分步向导 ─────────────────────────────────────────────
 // 以前三步是**滚动**的一整页（一个 section 接一个 section），
@@ -517,6 +544,42 @@ const countNote = computed(() => {
 const countShort = computed(
   () => usageLoaded.value && !usageUnlimited.value && countChoice.value > maxPerRun.value,
 )
+
+/**
+ * 「帮我选一个画风」—— 借鉴 giftsong 的 "Pick for me"。
+ *
+ * ⚠️ 为什么要这个：第 3 步有 5~6 个画风，中老年用户面对
+ *    「Photograph / Watercolour / Oil Pastel / Vintage Postcard / Paper Cut / Cartoon」
+ *    基本不知道选哪个，只能瞎点或者卡住不动。
+ *    给一个明确的默认，比逼他做决定有用得多。
+ *
+ * 规则（确定性，不随机 —— 同一个场合每次推荐一样，用户能形成预期）：
+ *   有照片（i2i）→ 优先挑对参考图安全的画风（i2iSafe）
+ *   没照片 → 用该场景的推荐画风（styles 数组第一项）
+ */
+function surpriseMe() {
+  const list = availableStyles.value
+  if (!list.length) return
+  const hasRef = !!uploadId.value || !!photoFile.value
+  const safe = hasRef ? list.filter(s => s.i2iSafe) : list
+  const pool = safe.length ? safe : list
+  style.value = pool[0].id
+}
+
+/** 当前画风的一句说明（让用户知道选的是什么效果） */
+const styleHint = computed(() => {
+  const st = availableStyles.value.find(s => s.id === style.value)
+  if (!st) return ''
+  return st.desc || ''
+})
+
+/** 「帮我选」按钮旁边的解释 */
+const pickMeHint = computed(() => {
+  const hasRef = !!uploadId.value || !!photoFile.value
+  return hasRef
+    ? 'We will pick one that keeps their face looking right.'
+    : 'We will pick the one that suits a card best.'
+})
 /** 付费档但张数用完了 —— 和「免费额度用完」要说不同的话 */
 const outOfCards = computed(() => usageMode.value === 'credit' && outOfQuota.value)
 
@@ -668,9 +731,7 @@ async function generate() {
   generating.value = true
   try {
     const uid = await uploadPhoto()
-    // 出图张数 = 用户选的（且不超过今天剩余的免费额度）。
-    // 服务端按**实际出图张数**扣，所以选几张就是扣几张 —— 这里先收敛，
-    // 避免请求到一半才被拒。
+    // 出图张数 = 候选数（额度按次扣，张数不扣额度了），受单次上限约束。
     const maxN = actualCount.value
     const res = await api.post<{ images: { id: string; imageUrl: string | null }[] }>('/api/image/generate', {
       scenario: scenario.value.id,
@@ -1126,6 +1187,8 @@ onBeforeUnmount(() => {
 .ck-input:focus { outline: 2px solid rgba(200, 84, 61, 0.4); outline-offset: 1px; }
 
 .ck-hint { display: flex; align-items: flex-start; gap: 0.4rem; margin-top: 0.75rem; font-size: 0.875rem; line-height: 1.55; color: var(--ck-ink-2); }
+/* 引导句：放在小标题下面，说明"接下来能做什么" */
+.ck-hint--lead { margin-top: 0.35rem; }
 .ck-hint--center { justify-content: center; }
 .ck-quota {
   margin-top: 1rem;
@@ -1156,6 +1219,72 @@ onBeforeUnmount(() => {
 .ck-styles { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 0.9rem; }
 
 /* ---------- 出图张数 ---------- */
+/* ---------- 「帮我选一个画风」 ---------- */
+.ck-pickrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+.ck-pickme {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border: 1.5px dashed var(--ck-coral);
+  border-radius: 999px;
+  background: rgba(200, 84, 61, 0.05);
+  color: var(--ck-coral-deep);
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.ck-pickme:hover { background: rgba(200, 84, 61, 0.12); }
+.ck-pickrow__hint {
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--ck-ink-soft, #8a7d72);
+}
+
+/* ---------- More options（折叠） ---------- */
+.ck-more {
+  margin-top: 1.25rem;
+  border: 1px solid var(--ck-line);
+  border-radius: 0.75rem;
+  background: transparent;
+}
+.ck-more__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ck-ink);
+  list-style: none;
+  user-select: none;
+}
+.ck-more__summary::-webkit-details-marker { display: none; }
+.ck-more__summary:hover { color: var(--ck-coral-deep); }
+.ck-more__tail {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ck-ink-soft, #8a7d72);
+}
+.ck-more[open] .ck-more__summary { border-bottom: 1px solid var(--ck-line); }
+.ck-more .ck-count {
+  margin: 0;
+  border: none;
+  border-radius: 0 0 0.75rem 0.75rem;
+  background: transparent;
+}
+
 .ck-count {
   margin-top: 1.5rem;
   padding: 1.1rem 1.2rem;
