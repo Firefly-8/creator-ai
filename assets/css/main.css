@@ -71,119 +71,8 @@ h3,
 
 .studio-shell {
   display: flex;
+  flex-direction: column;
   min-height: 100dvh;
-}
-
-.studio-sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  z-index: 50;
-  display: flex;
-  width: var(--sidebar-w);
-  flex-direction: column;
-  border-right: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(10, 9, 16, 0.92);
-  backdrop-filter: blur(16px);
-  transform: translateX(0);
-}
-
-.studio-sidebar__brand {
-  /* ⚠️ 以前是横向 flex（display:flex + align-items:center），
-     但 .studio-sidebar__note（"Make a card / Back to the card maker" 提示条）
-     本意是排在 logo **下面**（它自己带 margin-top）——
-     横排时它被挤成一条竖排文字，还溢出侧边栏压住 logo 和页面标题。
-     改成竖排 + gap，两块各占一行。 */
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 0.85rem;
-  padding: 0.9rem 1.1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.studio-sidebar__nav {
-  flex: 1;
-  overflow: auto;
-  padding: 1rem 0.75rem;
-}
-
-.studio-nav-group + .studio-nav-group {
-  margin-top: 1.15rem;
-}
-
-.studio-sidebar__auth {
-  padding: 0.85rem 1.1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  /* Sticky on mobile so auth actions are always visible without scrolling */
-  position: sticky;
-  top: 0;
-  background: rgba(10, 9, 16, 0.95);
-  backdrop-filter: blur(16px);
-  z-index: 1;
-}
-
-.studio-nav-group__label {
-  margin: 0 0 0.45rem 0.65rem;
-  color: #655f7c;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.studio-nav-link {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-  min-height: 2.55rem;
-  margin-bottom: 0.2rem;
-  padding: 0 0.75rem;
-  border-radius: 0.85rem;
-  color: #a39db8;
-  font-size: 13.5px;
-  font-weight: 600;
-  transition:
-    background 0.15s ease,
-    color 0.15s ease;
-}
-
-.studio-nav-link:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: #fff;
-}
-
-.studio-nav-link.router-link-active {
-  background: rgba(139, 124, 255, 0.14);
-  color: #fff;
-  box-shadow: inset 0 0 0 1px rgba(139, 124, 255, 0.28);
-}
-
-.studio-sidebar__foot {
-  padding: 1rem 1.1rem 1.15rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.studio-sidebar-backdrop {
-  display: none;
-}
-
-.studio-main {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  margin-left: var(--sidebar-w);
-}
-
-.studio-topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 56px;
-  padding: 0 0.85rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(10, 9, 16, 0.8);
-  backdrop-filter: blur(12px);
 }
 
 .studio-content {
@@ -268,27 +157,6 @@ h3,
 }
 
 @media (max-width: 768px) {
-  .studio-sidebar {
-    transform: translateX(-105%);
-    transition: transform 0.2s ease;
-  }
-
-  .studio-sidebar.is-open {
-    transform: translateX(0);
-  }
-
-  .studio-sidebar-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 45;
-    background: rgba(0, 0, 0, 0.55);
-  }
-
-  .studio-main {
-    margin-left: 0;
-  }
-
   .studio-content {
     padding: 0.85rem;
   }
@@ -325,16 +193,6 @@ h3,
 * {
   scrollbar-width: thin;
   scrollbar-color: rgba(139, 124, 255, 0.35) transparent;
-}
-
-.nav-link {
-  position: relative;
-}
-
-.nav-link.router-link-active {
-  color: #fff;
-  background: rgba(139, 124, 255, 0.14);
-  box-shadow: inset 0 0 0 1px rgba(139, 124, 255, 0.28);
 }
 
 .cover-orb {

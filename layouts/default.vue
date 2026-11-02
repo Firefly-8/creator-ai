@@ -1,103 +1,89 @@
 <template>
   <div class="page-shell studio-shell">
     <EmailVerificationGuard />
-    <aside class="studio-sidebar" :class="{ 'is-open': mobileNavOpen }">
-      <div class="studio-sidebar__brand">
-        <NuxtLink to="/" class="group flex items-center gap-2.5" @click="mobileNavOpen = false">
-          <img src="/logo-mark.png" alt="Create Keepsakes" class="h-9 w-9 rounded-[11px] object-contain" />
-          <!-- 侧栏只有 232px 宽，17px 会让 "Create Keepsakes" 折成两行 -->
-          <span class="font-display text-[15px] font-700 tracking-tight text-white whitespace-nowrap">Create Keepsakes</span>
+    <!--
+      ============ 顶部导航 ============
+      ⚠️ 2026-10-28：原来是**左侧固定侧边栏**（232px），现在改成顶栏。
+         原因：产品聚焦做贺卡了，侧边栏那种「工具站工作台」的布局
+         跟营销站（顶栏）割裂，而且侧边栏吃掉了 232px 宽度。
+         顶栏版式跟 marketing 一致（logo + 几个入口 + 登录/账号）。
+    -->
+    <header class="studio-top">
+      <div class="studio-top__inner">
+        <NuxtLink to="/" class="studio-top__brand">
+          <img src="/logo-mark.png" alt="Create Keepsakes" class="studio-top__logo" />
+          <span class="studio-top__name">Create Keepsakes</span>
         </NuxtLink>
-        <NuxtLink to="/cards" class="studio-sidebar__note" @click="mobileNavOpen = false">
-          <span class="i-ph-gift" />
-          <span>
-            <strong>Make a card</strong>
-            <em>Back to the card maker</em>
-          </span>
-        </NuxtLink>
-      </div>
 
-      <nav class="studio-sidebar__nav">
-        <div v-for="group in groups" :key="group.label" class="studio-nav-group">
-          <p class="studio-nav-group__label">{{ group.label }}</p>
+        <nav class="studio-top__nav">
           <NuxtLink
-            v-for="item in group.items"
+            v-for="item in navItems"
             :key="item.to"
             :to="item.to"
-            class="studio-nav-link"
-            @click="mobileNavOpen = false"
+            class="studio-top__link"
           >
-            <span class="text-[16px]" :class="item.icon" />
-            <span>{{ item.label }}</span>
+            {{ item.label }}
           </NuxtLink>
-        </div>
-      </nav>
+        </nav>
 
-      <!-- Auth Section — always visible at top on mobile -->
-      <div class="studio-sidebar__auth">
-        <template v-if="authReady && !user">
-          <button class="btn-secondary w-full text-sm mb-2" @click="openLogin">{{ 'Sign in' }}</button>
-          <button class="btn-primary w-full text-sm" @click="openSignup">{{ 'Sign up' }}</button>
-        </template>
-        <template v-else-if="authReady && user">
-          <!-- 账号菜单（头像 + 名字）—— 侧栏导航里已有全部页面，
-               菜单里再放一个「我的作品」入口，保证在任何页面都能一眼找到自己的东西 -->
-          <UserMenu tone="dark" align="left" :user="user" :links="accountLinks" />
-        </template>
-      </div>
-
-      <div class="studio-sidebar__foot">
-        <!-- Admin Link (only when logged in) -->
-        <template v-if="authReady && user && isAdmin">
-          <NuxtLink
-            to="/admin"
-            class="btn-secondary w-full text-sm !inline-flex !items-center !justify-center gap-1.5"
-            @click="mobileNavOpen = false"
+        <div class="studio-top__actions">
+          <template v-if="authReady && !user">
+            <button class="btn-secondary !px-3 !py-1.5 text-xs studio-top__signin" @click="openLogin">Sign in</button>
+            <button class="btn-primary !px-3 !py-1.5 text-xs studio-top__signup" @click="openSignup">Sign up</button>
+          </template>
+          <UserMenu
+            v-else-if="authReady && user"
+            tone="dark"
+            align="right"
+            :user="user"
+            :links="accountLinks"
+          />
+          <button
+            class="studio-top__icon"
+            title="Send feedback"
+            aria-label="Send feedback"
+            @click="openFeedback()"
           >
-            <span class="i-ph-shield-star text-[14px]" />
-            {{ 'Admin' }}
-          </NuxtLink>
-        </template>
-        <button class="sidebar-feedback-btn" @click="openFeedback()">
-          <span class="i ph-chat-circle-text text-[14px]" />
-          {{ 'Send feedback' }}
-        </button>
-        <div class="mt-3">
+            <span class="i-ph-chat-circle-text" />
+          </button>
           <LanguageSwitcher />
         </div>
-        <p class="text-[11px] leading-relaxed text-ink-500 mt-2">{{ 'Personalised cards &amp; canvas prints' }}</p>
-      </div>
-    </aside>
 
-    <div v-if="mobileNavOpen" class="studio-sidebar-backdrop" @click="mobileNavOpen = false" />
-
-    <div class="studio-main">
-      <header class="studio-topbar md:hidden">
         <button
-          class="inline-flex h-9 w-9 items-center justify-center rounded-xl hover:bg-white/5"
-          aria-label="Menu"
-          @click="mobileNavOpen = true"
+          class="studio-top__burger"
+          :aria-label="mobileOpen ? 'Close menu' : 'Open menu'"
+          @click="mobileOpen = !mobileOpen"
         >
-          <span class="i-ph-list text-white/80" />
+          <span :class="mobileOpen ? 'i-ph-x' : 'i-ph-list'" />
         </button>
-        <span class="font-display text-[15px] font-650 text-white">{{ pageTitle }}</span>
-        <div class="flex items-center gap-2 w-9 justify-end">
-          <template v-if="authReady && !user">
-            <button class="text-xs text-ink-300 hover:text-white" @click="openLogin">{{ 'Sign in' }}</button>
-          </template>
-        </div>
-      </header>
+      </div>
 
-      <main class="studio-content">
-        <slot />
-      </main>
-    </div>
+      <div v-if="mobileOpen" class="studio-top__mobile">
+        <NuxtLink
+          v-for="item in navItems"
+          :key="item.to"
+          :to="item.to"
+          class="studio-top__mobile-link"
+          @click="mobileOpen = false"
+        >
+          {{ item.label }}
+        </NuxtLink>
+        <NuxtLink to="/my-assets" class="studio-top__mobile-link" @click="mobileOpen = false">
+          My creations
+        </NuxtLink>
+        <template v-if="authReady && !user">
+          <button class="btn-secondary w-full text-sm mt-2" @click="openLogin(); mobileOpen = false">Sign in</button>
+          <button class="btn-primary w-full text-sm" @click="openSignup(); mobileOpen = false">Sign up</button>
+        </template>
+        <!-- 窄屏顶栏塞不下语言切换 → 挪到这里 -->
+        <div class="mt-2"><LanguageSwitcher /></div>
+      </div>
+    </header>
 
-    <!-- 全局播放器（深色底栏）。
-         ⚠️ 以前**整个组件没被任何地方引用** → stores/player.ts 里
-         bindAudio() 永远绑不到 <audio> 元素 → 点「播放」只改状态不出声。
-         工作台的 .workspace 早就按 var(--player-h) 给底部留了位（tokens.css 里 92px），
-         说明它本来就该挂在这里。 -->
+    <main class="studio-content">
+      <slot />
+    </main>
+
     <AppPlayer />
   </div>
   <AuthModal v-model="authModalOpen" :initial-mode="authModalMode" />
@@ -122,7 +108,7 @@ import LocaleSuggestion from '~/components/ui/LocaleSuggestion.vue'
 //    写在 onMounted 回调里同样会炸。
 
 const route = useRoute()
-const mobileNavOpen = ref(false)
+const mobileOpen = ref(false)
 const { user, authReady } = useAuth()
 const { isOpen: authModalOpen, initialMode: authModalMode, openLogin, openSignup } = useAuthModal()
 const { isOpen: feedbackOpen, openFeedback } = useFeedback()
@@ -149,133 +135,175 @@ watch([() => user.value?.uid, authReady], async () => {
   }
 }, { immediate: true })
 
-// 使用 computed 确保 i18n 切换时导航标签同步更新
-// 导航顺序 = 业务优先级：贺卡是第一主业，音乐站降级保留（不删，但不再占据主导航）
-const groups = computed(() => [
-  {
-    label: 'Make',
-    items: [
-      { to: '/cards', label: 'Create a Card', icon: 'i-ph-gift' },
-      { to: '/image', label: 'AI Image Studio', icon: 'i-ph-image' },
-    ],
-  },
-  {
-    label: 'Music',
-    items: [
-      { to: '/create', label: 'Create a song', icon: 'i-ph-waveform' },
-      { to: '/cover', label: 'Cover art', icon: 'i-ph-arrows-clockwise' },
-      { to: '/music-library', label: 'Music library', icon: 'i-ph-music-notes' },
-    ],
-  },
-  {
-    // ⚠️ 资产入口：以前这一栏里只有 Gallery / Blog / Tools，
-    //    用户生成完根本找不到自己的作品（「也没有地方看资产」）
-    label: 'Yours',
-    items: [
-      { to: '/my-assets', label: 'My creations', icon: 'i-ph-images' },
-    ],
-  },
-  {
-    label: 'Discover',
-    items: [
-      { to: '/gallery', label: 'Gallery', icon: 'i-ph-grid-four' },
-      { to: '/blog', label: 'Blog', icon: 'i-ph-newspaper' },
-      { to: '/tools', label: 'Tools', icon: 'i-ph-wrench' },
-    ],
-  },
-])
+/**
+ * 顶栏导航项。
+ * ⚠️ 原来是侧边栏的**分组**结构（Make / Music / Yours / Discover 四组），
+ *    侧边栏删掉后顶栏放不下那么多分组 —— 压成一行，顺序 = 业务优先级：
+ *    贺卡第一，音乐/图片是保留的边角能力，不占主位。
+ */
+const navItems = [
+  { to: '/cards', label: 'Create a card' },
+  { to: '/image', label: 'Images' },
+  { to: '/create', label: 'Music' },
+  { to: '/gallery', label: 'Gallery' },
+  { to: '/blog', label: 'Blog' },
+  // ⚠️ /tools 是 SEO 聚合页（AI 图片/音乐/封面工具）。
+  //    侧边栏删掉后它变成**零入站链接的孤儿页** → 补回顶栏。
+  { to: '/tools', label: 'Tools' },
+]
 
 /**
  * 账号菜单里的站内链接。
- * ⚠️ 侧栏导航虽然已经有「My creations」，但账号菜单是「我在哪都能找到自己的东西」的
- *    最后一道保险 —— 尤其手机上侧栏是收起来的。
+ * ⚠️ 顶栏没有「My creations」（窄屏放不下），账号菜单是「我在哪都能找到自己的东西」
+ *    的最后一道保险。
  */
-const accountLinks = [
-  { to: '/my-assets', label: 'My creations', icon: 'i-ph-images' },
-]
-
-const pageTitle = computed(() => {
-  const map: Record<string, string> = {    '/create': 'Create',
-    '/cover': 'Cover',
-    '/library': 'Music library',
-    '/music-library': 'Music library',
-    '/my-assets': 'My creations',
-    '/my-cards': 'My creations',
-    '/cards': 'Create a Card',
-    '/image': 'Image',
-  }
-  if (route.path.startsWith('/song/')) return 'Track'
-  return map[route.path] || 'Create Keepsakes'
+const accountLinks = computed(() => {
+  const links: { to: string; label: string; icon?: string }[] = [
+    { to: '/my-assets', label: 'My creations', icon: 'i-ph-images' },
+  ]
+  // ⚠️ 以前 Admin 入口在侧边栏底部 —— 侧边栏删了以后会**丢掉**这个入口，
+  //    所以挪到账号菜单里（本来就该在账号菜单，不该占主导航）。
+  if (isAdmin.value) links.push({ to: '/admin', label: 'Admin', icon: 'i-ph-shield-star' })
+  return links
 })
 
+
 watch(() => route.fullPath, () => {
-  mobileNavOpen.value = false
+  mobileOpen.value = false
 })
 </script>
 
 <style scoped>
-.sidebar-feedback-btn {
+/* ---------- 顶栏 ---------- */
+.studio-top {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(10, 9, 16, 0.9);
+  backdrop-filter: blur(14px);
+}
+.studio-top__inner {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.5rem;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-pill);
-  background: transparent;
-  color: var(--muted);
-  font-size: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
+  gap: 1.25rem;
+  min-height: 56px;
+  padding: 0 1rem;
 }
-.sidebar-feedback-btn:hover {
-  border-color: var(--border-strong);
-  color: var(--ink);
-  background: var(--fill-soft);
-}
-
-
-</style>
-<style scoped>
-/* 「旧 AI 工具站」提示 —— 这套深色工作台是降级保留的老站，
-   顶部给一条明确出口，用户不该以为这里还是主站 */
-.studio-sidebar__note {
-  display: flex;
+.studio-top__brand {
+  flex: none;
+  display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  /* margin-top 交给 .studio-sidebar__brand 的 gap 管（见 assets/css/main.css） */
-  margin-top: 0;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid rgba(139, 124, 255, 0.28);
-  border-radius: 0.7rem;
-  background: rgba(139, 124, 255, 0.1);
+  gap: 0.5rem;
   text-decoration: none;
-  transition: background 0.14s ease, border-color 0.14s ease;
-}
-.studio-sidebar__note:hover {
-  background: rgba(139, 124, 255, 0.18);
-  border-color: rgba(139, 124, 255, 0.45);
-}
-.studio-sidebar__note > span:first-child {
-  font-size: 1.1rem;
-  color: #b6aaff;
   flex: none;
 }
-.studio-sidebar__note span span,
-.studio-sidebar__note strong,
-.studio-sidebar__note em {
-  display: block;
+.studio-top__logo {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  object-fit: contain;
 }
-.studio-sidebar__note strong {
-  font-size: 0.8125rem;
+.studio-top__name {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: 0.95rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: #fff;
+  white-space: nowrap;
 }
-.studio-sidebar__note em {
-  font-size: 0.6875rem;
-  font-style: normal;
-  color: rgba(255, 255, 255, 0.55);
+.studio-top__nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.studio-top__link {
+  padding: 0.4rem 0.7rem;
+  border-radius: 0.6rem;
+  color: #a39db8;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.studio-top__link:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+.studio-top__link.router-link-active { background: rgba(139, 124, 255, 0.16); color: #fff; }
+.studio-top__actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: none;
+}
+.studio-top__icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: #a39db8;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.studio-top__icon:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.studio-top__burger {
+  display: none;
+  place-items: center;
+  /* ⚠️ flex 容器里默认 flex-shrink:1 —— 窄屏时按钮会被压成 16×6px，
+     点都点不准。必须 flex:none。 */
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: none;
+  border-radius: 0.6rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+.studio-top__mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.6rem 1rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.studio-top__mobile-link {
+  padding: 0.6rem 0.4rem;
+  border-radius: 0.6rem;
+  color: #d7d3e6;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+.studio-top__mobile-link:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
+
+/* LanguageSwitcher 自带 width:100%（原来是放在侧边栏底部的），
+   放进顶栏会撑爆整行 → 这里收窄成按钮大小 */
+.studio-top__actions :deep(.lang-switcher) { width: auto; flex: none; }
+.studio-top__actions :deep(.lang-switcher__btn) {
+  width: auto;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 900px) {
+  .studio-top__nav { display: none; }
+  .studio-top__burger { display: grid; }
+  /* 窄屏顶栏塞不下语言切换，挪到汉堡菜单里 */
+  .studio-top__actions :deep(.lang-switcher) { display: none; }
+}
+
+@media (max-width: 560px) {
+  /* 更窄：品牌只留 logo，登录只留「Sign in」（Sign up 在汉堡菜单里） */
+  .studio-top__name { display: none; }
+  .studio-top__signup { display: none; }
 }
 </style>

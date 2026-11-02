@@ -3,24 +3,6 @@
     "title": "CraftAI — AI Music & Image Studio",
     "description": "Create AI music, images, and more — all in one studio. Free to start, no credit card required."
   },
-  "nav": {
-    "create": "Create",
-    "pricing": "Pricing",
-    "blog": "Blog",
-    "login": "Sign In",
-    "signup": "Sign Up",
-    "dashboard": "Dashboard",
-    "cover": "Cover",
-    "library": "Library",
-    "image": "Image",
-    "logout": "Sign Out",
-    "tagline": "AI Music & Image Studio",
-    "musicGroup": "Music",
-    "imageGroup": "Image",
-    "admin": "Admin",
-    "gallery": "Gallery",
-    "tools": "Tools"
-  },
   "hero": {
     "title": "Create AI Music & Images",
     "titleHighlight": "in Seconds",
@@ -246,7 +228,8 @@
     "regenerating": "Regenerating…",
     "regeneratedCount": "Regenerated {count} images",
     "regenerateFailed": "Regeneration failed",
-    "unnamed": "Untitled"
+    "unnamed": "Untitled",
+    "loadedParams": "Loaded your previous settings"
   },
   "cover": {
     "remixedFrom": "Loaded \"{ title }\"",
@@ -323,12 +306,18 @@
     "refresh": "Refresh",
     "refreshList": "Refresh list",
     "moreActions": "More actions",
-    "language": "Language"
+    "language": "Language",
+    "dismiss": "No thanks",
+    "localeSuggested": "We noticed you may prefer Chinese. Switch to Chinese?"
   },
   "homeDaily": {
     "title": "Daily Free Generations",
     "desc": "Get 10 free music and 20 free images every month — no credit card needed.",
     "cta": "Claim Free Generations",
     "browse": "Browse Gallery"
+  },
+  "common": {
+    "delete": "Delete",
+    "cancel": "Cancel"
   }
 }

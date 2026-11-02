@@ -3,22 +3,6 @@
     "title": "CraftAI — AI 音乐与图像工作室",
     "description": "一个平台搞定 AI 音乐、图像等创作。免费开始，无需信用卡。"
   },
-  "nav": {
-    "create": "创作",
-    "pricing": "定价",
-    "blog": "博客",
-    "login": "登录",
-    "signup": "注册",
-    "dashboard": "仪表盘",
-    "cover": "翻唱",
-    "library": "曲库",
-    "image": "图像",
-    "logout": "退出登录",
-    "tagline": "AI 音乐与图像工作室",
-    "musicGroup": "音乐",
-    "imageGroup": "图像",
-    "admin": "管理"
-  },
   "hero": {
     "title": "创作 AI 音乐与图像",
     "titleHighlight": "只需数秒",
@@ -234,7 +218,8 @@
     "regenerating": "重新生成中…",
     "regeneratedCount": "已重新生成 {count} 张",
     "regenerateFailed": "重新生成失败",
-    "unnamed": "未命名"
+    "unnamed": "未命名",
+    "loadedParams": "已载入上次的设置"
   },
   "cover": {
     "remixedFrom": "已载入「{ title }」",
@@ -311,6 +296,12 @@
     "refresh": "刷新",
     "refreshList": "刷新列表",
     "moreActions": "更多操作",
-    "language": "语言"
+    "language": "语言",
+    "dismiss": "不用了",
+    "localeSuggested": "检测到您来自中文地区，是否切换到中文？"
+  },
+  "common": {
+    "delete": "删除",
+    "cancel": "取消"
   }
 }

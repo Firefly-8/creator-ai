@@ -3,22 +3,6 @@
     "title": "CraftAI — AI 음악 & 이미지 스튜디오",
     "description": "AI 음악, 이미지 등을 하나의 스튜디오에서 만드세요. 무료로 시작, 신용카드 불필요."
   },
-  "nav": {
-    "create": "만들기",
-    "pricing": "가격",
-    "blog": "블로그",
-    "login": "로그인",
-    "signup": "회원가입",
-    "dashboard": "대시보드",
-    "cover": "커버",
-    "library": "라이브러리",
-    "image": "Image",
-    "logout": "로그아웃",
-    "tagline": "AI Music & Image Studio",
-    "musicGroup": "Music",
-    "imageGroup": "Image",
-    "admin": "Admin"
-  },
   "hero": {
     "title": "AI 음악 & 이미지를",
     "titleHighlight": "초 단위로 생성",
@@ -179,7 +163,8 @@
     "generating": "Generating…",
     "restoredRef": "Reference restored (from last generation)",
     "generic": "general",
-    "style": "style"
+    "style": "style",
+    "loadedParams": "이전 설정을 불러왔습니다"
   },
   "cover": {
     "remixedFrom": "Loaded \"{ title }\"",
@@ -224,5 +209,9 @@
     "sending": "Sending...",
     "thanks": "Thank you for your feedback!",
     "done": "Done"
+  },
+  "common": {
+    "delete": "삭제",
+    "cancel": "취소"
   }
 }

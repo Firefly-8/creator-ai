@@ -3,22 +3,6 @@
     "title": "CraftAI — AI Musik & Bild Studio",
     "description": "Erstelle AI-Musik, Bilder und mehr — alles in einem Studio. Kostenlos starten, keine Kreditkarte erforderlich."
   },
-  "nav": {
-    "create": "Erstellen",
-    "pricing": "Preise",
-    "blog": "Blog",
-    "login": "Anmelden",
-    "signup": "Registrieren",
-    "dashboard": "Dashboard",
-    "cover": "Cover",
-    "library": "Bibliothek",
-    "image": "Image",
-    "logout": "Abmelden",
-    "tagline": "AI Music & Image Studio",
-    "musicGroup": "Music",
-    "imageGroup": "Image",
-    "admin": "Admin"
-  },
   "hero": {
     "title": "AI-Musik & Bilder",
     "titleHighlight": "in Sekunden erstellen",
@@ -179,7 +163,8 @@
     "generating": "Generating…",
     "restoredRef": "Reference restored (from last generation)",
     "generic": "general",
-    "style": "style"
+    "style": "style",
+    "loadedParams": "Vorherige Einstellungen geladen"
   },
   "cover": {
     "remixedFrom": "Loaded \"{ title }\"",
@@ -224,5 +209,9 @@
     "sending": "Sending...",
     "thanks": "Thank you for your feedback!",
     "done": "Done"
+  },
+  "common": {
+    "delete": "Löschen",
+    "cancel": "Abbrechen"
   }
 }

@@ -3,22 +3,6 @@
     "title": "Creator — Estúdio de Música e Imagem com IA",
     "description": "Crie música, imagens e mais com IA — tudo em um só estúdio. Grátis para começar, sem cartão de crédito."
   },
-  "nav": {
-    "create": "Criar",
-    "pricing": "Preços",
-    "blog": "Blog",
-    "login": "Entrar",
-    "signup": "Cadastrar",
-    "dashboard": "Painel",
-    "cover": "Capa",
-    "library": "Biblioteca",
-    "image": "Image",
-    "logout": "Sair",
-    "tagline": "AI Music & Image Studio",
-    "musicGroup": "Music",
-    "imageGroup": "Image",
-    "admin": "Admin"
-  },
   "hero": {
     "title": "Crie Música e Imagens com IA",
     "titleHighlight": "em Segundos",
@@ -179,7 +163,8 @@
     "generating": "Generating…",
     "restoredRef": "Reference restored (from last generation)",
     "generic": "general",
-    "style": "style"
+    "style": "style",
+    "loadedParams": "Definições anteriores carregadas"
   },
   "cover": {
     "remixedFrom": "Carregado \"{ title }\"",
@@ -224,5 +209,9 @@
     "sending": "Sending...",
     "thanks": "Thank you for your feedback!",
     "done": "Done"
+  },
+  "common": {
+    "delete": "Eliminar",
+    "cancel": "Cancelar"
   }
 }

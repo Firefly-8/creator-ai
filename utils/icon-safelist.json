@@ -54,7 +54,6 @@
     "ph-gift",
     "ph-golf",
     "ph-graduation-cap",
-    "ph-grid-four",
     "ph-hand-heart",
     "ph-hand-tap",
     "ph-heart",
@@ -126,7 +125,6 @@
     "ph-warning",
     "ph-warning-circle",
     "ph-waveform",
-    "ph-wrench",
     "ph-x"
   ],
   "safelist": [
@@ -183,7 +181,6 @@
     "i-ph-gift",
     "i-ph-golf",
     "i-ph-graduation-cap",
-    "i-ph-grid-four",
     "i-ph-hand-heart",
     "i-ph-hand-tap",
     "i-ph-heart",
@@ -255,7 +252,6 @@
     "i-ph-warning",
     "i-ph-warning-circle",
     "i-ph-waveform",
-    "i-ph-wrench",
     "i-ph-x"
   ]
 }

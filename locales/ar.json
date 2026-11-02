@@ -3,22 +3,6 @@
     "title": "Creator — استوديو الموسيقى والصور بالذكاء الاصطناعي",
     "description": "أنشئ موسيقى وصورًا والمزيد بالذكاء الاصطناعي — كل ذلك في استوديو واحد. ابدأ مجانًا، بدون بطاقة ائتمان."
   },
-  "nav": {
-    "create": "إنشاء",
-    "pricing": "الأسعار",
-    "blog": "المدونة",
-    "login": "تسجيل الدخول",
-    "signup": "التسجيل",
-    "dashboard": "لوحة التحكم",
-    "cover": "غلاف",
-    "library": "مكتبة",
-    "image": "Image",
-    "logout": "تسجيل الخروج",
-    "tagline": "AI Music & Image Studio",
-    "musicGroup": "Music",
-    "imageGroup": "Image",
-    "admin": "Admin"
-  },
   "hero": {
     "title": "أنشئ موسيقى وصورًا بالذكاء الاصطناعي",
     "titleHighlight": "في ثوانٍ",
@@ -179,7 +163,8 @@
     "generating": "Generating…",
     "restoredRef": "Reference restored (from last generation)",
     "generic": "general",
-    "style": "style"
+    "style": "style",
+    "loadedParams": "تم تحميل إعداداتك السابقة"
   },
   "cover": {
     "remixedFrom": "تم تحميل \"{ title }\"",
@@ -224,5 +209,9 @@
     "sending": "Sending...",
     "thanks": "Thank you for your feedback!",
     "done": "Done"
+  },
+  "common": {
+    "delete": "حذف",
+    "cancel": "إلغاء"
   }
 }

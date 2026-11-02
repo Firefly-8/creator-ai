@@ -81,7 +81,6 @@ for (const route of ROUTES) {
       const h = document.querySelector('h1')
       return h ? h.textContent.trim().slice(0, 70) : ''
     })
-    rec.hasSidebar = await page.evaluate(() => !!document.querySelector('.studio-sidebar'))
     rec.ckCount = await page.evaluate(() => document.querySelectorAll('[class*="ck-"]').length)
     rec.dupMeta = await page.evaluate(() => {
       // 检查 head 里是否有重复的 meta name（SEO bug）

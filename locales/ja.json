@@ -3,22 +3,6 @@
     "title": "CraftAI — AI音楽＆画像スタジオ",
     "description": "AI音楽、画像、その他をすべて1つのスタジオで作成。無料で開始、クレジットカード不要。"
   },
-  "nav": {
-    "create": "作成",
-    "pricing": "料金",
-    "blog": "ブログ",
-    "login": "ログイン",
-    "signup": "新規登録",
-    "dashboard": "ダッシュボード",
-    "cover": "カバー",
-    "library": "ライブラリ",
-    "image": "Image",
-    "logout": "ログアウト",
-    "tagline": "AI Music & Image Studio",
-    "musicGroup": "Music",
-    "imageGroup": "Image",
-    "admin": "Admin"
-  },
   "hero": {
     "title": "AI音楽と画像を",
     "titleHighlight": "数秒で作成",
@@ -179,7 +163,8 @@
     "generating": "Generating…",
     "restoredRef": "Reference restored (from last generation)",
     "generic": "general",
-    "style": "style"
+    "style": "style",
+    "loadedParams": "前回の設定を読み込みました"
   },
   "cover": {
     "remixedFrom": "Loaded \"{ title }\"",
@@ -224,5 +209,9 @@
     "sending": "Sending...",
     "thanks": "Thank you for your feedback!",
     "done": "Done"
+  },
+  "common": {
+    "delete": "削除",
+    "cancel": "キャンセル"
   }
 }
