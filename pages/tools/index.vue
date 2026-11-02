@@ -117,6 +117,9 @@ useHead({
 <style scoped>
 .content-page {
   position: relative;
+  /* ⚠️ .content-glow 左右各溢出 10%，不裁剪会把页面撑出横向滚动条
+     （实测 1280px 视口 scrollWidth 1389）。这里裁掉装饰溢出。 */
+  overflow: hidden;
 }
 
 .content-glow {

@@ -236,6 +236,8 @@ h3,
 /* —— Commercial seek / volume sliders —— */
 .seek {
   --seek-progress: 0%;
+  /* flex item 默认 min-width:auto，窄屏下撑不回去会顶出横向滚动条 */
+  min-width: 0;
   -webkit-appearance: none;
   appearance: none;
   width: 100%;

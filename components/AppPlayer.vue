@@ -73,7 +73,7 @@
           </button>
         </div>
 
-        <div class="flex w-full items-center gap-2 px-1">
+        <div class="flex w-full min-w-0 items-center gap-2 px-1">
           <span class="w-10 shrink-0 text-right text-[11px] tabular-nums text-ink-400">
             {{  formatDuration(player.currentTime * 1000)  }}
           </span>
