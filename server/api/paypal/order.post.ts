@@ -48,7 +48,9 @@ export default defineEventHandler(async (event) => {
 
   const cfg = getPayPalConfig()
   const origin = getRequestURL(event).origin
-  const base = process.env.PUBLIC_SITE_URL || origin
+  // ⚠️ PUBLIC_SITE_URL 是首选，但代码别处统一用 NUXT_PUBLIC_SITE_URL —— 两个都读，
+  //    避免用户只配了后者时，return_url 退化成 pages.dev 默认域名。
+  const base = process.env.PUBLIC_SITE_URL || process.env.NUXT_PUBLIC_SITE_URL || origin
 
   let order: any
   try {
