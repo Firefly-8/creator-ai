@@ -157,7 +157,7 @@ export async function publicImage(img: ImageRow) {
   // ⚠️ 2026-11-17：把卡面数据（名字/留言/版式）一起带出去 ——
   //    以前只存图不存字，用户从「我的作品」打开旧卡得重写一遍。
   //    meta_json 里没有 card 字段的老记录 → 返回 undefined，前端跳过。
-  let card: { name?: string; message?: string; style?: string; layout?: string } | undefined
+  let card: { name?: string; message?: string; style?: string; layout?: string; texts?: unknown[] } | undefined
   try {
     const meta = img.meta_json ? JSON.parse(img.meta_json) : null
     if (meta?.card && typeof meta.card === 'object') card = meta.card

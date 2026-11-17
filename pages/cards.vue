@@ -381,8 +381,10 @@
           <CardComposer
             :image-url="pickedUrl"
             :initial-texts="prefilledTexts"
+            :saved-card="savedCard"
             :has-paid="hasPaid"
             class="ck-editor__composer"
+            @update:card="onCardUpdate"
           />
         </div>
       </section>
@@ -821,6 +823,42 @@ const prefilledTexts = computed(() => {
   return out
 })
 
+/**
+ * 成品状态（版式 + 每条文字的精确位置）
+ *
+ * ⚠️ 2026-11-17：以前这些只活在浏览器内存里 ——
+ *    用户挑好版式、拖好字，刷新一下全没了，出了图的服务端也从来没存过。
+ *    现在：编辑器每次改动 → 防抖存到服务器 → 下次从「我的作品」打开还是那张卡。
+ */
+const savedCard = ref<{ layout?: string; texts?: any[] } | null>(null)
+/** 当前成品状态（编辑器实时报上来的） */
+const finalCard = ref<{ layout?: string; texts?: any[] } | null>(null)
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
+/** 编辑器改动 → 防抖 2.5 秒后存一次 */
+function onCardUpdate(v: { layout: string; texts: any[] }) {
+  finalCard.value = v
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => { void saveCardNow() }, 2500)
+}
+
+/** 把当前成品状态存到服务器（挂在选中的那张图上） */
+async function saveCardNow() {
+  const id = picked.value
+  if (!id || !finalCard.value) return
+  try {
+    await api.put(`/api/images/${id}/card`, {
+      name: name.value,
+      message: message.value,
+      style: style.value,
+      layout: finalCard.value.layout,
+      texts: finalCard.value.texts,
+    })
+  } catch {
+    // 存不上不打断编辑（用户可能没登录 / 网络抖了）—— 静默
+  }
+}
+
 /** 当前画风的名字（给"已选画风"那张卡用） */
 const currentStyleLabel = computed(() => {
   const st = availableStyles.value.find(s => s.id === style.value)
@@ -1047,7 +1085,7 @@ async function loadFromCard() {
       images: {
         id: string
         imageUrl: string | null
-        card?: { name?: string; message?: string }
+        card?: { name?: string; message?: string; layout?: string; texts?: any[] }
       }[]
     }>('/api/images')
     const hit = (res.images || []).find(i => i.id === id)
@@ -1058,6 +1096,10 @@ async function loadFromCard() {
     //    以前只把图放回来，字没了（得重写一遍）。现在直接复用。
     if (hit.card?.name) name.value = hit.card.name
     if (hit.card?.message) message.value = hit.card.message
+    // ⚠️ 版式 + 精确文字位置也恢复 —— 用户做过的卡要长得一模一样
+    if (hit.card?.layout || hit.card?.texts?.length) {
+      savedCard.value = { layout: hit.card?.layout, texts: hit.card?.texts }
+    }
     step.value = 3
     maxReached.value = 3
   } catch {

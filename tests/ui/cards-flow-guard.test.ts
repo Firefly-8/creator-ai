@@ -81,7 +81,35 @@ describe('贺卡向导 · 流程守卫', () => {
   })
 
   it('CardComposer 真的接上了 initialTexts', () => {
-    expect(composer).toMatch(/texts:\s*props\.initialTexts/)
+    expect(composer).toMatch(/props\.initialTexts\?\.length/)
+  })
+
+  it('旧卡恢复优先于初始文字（savedCard 的位置是精确的，不能再被套版式覆盖）', () => {
+    expect(composer).toMatch(/texts:\s*props\.savedCard\?\.texts\?\.length/)
+    // 恢复旧卡时**不要**再 applyLayout —— 会把用户当时的位置覆盖掉
+    expect(composer).toMatch(/if \(!props\.savedCard\?\.texts\?\.length\) applyLayout/)
+  })
+
+  it('成品状态会报给页面层去保存（版式 + 文字位置都不丢）', () => {
+    expect(composer).toContain("'update:card'")
+    expect(composer).toContain('emit(\'update:card\'')
+    // 页面层：接 + 防抖存 + 带上版式
+    expect(src).toContain('@update:card="onCardUpdate"')
+    expect(src).toContain(':saved-card="savedCard"')
+    expect(src).toContain('saveCardNow')
+    expect(src).toMatch(/layout:\s*finalCard\.value\.layout/)
+    expect(src).toMatch(/texts:\s*finalCard\.value\.texts/)
+  })
+
+  it('保存成品要走带归属校验的接口（不能按 id 裸写别人的图）', () => {
+    const api = readFileSync(join(ROOT, 'server/api/images/[id]/card.put.ts'), 'utf8')
+    expect(api).toContain('getImage(id, auth.uid)')
+    expect(api).toContain('401')
+    // 只收白名单字段
+    expect(api).toContain('String(body.name')
+    expect(api).toContain('Array.isArray(body.texts)')
+    // 合并写 meta_json，不能整块覆盖
+    expect(api).toContain('meta.card = { ...(meta.card || {}), ...card }')
   })
 
   it('额度没加载出来时，不许说「uses 1 of your free goes」', () => {
