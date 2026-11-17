@@ -74,6 +74,29 @@ describe('旧卡复用 · meta_json → publicImage().card', () => {
     expect(src).toContain('layout: String(body?.layout')
   })
 
+  it('保存成品的路由模块能真的加载（import 路径写错的话只有 build 才炸）', async () => {
+    // ⚠️ vitest 里没有 nitro 的自动导入全局（defineEventHandler 等），
+    //    这里手动塞一份 —— 目的不是测路由逻辑，
+    //    是让**模块顶层的 import 全部被解析一遍**。
+    //    之前就踩过：dbRun 从 db-runtime.ts import（那里根本没有），
+    //    源码级守卫测试全绿，nuxt build 直接 RollupError。
+    const g = globalThis as any
+    g.defineEventHandler = (fn: any) => fn
+    g.createError = (o: any) => Object.assign(new Error(o?.statusMessage || 'error'), o)
+    g.readBody = async () => ({})
+    const mod: any = await import('../../server/api/images/[id]/card.put')
+    expect(typeof mod.default).toBe('function')
+  })
+
+  it('dbRun 只能从 server/utils/db 拿（db-runtime 里没有它）', async () => {
+    const db: any = await import('../../server/utils/db')
+    expect(typeof db.dbRun).toBe('function')
+    const src = readFileSync(join(ROOT, 'server/api/images/[id]/card.put.ts'), 'utf8')
+    // 只看 import 语句（注释里提一句 db-runtime 不算）
+    expect(src).toMatch(/import\s*\{[^}]*dbRun[^}]*\}\s*from\s*'\.\.\/\.\.\/\.\.\/utils\/db'/)
+    expect(src).not.toMatch(/import[^\n]*from\s*'[^']*db-runtime'/)
+  })
+
   it('前端 open 旧卡时把字回填进表单', () => {
     const src = readFileSync(join(ROOT, 'pages/cards.vue'), 'utf8')
     const fn = src.match(/async function loadFromCard\(\)[\s\S]*?\n\}/)?.[0] || ''

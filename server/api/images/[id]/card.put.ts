@@ -13,7 +13,8 @@
  */
 import { defineEventHandler, createError, readBody } from 'h3'
 import { getImage } from '../../../utils/images'
-import { dbRun } from '../../../utils/db-runtime'
+// ⚠️ dbRun 在 server/utils/db.ts（不是 db-runtime.ts —— 那个只有 getDB/requireDB）
+import { dbRun } from '../../../utils/db'
 
 interface CardPayload {
   name?: string
