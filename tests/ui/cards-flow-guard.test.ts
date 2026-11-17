@@ -83,4 +83,37 @@ describe('贺卡向导 · 流程守卫', () => {
   it('CardComposer 真的接上了 initialTexts', () => {
     expect(composer).toMatch(/texts:\s*props\.initialTexts/)
   })
+
+  it('额度没加载出来时，不许说「uses 1 of your free goes」', () => {
+    // ⚠️ 2026-11-17：未登录 → /api/user/usage 401 → usageLoaded=false。
+    //    但 outOfQuota 也是 false → 原来照样显示成本提示，
+    //    等于跟没登录的人说"你还有免费次数"，而他登录后是 1 次还是 2 次
+    //    （看邮箱验证没）根本不知道。
+    const cost = src.match(/<span[^>]*ck-nav__cost[\s\S]*?<\/span>/)?.[0] || ''
+    expect(cost).toContain('usageLoaded')
+  })
+
+  it('额度未知时给的是「先登录」的提示，不是假装知道剩几次', () => {
+    const hint = src.match(/<p v-if="step === 2" class="ck-nav__hint">[\s\S]*?<\/p>/)?.[0] || ''
+    // v-else 分支 = 额度没加载出来
+    expect(hint).toContain('Sign in to make this card')
+    // 别再出现"你说免费预览"这种含糊话
+    expect(hint).not.toContain('Free to preview')
+  })
+
+  it('生成按钮文案不拼场景名（"Make birthday" / "Make restore an old photo card"）', () => {
+    const btn = src.match(/class="ck-btn ck-btn--primary ck-btn--lg"[\s\S]*?@click="generate"[\s\S]*?<\/button>/)?.[0] || ''
+    expect(btn).toContain('Make the card')
+    expect(btn).not.toMatch(/Make \$\{scenario/)
+  })
+
+  it('快捷场合的高亮 class 是 is-on（验证脚本别选错名字）', () => {
+    expect(src).toContain("'is-on': scenario?.id === q.id")
+  })
+
+  it('草稿恢复后能把场景回填（否则刷新后场合高亮丢失）', () => {
+    const restore = src.match(/function restoreDraft\(\)[\s\S]*?\n\}/)?.[0] || ''
+    expect(restore).toContain('IMAGE_SCENARIOS.find')
+    expect(restore).toContain('scenario.value = sc')
+  })
 })

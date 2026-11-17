@@ -427,7 +427,14 @@
             → "Make restore an old photo card"。场景信息第 2 步标题里已经有了。
           -->
           {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? (outOfCards ? 'No cards left' : 'Daily limit reached') : 'Make the card') }}
-          <span v-if="!generating && !outOfQuota" class="ck-nav__cost">
+          <!--
+            ⚠️ 必须加 usageLoaded 守卫（2026-11-17）：
+            未登录时 /api/user/usage 直接 401 → usageLoaded=false，
+            但 outOfQuota 也因此是 false → 原来照样渲染
+            "uses 1 of your free goes" → 跟没登录的人说"你还有免费次数"，
+            而登录后到底 1 次还是 2 次（看邮箱有没有验证）他根本不知道。
+          -->
+          <span v-if="!generating && !outOfQuota && usageLoaded" class="ck-nav__cost">
             uses 1 of your free goes
           </span>
         </button>
@@ -444,7 +451,10 @@
           You have {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left today —
           each go makes up to {{ maxPerRun }} pictures to choose from.
         </template>
-        <template v-else>Free to preview. Only pay when it is right.</template>
+        <template v-else>
+          <!-- 未登录：额度还没加载出来（接口 401），别假装知道用户剩几次 -->
+          Sign in to make this card — we will ask you first.
+        </template>
       </p>
     </div>
   </div>
