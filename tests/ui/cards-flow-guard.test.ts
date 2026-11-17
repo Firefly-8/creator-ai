@@ -101,6 +101,26 @@ describe('贺卡向导 · 流程守卫', () => {
     expect(src).toMatch(/texts:\s*finalCard\.value\.texts/)
   })
 
+  it('「Try again」要标出消耗（以前一点就又扣一次额度，界面零提示）', () => {
+    const regen = src.match(/<div class="ck-regen">[\s\S]*?<\/div>/)?.[0] || ''
+    expect(regen).toContain('ck-nav__cost')
+    // 同一个守卫：额度没加载出来就别报成本
+    expect(regen).toContain('usageLoaded')
+  })
+
+  it('结果页不许说「You can make as many as you like」（一次就扣一次额度）', () => {
+    expect(src).not.toContain('You can make as many as you like')
+    expect(src).toContain('Each try uses 1 of your free goes')
+  })
+
+  it('Try again 不能把上一批候选顶掉（保留两批，最多 8 张）', () => {
+    expect(src).toContain('const currentBatch = ref')
+    expect(src).toContain('const olderBatch = ref')
+    expect(src).toContain('const candidates = computed(')
+    // 生成时上一批要挪走而不是被覆盖
+    expect(src).toMatch(/olderBatch\.value = currentBatch\.value/)
+  })
+
   it('保存成品要走带归属校验的接口（不能按 id 裸写别人的图）', () => {
     const api = readFileSync(join(ROOT, 'server/api/images/[id]/card.put.ts'), 'utf8')
     expect(api).toContain('getImage(id, auth.uid)')

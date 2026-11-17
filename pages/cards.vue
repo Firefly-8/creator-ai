@@ -325,7 +325,9 @@
           <span class="ck-sec__num">3</span>
           Pick the one you like
         </h2>
-        <p class="ck-sec__sub">You can make as many as you like. Regenerate any time.</p>
+        <p class="ck-sec__sub">
+          Each try uses 1 of your free goes. The previous batch stays below so you can compare.
+        </p>
 
         <div class="ck-cands">
           <button
@@ -344,6 +346,11 @@
           <button class="ck-btn ck-btn--ghost" :disabled="generating" @click="generate">
             <span class="i-ph-arrow-clockwise" />
             Try again
+            <!-- ⚠️ 成本要标出来（跟底部 CTA 同一个守卫）——
+                 以前这里一点就又扣一次额度，界面上一个字都没提。 -->
+            <span v-if="usageLoaded && !outOfQuota && !usageUnlimited" class="ck-nav__cost">
+              uses 1 of your free goes
+            </span>
           </button>
           <!-- 生成完顺手给个「看全部作品」的出口 -->
           <NuxtLink to="/my-assets" class="ck-btn ck-btn--ghost">
@@ -580,7 +587,17 @@ const uploadId = ref('')
 
 const generating = ref(false)
 const genError = ref('')
-const candidates = ref<{ id: string; url: string }[]>([])
+/**
+ * 候选图分两批存
+ *
+ * ⚠️ 2026-11-17：以前点「Try again」会**直接把上一批候选顶掉** ——
+ *    用户好不容易挑到一张还不错的，一按就没了，只能再花一次额度重来。
+ *    现在保留上一批（新批次在上面），可以对比着挑。
+ *    只留两批 → 最多 8 张，不会越滚越长。
+ */
+const currentBatch = ref<{ id: string; url: string }[]>([])
+const olderBatch = ref<{ id: string; url: string }[]>([])
+const candidates = computed(() => [...currentBatch.value, ...olderBatch.value])
 const picked = ref('')
 
 /**
@@ -1016,13 +1033,18 @@ async function generate() {
     await loadUsage()
     // ⚠️ 后端返回的是 { id, imageUrl }（签名 URL），
     //    以前这里读的是 im.url → 永远是 undefined → 候选图一片空白
-    candidates.value = (res.images || [])
+    const fresh = (res.images || [])
       .filter((im) => !!im.imageUrl)
       .map((im) => ({
         id: im.id,
         url: im.imageUrl as string,
       }))
-    picked.value = candidates.value[0]?.id || ''
+    // 上一批挪到 olderBatch —— 别把用户挑好的那张顶掉
+    if (fresh.length) {
+      olderBatch.value = currentBatch.value
+      currentBatch.value = fresh
+    }
+    picked.value = currentBatch.value[0]?.id || ''
     // 出图了 → 切到结果页（第 3 步）
     step.value = 3
     maxReached.value = Math.max(maxReached.value, 3)
@@ -1090,7 +1112,8 @@ async function loadFromCard() {
     }>('/api/images')
     const hit = (res.images || []).find(i => i.id === id)
     if (!hit?.imageUrl) return
-    candidates.value = [{ id: hit.id, url: hit.imageUrl }]
+    currentBatch.value = [{ id: hit.id, url: hit.imageUrl }]
+    olderBatch.value = []
     picked.value = hit.id
     // ⚠️ 2026-11-17：把老卡上写过的字**带回来** ——
     //    以前只把图放回来，字没了（得重写一遍）。现在直接复用。
