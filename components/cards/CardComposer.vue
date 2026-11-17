@@ -171,10 +171,17 @@ const {
   // ⚠️ 默认**只有两个必填字段**（名字 + 留言）。
   //    签名是可选的 → 用户点了「+ Add a signature」才加。
   //    （以前默认三条，等于给用户塞了三个输入框）
-  texts: [
-    { id: 'name', kind: 'name', text: '', x: 0.5, y: 0.79, size: 0.075, color: '#c8543d', align: 'center', font: 'display', rotate: 0 },
-    { id: 'message', kind: 'message', text: '', x: 0.5, y: 0.868, size: 0.028, color: '#3a2f28', align: 'center', font: 'body', rotate: 0 },
-  ],
+  //
+  // ⚠️ 2026-11-17：initialTexts 以前声明了却**根本没用** ——
+  //    页面层传什么进来都被这三条默认文本覆盖掉。
+  //    现在真正接上：用户在新流程里提前写好的名字和留言，
+  //    出图后直接落在成品上（不用再手打一遍）。
+  texts: props.initialTexts?.length
+    ? (props.initialTexts as CardTextItem[])
+    : [
+        { id: 'name', kind: 'name', text: '', x: 0.5, y: 0.79, size: 0.075, color: '#c8543d', align: 'center', font: 'display', rotate: 0 },
+        { id: 'message', kind: 'message', text: '', x: 0.5, y: 0.868, size: 0.028, color: '#3a2f28', align: 'center', font: 'body', rotate: 0 },
+      ],
 })
 
 const hasPaid = computed(() => !!props.hasPaid)

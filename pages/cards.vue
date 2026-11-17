@@ -29,7 +29,7 @@
           </li>
         </ol>
         <p class="ck-stepsbar__now">
-          {{ step <= 3 ? `Step ${step} of 3 · ${stepLabels[step - 1]}` : 'Last step · add your words' }}
+          {{ step <= 2 ? `Step ${step} of 2 · ${stepLabels[step - 1]}` : 'Last step · add your words' }}
         </p>
       </div>
     </div>
@@ -38,7 +38,7 @@
     <header class="ck-cards__head">
       <div class="ck-wrap ck-cards__headgrid">
         <div class="ck-cards__headcopy">
-          <p v-if="step < 4" class="ck-eyebrow">Step {{ step }} of 3</p>
+          <p v-if="step < 3" class="ck-eyebrow">Step {{ step }} of 2</p>
           <h1 class="ck-h1">{{ stepHeadline }}</h1>
           <p class="ck-lede">{{ stepLede }}</p>
         </div>
@@ -61,59 +61,112 @@
     </header>
 
     <div class="ck-wrap ck-cards__body">
-      <!-- ==================== STEP 1 · 场合 ==================== -->
+      <!-- ==================== STEP 1 · 谁 + 说什么 ==================== -->
+      <!--
+        ⚠️ 2026-11-17 减步改造：
+        原来是「STEP1 场合(6 组 tab → 22 个卡片墙)」+「STEP2 照片+名字」
+        两步两层决策。现在合成一步：
+          ① 8 个高频场合一键选（想找冷门场合再展开 More occasions）
+          ② 名字 + 想说的话 + 照片（三个都是可选的，只有一个真必填）
+        「想说什么」提前到生成前 —— 出图后直接落在成品上，不用再手打一遍。
+      -->
       <section v-if="step === 1" class="ck-sec ck-sec--card">
         <h2 class="ck-sec__title">
           <span class="ck-sec__num">1</span>
-          What is it for?
-        </h2>
-        <p class="ck-sec__sub">Pick the closest one. You can change it later.</p>
-
-        <!-- 分组 tab -->
-        <div class="ck-tabs">
-          <button
-            v-for="g in SCENARIO_GROUPS"
-            :key="g.id"
-            class="ck-tab"
-            :class="{ 'ck-tab--on': group === g.id }"
-            @click="group = g.id"
-          >
-            {{ g.label }}
-          </button>
-        </div>
-
-        <div class="ck-scene-grid">
-          <button
-            v-for="sc in visibleScenarios"
-            :key="sc.id"
-            class="ck-scene"
-            :class="{ 'ck-scene--on': scenario?.id === sc.id }"
-            @click="pickScenario(sc)"
-          >
-            <span class="ck-scene__icon" :class="`i-${sc.icon}`" />
-            <span class="ck-scene__label">{{ sc.label }}</span>
-            <span class="ck-scene__desc">{{ sc.desc }}</span>
-            <span v-if="sc.needReference" class="ck-scene__tag">
-              <span class="i-ph-image" /> photo
-            </span>
-          </button>
-        </div>
-      </section>
-
-      <!-- ==================== STEP 2 · 照片 + 称呼 ==================== -->
-      <section v-if="step === 2 && scenario" class="ck-sec ck-sec--card">
-        <h2 class="ck-sec__title">
-          <span class="ck-sec__num">2</span>
-          Add their photo and name
+          Who is it for, and what should it say?
         </h2>
         <p class="ck-sec__sub">
-          This is what makes it theirs. A photo is best, but you can skip it.
+          Pick an occasion below, then tell us the rest in your own words.
+          Everything here is optional — we can fill it in for you.
         </p>
 
+        <!-- 高频场合：一次点击 -->
+        <div class="ck-quick">
+          <button
+            v-for="q in quickIntents"
+            :key="q.id"
+            type="button"
+            class="ck-quick__btn"
+            :class="{ 'is-on': scenario?.id === q.id }"
+            @click="pickQuick(q)"
+          >
+            <span class="ck-quick__icon" :class="q.icon" />
+            <span class="ck-quick__label">{{ q.label }}</span>
+          </button>
+        </div>
+
+        <!-- 冷门场合：折起来 -->
+        <details class="ck-more" :open="showAllOccasions">
+          <summary class="ck-more__summary">
+            <span class="i-ph-list-dashes" />
+            More occasions
+            <span class="ck-more__tail">{{ scenario?.label || '22 to choose from' }}</span>
+          </summary>
+
+          <div class="ck-tabs">
+            <button
+              v-for="g in SCENARIO_GROUPS"
+              :key="g.id"
+              class="ck-tab"
+              :class="{ 'ck-tab--on': group === g.id }"
+              @click="group = g.id"
+            >
+              {{ g.label }}
+            </button>
+          </div>
+
+          <div class="ck-scene-grid">
+            <button
+              v-for="sc in visibleScenarios"
+              :key="sc.id"
+              class="ck-scene"
+              :class="{ 'ck-scene--on': scenario?.id === sc.id }"
+              @click="pickScenario(sc)"
+            >
+              <span class="ck-scene__icon" :class="`i-${sc.icon}`" />
+              <span class="ck-scene__label">{{ sc.label }}</span>
+              <span class="ck-scene__desc">{{ sc.desc }}</span>
+              <span v-if="sc.needReference" class="ck-scene__tag">
+                <span class="i-ph-image" /> photo
+              </span>
+            </button>
+          </div>
+        </details>
+
+        <!-- 名字 + 想说的话 -->
         <div class="ck-step2">
-          <!-- 照片 -->
           <div class="ck-step2__col">
-            <h3 class="ck-mini-title">Their photo</h3>
+            <h3 class="ck-mini-title">Their name</h3>
+            <input
+              class="ck-input"
+              type="text"
+              :value="name"
+              :placeholder="scenario?.inputHint || 'e.g. Margaret'"
+              @input="onNameInput"
+            />
+            <p class="ck-hint">We put this on the card exactly as you type it. Check it once.</p>
+          </div>
+
+          <div class="ck-step2__col">
+            <h3 class="ck-mini-title">What should it say?</h3>
+            <textarea
+              class="ck-input ck-textarea"
+              rows="4"
+              :value="message"
+              placeholder="Tell us who it is for and what you would like to say. e.g. 'Margaret's 80th — tell her she still does the crossword in pen.'"
+              @input="onMessageInput"
+            />
+            <p class="ck-hint">
+              We write this onto the card for you. Leave it empty and we will suggest
+              something you can edit.
+            </p>
+          </div>
+        </div>
+
+        <!-- 照片 -->
+        <div class="ck-step2">
+          <div class="ck-step2__col">
+            <h3 class="ck-mini-title">Their photo <span class="ck-mini-title__opt">optional</span></h3>
             <div v-if="photoPreview" class="ck-photo">
               <img :src="photoPreview" alt="Your uploaded photo" />
               <button class="ck-photo__clear" title="Remove photo" @click="clearPhoto">
@@ -139,63 +192,72 @@
             </p>
           </div>
 
-          <!-- 称呼 -->
+          <!-- 画面细节：折起来（大多数用户用不到） -->
           <div class="ck-step2__col">
-            <h3 class="ck-mini-title">Their name</h3>
-            <input
-              class="ck-input"
-              type="text"
-              :value="name"
-              :placeholder="scenario?.inputHint || 'e.g. Margaret'"
-              @input="name = ($event.target as HTMLInputElement).value"
-            />
-            <p class="ck-hint">
-              We put this on the card exactly as you type it. Check it once.
-            </p>
-
-            <h3 class="ck-mini-title ck-mini-title--gap">Anything else we should know?</h3>
-            <input
-              class="ck-input"
-              type="text"
-              :value="extra"
-              placeholder="e.g. loves gardening, has a golden retriever called Biscuit"
-              @input="extra = ($event.target as HTMLInputElement).value"
-            />
-            <p class="ck-hint">Optional. A detail like this makes the card much more personal.</p>
+            <details class="ck-more">
+              <summary class="ck-more__summary">
+                <span class="i-ph-paint-brush" />
+                More detail for the picture
+              </summary>
+              <input
+                class="ck-input"
+                type="text"
+                :value="extra"
+                placeholder="e.g. loves gardening, has a golden retriever called Biscuit"
+                @input="onExtraInput"
+              />
+              <p class="ck-hint">
+                Optional. A detail like this makes the picture more personal.
+              </p>
+            </details>
           </div>
         </div>
       </section>
 
-      <!-- ==================== STEP 3 · 画风 + 生成 ==================== -->
-      <section v-if="step === 3 && scenario" class="ck-sec ck-sec--card">
+      <!-- ==================== STEP 2 · 画风 + 生成 ==================== -->
+      <!--
+        ⚠️ 2026-11-17：原来这里逼用户从 5~6 个画风里挑一个。
+        中老年用户面对 "Photograph / Watercolour / Oil Pastel / Vintage Postcard /
+        Paper Cut / Cartoon" 基本不知道选哪个，只能瞎点或卡住。
+        现在**默认已经选好**（按场合自动匹配），想换再展开 ——
+        对应 Greetings Island 的 "Style: Best match"。
+      -->
+      <section v-if="step === 2 && scenario" class="ck-sec ck-sec--card">
         <h2 class="ck-sec__title">
-          <span class="ck-sec__num">3</span>
-          Pick a look
+          <span class="ck-sec__num">2</span>
+          Ready when you are
         </h2>
-        <p class="ck-sec__sub">Every style below has been tested — the result will look like the picture.</p>
+        <p class="ck-sec__sub">
+          We picked a look that suits a {{ scenario.label.toLowerCase() }} card.
+          Change it if you would like something else.
+        </p>
 
-        <!-- 不知道选哪个？给个逃生口（giftsong 的 "Pick for me"） -->
-        <div class="ck-pickrow">
-          <button type="button" class="ck-pickme" @click="surpriseMe">
-            <span class="i-ph-sparkle" />
-            Pick one for me
-          </button>
-          <span class="ck-pickrow__hint">
-            {{ pickMeHint }}
+        <!-- 已选画风（默认状态就是这一个，不用做任何决定） -->
+        <div class="ck-picked">
+          <span class="ck-picked__icon"><span class="i-ph-paint-brush" /></span>
+          <span class="ck-picked__copy">
+            <span class="ck-picked__name">{{ currentStyleLabel }}</span>
+            <span class="ck-picked__desc">{{ styleHint }}</span>
           </span>
+          <button type="button" class="ck-btn ck-btn--ghost ck-picked__btn" @click="showStyles = !showStyles">
+            {{ showStyles ? 'Hide' : 'Change' }}
+          </button>
         </div>
 
-        <div class="ck-styles">
+        <div v-if="showStyles" class="ck-styles">
           <button
             v-for="st in availableStyles"
             :key="st.id"
             class="ck-style"
             :class="{ 'ck-style--on': style === st.id }"
-            @click="style = st.id"
+            @click="pickStyle(st.id)"
           >
             <span class="ck-style__name">{{ st.label }}</span>
             <span class="ck-style__desc">{{ st.desc || st.prompt }}</span>
           </button>
+          <p class="ck-hint ck-pickrow__hint">
+            {{ pickMeHint }}
+          </p>
         </div>
 
         <!--
@@ -260,7 +322,7 @@
       <!-- ==================== 结果 / 编辑器 ==================== -->
       <section v-if="candidates.length" class="ck-sec ck-sec--card">
         <h2 class="ck-sec__title">
-          <span class="ck-sec__num">4</span>
+          <span class="ck-sec__num">3</span>
           Pick the one you like
         </h2>
         <p class="ck-sec__sub">You can make as many as you like. Regenerate any time.</p>
@@ -318,7 +380,7 @@
 
           <CardComposer
             :image-url="pickedUrl"
-            :initial-texts="[]"
+            :initial-texts="prefilledTexts"
             :has-paid="hasPaid"
             class="ck-editor__composer"
           />
@@ -327,7 +389,7 @@
     </div>
 
     <!-- ============ 底部操作栏：返回 / 继续 ============ -->
-    <div v-if="step <= 3" class="ck-nav">
+    <div v-if="step <= 2" class="ck-nav">
       <div class="ck-wrap ck-nav__inner">
         <button
           v-if="step > 1"
@@ -341,7 +403,7 @@
         <span v-else class="ck-nav__spacer" />
 
         <button
-          v-if="step < 3"
+          v-if="step < 2"
           type="button"
           class="ck-btn ck-btn--primary ck-btn--lg"
           :disabled="!canContinue"
@@ -359,10 +421,18 @@
         >
           <span v-if="generating" class="i-ph-spinner animate-spin" />
           <span v-else class="i-ph-magic-wand" />
-          {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? (outOfCards ? 'No cards left' : 'Daily limit reached') : `Make ${scenario?.label.toLowerCase() || 'card'}`) }}
+          <!--
+            ⚠️ 文案不要再拼场景名了：`Make ${label.toLowerCase()}` 会读成
+            "Make birthday"，遇到 "Restore an Old Photo" 直接语法崩
+            → "Make restore an old photo card"。场景信息第 2 步标题里已经有了。
+          -->
+          {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? (outOfCards ? 'No cards left' : 'Daily limit reached') : 'Make the card') }}
+          <span v-if="!generating && !outOfQuota" class="ck-nav__cost">
+            uses 1 of your free goes
+          </span>
         </button>
       </div>
-      <p v-if="step === 3" class="ck-nav__hint">
+      <p v-if="step === 2" class="ck-nav__hint">
         <template v-if="usageUnlimited">Unlimited generations on your plan.</template>
         <template v-else-if="usageMode === 'credit' && usageLoaded">
           You have {{ quotaRemaining }} card{{ quotaRemaining === 1 ? '' : 's' }} left on your plan.
@@ -389,6 +459,8 @@ import {
   stylesForScenario,
   type ImageScenarioDef,
 } from '~/utils/imageScenarios'
+import { QUICK_INTENTS, type QuickIntent } from '~/utils/quickIntents'
+import { useCardDraft, makeThumbnail } from '~/composables/useCardDraft'
 import CardComposer from '~/components/cards/CardComposer.vue'
 
 definePageMeta({ layout: 'marketing' })
@@ -401,7 +473,7 @@ useHead({
 // ⚠️ 名字要**名词化**（一个名字 = 一件事），别把两件事塞一个名字：
 //    旧 'Style & make' = 选画风 + 生成，两件事挤在一起 → 用户不知道自己在第几步。
 //    （giftsong 用的是 Style / Recipient / Story / Song，每个都是一件事）
-const stepLabels = ['Occasion', 'Name & photo', 'Look']
+const stepLabels = ['Who & what', 'Make it']
 
 // ── 分步向导 ─────────────────────────────────────────────
 // 以前三步是**滚动**的一整页（一个 section 接一个 section），
@@ -416,44 +488,40 @@ const maxReached = ref(1)
 const STEP_COPY = [
   {
     headline: "Let's make their day.",
-    lede: 'Three small steps — no prompt to write, no font to pick. Start with the occasion: it decides the picture. You can change it later.',
+    lede: 'Two steps, no prompt to write, no font to pick. Tell us who it is for and what to say — we do the rest.',
   },
   {
-    headline: 'Add their photo and name.',
-    lede: 'This is what makes it theirs. A photo is best, but you can skip it and still get a lovely card.',
-  },
-  {
-    headline: 'Choose a look, then make it.',
-    lede: 'Every style below has been tested — the result will look like the picture. Pick one and we will do the rest.',
+    headline: 'Ready when you are.',
+    lede: 'We picked a look that suits the card. Make it, then add your words and download it ready to print.',
   },
   {
     headline: 'Pick the one you like.',
-    lede: 'Here are your cards. Add your words, then download it ready to print.',
+    lede: 'Here are your cards. Your words are already on it — download it ready to print.',
   },
 ]
 
 const stepHeadline = computed(() => {
-  // 从「My cards」打开旧卡时，第 4 步不是「挑一张」，而是「继续做这张」
-  if (step.value === 4 && route.query.from) return 'Your card, ready to finish.'
+  // 从「My cards」打开旧卡时，结果页不是「挑一张」，而是「继续做这张」
+  if (step.value === 3 && route.query.from) return 'Your card, ready to finish.'
   return STEP_COPY[step.value - 1]?.headline || STEP_COPY[0].headline
 })
 const stepLede = computed(() => STEP_COPY[step.value - 1]?.lede || STEP_COPY[0].lede)
 
-/** 能不能继续：第 1 步必须先选了场合 */
+/** 能不能继续：第 1 步得先选个场合 */
 const canContinue = computed(() => {
   if (step.value === 1) return !!scenario.value
   return true
 })
 
 function goTo(n: number) {
-  if (n < 1 || n > 3) return
+  if (n < 1 || n > 2) return
   if (n > maxReached.value) return
   step.value = n
 }
 
 function goNext() {
   if (!canContinue.value) return
-  if (step.value >= 3) return
+  if (step.value >= 2) return
   step.value += 1
   if (step.value > maxReached.value) maxReached.value = step.value
 }
@@ -463,11 +531,35 @@ function goBack() {
   step.value -= 1
 }
 
+/**
+ * 本地草稿 —— 防「填了一半被杀掉」。
+ *
+ * ⚠️ 2026-11-17：原来 /cards 的中间状态全在内存里，刷新/切后台就没了。
+ *    现在写 localStorage，刷新回来还在。
+ */
+const draftStore = useCardDraft()
+
+/** 高频场合入口（模板用） */
+const quickIntents = QUICK_INTENTS
+
 const group = ref<string>('birthday')
 const scenario = ref<ImageScenarioDef | null>(null)
 const style = ref('watercolor')
 const name = ref('')
 const extra = ref('')
+/**
+ * 「想说什么」—— 2026-11-17 提前到生成前。
+ *
+ * ⚠️ 它**不进 AI prompt**（模型自己写字必翻车，而且贺卡正文不是画面线索）。
+ *    它的唯一去向 = 出图后落在成品上（prefilledTexts）。
+ *    这样用户出图后不用再手打一遍 —— 少一步，且不会忘词。
+ */
+const message = ref('')
+
+/** 画风网格是否展开（默认收起：默认已经选好了） */
+const showStyles = ref(false)
+/** 「更多场合」是否展开 */
+const showAllOccasions = ref(false)
 
 const photoFile = ref<File | null>(null)
 const photoPreview = ref('')
@@ -576,23 +668,13 @@ const countShort = computed(
 /**
  * 「帮我选一个画风」—— 借鉴 giftsong 的 "Pick for me"。
  *
- * ⚠️ 为什么要这个：第 3 步有 5~6 个画风，中老年用户面对
- *    「Photograph / Watercolour / Oil Pastel / Vintage Postcard / Paper Cut / Cartoon」
- *    基本不知道选哪个，只能瞎点或者卡住不动。
- *    给一个明确的默认，比逼他做决定有用得多。
- *
- * 规则（确定性，不随机 —— 同一个场合每次推荐一样，用户能形成预期）：
- *   有照片（i2i）→ 优先挑对参考图安全的画风（i2iSafe）
- *   没照片 → 用该场景的推荐画风（styles 数组第一项）
+ * ⚠️ 2026-11-17：这个函数**已经没有调用方**了 ——
+ *    画风现在**默认就选好了**（pickScenario 里按场景自动选），
+ *    用户想换才展开网格。所以这里只剩一个规则说明：
+ *    规则（确定性，不随机 —— 同一个场合每次推荐一样，用户能形成预期）：
+ *      有照片（i2i）→ 优先挑对参考图安全的画风（i2iSafe）
+ *      没照片 → 用该场景的推荐画风（styles 数组第一项）
  */
-function surpriseMe() {
-  const list = availableStyles.value
-  if (!list.length) return
-  const hasRef = !!uploadId.value || !!photoFile.value
-  const safe = hasRef ? list.filter(s => s.i2iSafe) : list
-  const pool = safe.length ? safe : list
-  style.value = pool[0].id
-}
 
 /** 当前画风的一句说明（让用户知道选的是什么效果） */
 const styleHint = computed(() => {
@@ -681,6 +763,60 @@ const availableStyles = computed(() => {
   return stylesForScenario(scenario.value, !!uploadId.value || !!photoFile.value)
 })
 
+/**
+ * 选一个高频场合（8 个一键入口）。
+ *
+ * ⚠️ 点了会**顺手把开场白填进「想说什么」** ——
+ *    用户可以改，但不用从零开始想。
+ */
+function pickQuick(q: QuickIntent) {
+  const sc = IMAGE_SCENARIOS.find(x => x.id === q.id)
+  if (!sc) return
+  pickScenario(sc)
+  if (!message.value.trim()) message.value = q.starter
+}
+
+function onNameInput(e: Event) {
+  name.value = (e.target as HTMLInputElement).value
+}
+
+function onMessageInput(e: Event) {
+  message.value = (e.target as HTMLTextAreaElement).value
+}
+
+function onExtraInput(e: Event) {
+  extra.value = (e.target as HTMLInputElement).value
+}
+
+/** 换画风（点了就收起网格，用户已经选完了） */
+function pickStyle(id: string) {
+  style.value = id
+  showStyles.value = false
+}
+
+/**
+ * 出图后自动落在成品上的文字。
+ *
+ * ⚠️ 只有用户真的写了才带过去 —— 空的字段还是空的，
+ *    别让成品上出现一个空的留言框（那比不写更难看）。
+ */
+const prefilledTexts = computed(() => {
+  const out: any[] = []
+  if (name.value.trim()) {
+    out.push({ id: 'name', kind: 'name', text: name.value.trim(), x: 0.5, y: 0.79, size: 0.075, color: '#c8543d', align: 'center', font: 'display', rotate: 0 })
+  }
+  if (message.value.trim()) {
+    out.push({ id: 'message', kind: 'message', text: message.value.trim(), x: 0.5, y: 0.868, size: 0.028, color: '#3a2f28', align: 'center', font: 'body', rotate: 0 })
+  }
+  return out
+})
+
+/** 当前画风的名字（给"已选画风"那张卡用） */
+const currentStyleLabel = computed(() => {
+  const st = availableStyles.value.find(s => s.id === style.value)
+  return st?.label || 'Watercolour'
+})
+
 function pickScenario(sc: ImageScenarioDef) {
   scenario.value = sc
   messageOptions.value = sc.presetMessages ? [...sc.presetMessages] : []
@@ -753,6 +889,61 @@ async function uploadPhoto(): Promise<string> {
   }
 }
 
+/**
+ * 把当前状态写进草稿（防丢）。
+ *
+ * ⚠️ 只存"用户真的填过"的字段 —— 否则会存下一堆空值，
+ *    下次进来弹"要不要继续"会很烦。
+ */
+watch(
+  [scenario, style, name, message, extra, countChoice, step],
+  () => {
+    draftStore.state.value = {
+      ...draftStore.state.value,
+      scenario: scenario.value?.id || '',
+      style: style.value,
+      name: name.value,
+      message: message.value,
+      extra: extra.value,
+      count: countChoice.value,
+      step: step.value,
+      thumb: draftStore.state.value.thumb,
+      at: Date.now(),
+    }
+  },
+  { deep: true },
+)
+
+/**
+ * 恢复草稿（页面加载时调一次）。
+ *
+ * ⚠️ 恢复的是**内容**，不是"跳到第几步"——
+ *    直接把 step 跳回 2 会让用户看到一个已经填好的表单（更好），
+ *    但如果他上次是在结果页，就不该把他拽回前面。
+ */
+function restoreDraft() {
+  const ok = draftStore.restore()
+  if (!ok) return
+  const st = draftStore.state.value
+  if (st.scenario) {
+    const sc = IMAGE_SCENARIOS.find(x => x.id === st.scenario)
+    if (sc) {
+      group.value = sc.group
+      scenario.value = sc
+      messageOptions.value = sc.presetMessages ? [...sc.presetMessages] : []
+      if (!chosenMessage.value) chosenMessage.value = sc.presetMessages?.[0] || ''
+    }
+  }
+  if (st.style) style.value = st.style
+  if (st.name) name.value = st.name
+  if (st.message) message.value = st.message
+  if (st.extra) extra.value = st.extra
+  if (st.count) countChoice.value = st.count
+  // ⚠️ 有草稿就把用户放回第 1 步 —— 让他确认一下再继续，
+  //    而不是直接跳到一个半成品的中间状态。
+  if (st.scenario && st.step <= 1) step.value = 1
+}
+
 async function generate() {
   if (!scenario.value) return
   genError.value = ''
@@ -765,6 +956,9 @@ async function generate() {
       scenario: scenario.value.id,
       style: style.value,
       name: name.value,
+      // ⚠️ 贺卡正文**不进 prompt**（模型自己写字必翻车），
+      //    但要存进服务端 → 以后从「我的作品」打开这张卡，字还在。
+      message: message.value,
       extra: extra.value,
       uploadId: uid || undefined,
       n: maxN,
@@ -781,9 +975,9 @@ async function generate() {
         url: im.imageUrl as string,
       }))
     picked.value = candidates.value[0]?.id || ''
-    // 出图了 → 切到结果页（第 4 步）
-    step.value = 4
-    maxReached.value = Math.max(maxReached.value, 4)
+    // 出图了 → 切到结果页（第 3 步）
+    step.value = 3
+    maxReached.value = Math.max(maxReached.value, 3)
   } catch (e: any) {
     // 401 = 需要登录。判断放在服务端返回上，比读本地 auth 状态可靠
     //（useAuth 每次调用返回新 ref，组件里拿到的 user 常常是空的）
@@ -839,13 +1033,23 @@ async function loadFromCard() {
   const id = String(route.query.from || '')
   if (!id) return
   try {
-    const res = await api.get<{ images: { id: string; imageUrl: string | null }[] }>('/api/images')
+    const res = await api.get<{
+      images: {
+        id: string
+        imageUrl: string | null
+        card?: { name?: string; message?: string }
+      }[]
+    }>('/api/images')
     const hit = (res.images || []).find(i => i.id === id)
     if (!hit?.imageUrl) return
     candidates.value = [{ id: hit.id, url: hit.imageUrl }]
     picked.value = hit.id
-    step.value = 4
-    maxReached.value = 4
+    // ⚠️ 2026-11-17：把老卡上写过的字**带回来** ——
+    //    以前只把图放回来，字没了（得重写一遍）。现在直接复用。
+    if (hit.card?.name) name.value = hit.card.name
+    if (hit.card?.message) message.value = hit.card.message
+    step.value = 3
+    maxReached.value = 3
   } catch {
     // 没登录 / 找不到 / 没权限 → 正常走「做一张新卡」的流程
   }
@@ -854,9 +1058,11 @@ async function loadFromCard() {
 // 额度：进入页面就读一次（未登录会失败，忽略即可 —— 生成时服务端会要求登录）
 onMounted(() => {
   loadUsage()
+  // ⚠️ 恢复本地草稿（2026-11-17）—— 刷新/切后台回来别丢
+  restoreDraft()
   // 支持 /cards?step=2 直接落到某一步
   const q = Number(route.query.step || 1)
-  if (Number.isFinite(q) && q >= 1 && q <= 3) {
+  if (Number.isFinite(q) && q >= 1 && q <= 2) {
     step.value = q
     maxReached.value = q
   }
@@ -865,9 +1071,14 @@ onMounted(() => {
 })
 
 // 步骤写进 URL —— 刷新和浏览器后退都保持在同一步
+//
+// ⚠️ 2026-11-17：只写 1 / 2。**结果页(3)不写** ——
+//    结果页的内容是"这一批候选图"，只存在内存里；
+//    把 step=3 写进 URL 的话，刷新后候选图没了但步骤还停在 3
+//    → 所有区块的 v-if 都不成立 → **整页空白**。
 watch(step, (v) => {
   const q = { ...route.query }
-  if (v > 1) q.step = String(v)
+  if (v > 1 && v <= 2) q.step = String(v)
   else delete q.step
   navigateTo({ path: '/cards', query: q }, { replace: true })
 })
@@ -1278,6 +1489,116 @@ onBeforeUnmount(() => {
 
 /* ---------- 出图张数 ---------- */
 /* ---------- 「帮我选一个画风」 ---------- */
+/* ── 快捷场合（8 个一键入口）── */
+.ck-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ck-quick__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid var(--ck-line);
+  border-radius: 999px;
+  background: rgba(255, 253, 250, 0.7);
+  color: var(--ck-ink-2);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.ck-quick__btn:hover {
+  border-color: var(--ck-coral);
+  color: var(--ck-ink);
+}
+
+.ck-quick__btn.is-on {
+  border-color: var(--ck-coral);
+  background: rgba(200, 84, 61, 0.1);
+  color: var(--ck-coral-deep);
+}
+
+.ck-quick__icon {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ── 已选画风（默认状态，不用做决定）── */
+.ck-picked {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1.5px solid var(--ck-line);
+  border-radius: 1rem;
+  background: rgba(255, 253, 250, 0.8);
+}
+
+.ck-picked__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  background: rgba(200, 84, 61, 0.12);
+  color: var(--ck-coral);
+  font-size: 1.25rem;
+}
+
+.ck-picked__copy {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ck-picked__name {
+  font-family: var(--ck-serif);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--ck-ink);
+}
+
+.ck-picked__desc {
+  font-size: 0.875rem;
+  color: var(--ck-ink-2);
+}
+
+.ck-picked__btn {
+  flex: none;
+}
+
+/* ── 多行输入（想说的话）── */
+.ck-textarea {
+  min-height: 6.5rem;
+  resize: vertical;
+  line-height: 1.55;
+  font-family: inherit;
+}
+
+.ck-mini-title__opt {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--ck-ink-2);
+  text-transform: lowercase;
+}
+
+/* ── 生成按钮上的成本提示 ── */
+.ck-nav__cost {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
 .ck-pickrow {
   display: flex;
   flex-wrap: wrap;

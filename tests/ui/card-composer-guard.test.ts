@@ -42,12 +42,19 @@ describe('CardComposer · 文字编辑面板', () => {
 
   it('默认只有两个必填字段（名字 + 留言），签名是可选的', () => {
     // 初始 texts 里不能有 signature
-    const initial = src.match(/texts:\s*\[([\s\S]*?)\n  \],/)?.[1] || ''
+    const initial = src.match(/texts:[\s\S]*?:\s*\[([\s\S]*?)\n\s*\],/)?.[1] || ''
     expect(initial).toContain("kind: 'name'")
     expect(initial).toContain("kind: 'message'")
     expect(initial).not.toContain("kind: 'signature'")
     // 签名要有单独的入口
     expect(src).toContain('addSignature')
+  })
+
+  it('支持 initialTexts 预填（用户提前写好的名字/留言要能落进成品）', () => {
+    // ⚠️ 2026-11-17：initialTexts 以前声明了却根本没用 ——
+    //    页面层传什么都被默认两条覆盖掉。现在必须真的接上。
+    expect(src).toContain('initialTexts')
+    expect(src).toMatch(/texts:[\s\S]*?initialTexts[\s\S]*?:\s*\[/)
   })
 
   it('换版式要保留用户已经写的字', () => {

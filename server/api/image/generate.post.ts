@@ -116,6 +116,18 @@ export default defineEventHandler(async (event) => {
     model,
     mode,
     aspectRatio,
+    // ⚠️ 2026-11-17：把**卡面数据**一起存进 meta_json。
+    //    以前服务端只存"模型出的那张图"，用户在浏览器里写的字
+    //    是下载时现排的 → 之后从「我的作品」打开旧卡，字没了，得重写一遍。
+    //    现在名字/留言/版式都存下来 → 旧卡能真正复用。
+    metaJson: JSON.stringify({
+      card: {
+        name: String(body?.name || ''),
+        message: String(body?.message || ''),
+        style: String(body?.style || ''),
+        layout: String(body?.layout || ''),
+      },
+    }),
   }
   const image = await createImageRecord(auth.uid, recordMeta)
 
