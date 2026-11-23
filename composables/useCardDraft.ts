@@ -23,6 +23,8 @@ const KEY = 'craftai_card_draft_v1'
 const MAX_BYTES = 4 * 1024 * 1024
 
 export interface CardDraftState {
+  /** 卡片格式（invite / card）；2026-11-23 格式由落地页入口决定，一并存草稿 */
+  format?: string
   /** 场景 id（IMAGE_SCENARIOS 的 id） */
   scenario: string
   /** 画风 id */
