@@ -23,15 +23,21 @@ describe('贺卡 GI 工作区', () => {
   })
 
   it('编辑器在遮罩内，不再挂营销页 ck-cards__body 结果区', () => {
-    const tpl = cards.slice(0, cards.lastIndexOf('</template>'))
+    // 取最后一个顶层 </template>（忽略内部 <template v-if>）
+    const closes = [...cards.matchAll(/<\/template>/g)]
+    const tpl = cards.slice(0, closes[closes.length - 1]?.index ?? 0)
     expect(tpl).toContain('ck-workspace__editor')
     expect(tpl).toContain('data-phase="editor"')
     expect(tpl).not.toContain('ck-cards__body')
     expect(tpl).toContain('<CardComposer')
+    expect(tpl).toContain('ck-cands--strip')
+    expect(tpl).toContain('ck-msgfold')
   })
 
-  it('桌面宽面板 / 移动全屏仍保留', () => {
+  it('桌面宽面板 / 分栏独立滚动 / 进入编辑滚到画布', () => {
     expect(cards).toContain('ck-formmodal__panel--wide')
+    expect(cards).toContain('focusEditorPreview')
+    expect(cards).toMatch(/:deep\(\.ck-comp__panel\)[\s\S]*overflow-y:\s*auto/)
     expect(cards).toMatch(/@media \(max-width:\s*640px\)[\s\S]*max-height:\s*100vh/)
   })
 

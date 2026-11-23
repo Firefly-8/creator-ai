@@ -344,87 +344,88 @@
           class="ck-workspace__editor"
           data-phase="editor"
         >
-      <section class="ck-result ck-result--workspace">
-        <h2 class="ck-sec__title">
-          Pick the one you like
-        </h2>
-        <p class="ck-sec__sub">Edit words on the canvas — that never uses a generation. Each try uses 1 of your free goes — your previous picks stay so you can compare.</p>
+          <section class="ck-result ck-result--workspace">
+            <!-- 顶栏压缩：小候选条 + Try again，避免把画布顶出首屏 -->
+            <div class="ck-editor-toolbar">
+              <div class="ck-cands ck-cands--strip" role="listbox" aria-label="Generated options">
+                <button
+                  v-for="c in candidates"
+                  :key="c.id"
+                  type="button"
+                  class="ck-cand"
+                  :class="{ 'ck-cand--on': picked === c.id }"
+                  role="option"
+                  :aria-selected="picked === c.id"
+                  @click="pickCandidate(c.id)"
+                >
+                  <img :src="c.url" :alt="`Generated option`" loading="lazy" />
+                </button>
+              </div>
+              <div class="ck-regen">
+                <button class="ck-btn ck-btn--ghost ck-btn--sm" :disabled="generating" @click="generate">
+                  <span class="i-ph-arrow-clockwise" />
+                  Try again
+                  <span v-if="usageLoaded && !outOfQuota && !usageUnlimited" class="ck-nav__cost">
+                    uses 1
+                  </span>
+                </button>
+                <NuxtLink to="/my-assets" class="ck-btn ck-btn--ghost ck-btn--sm">
+                  <span class="i-ph-images" />
+                  My creations
+                </NuxtLink>
+              </div>
+            </div>
+            <p class="ck-sec__sub ck-sec__sub--tight">
+              Canvas edits are free. Each try uses 1 of your free goes.
+            </p>
 
-        <div class="ck-cands">
-          <button
-            v-for="c in candidates"
-            :key="c.id"
-            class="ck-cand"
-            :class="{ 'ck-cand--on': picked === c.id }"
-            @click="pickCandidate(c.id)"
-          >
-            <img :src="c.url" :alt="`Generated option ${c.id}`" loading="lazy" />
-            <span v-if="picked === c.id" class="ck-cand__tick i-ph-check-circle" />
-          </button>
-        </div>
+            <div v-if="pickedUrl" class="ck-editor ck-editor--workspace">
+              <!-- 文案建议收进折叠，默认不占首屏；Composer 内仍可直接改字 -->
+              <details class="ck-msgfold">
+                <summary>Message ideas <span class="ck-msgfold__hint">optional</span></summary>
+                <div class="ck-msgpick ck-msgpick--compact">
+                  <button
+                    v-for="(m, i) in messageOptions"
+                    :key="i"
+                    type="button"
+                    class="ck-msgpick__item"
+                    :class="{ 'ck-msgpick__item--on': chosenMessage === m }"
+                    @click="chosenMessage = m"
+                  >
+                    {{ m }}
+                  </button>
+                  <button
+                    type="button"
+                    class="ck-msgpick__item ck-msgpick__item--ai"
+                    :disabled="writingMessage"
+                    @click="askAI"
+                  >
+                    <span v-if="writingMessage" class="i-ph-spinner animate-spin" />
+                    <span v-else class="i-ph-magic-wand" />
+                    Write it for me
+                  </button>
+                </div>
+              </details>
 
-        <div class="ck-regen">
-          <button class="ck-btn ck-btn--ghost" :disabled="generating" @click="generate">
-            <span class="i-ph-arrow-clockwise" />
-            Try again
-            <!-- ⚠️ 成本要标出来（远端线 2026-11-23）——
-                 以前这里一点就又扣一次额度，界面上一个字都没提。 -->
-            <span v-if="usageLoaded && !outOfQuota && !usageUnlimited" class="ck-nav__cost">
-              uses 1 of your free goes
-            </span>
-          </button>
-          <!-- 生成完顺手给个「看全部作品」的出口 -->
-          <NuxtLink to="/my-assets" class="ck-btn ck-btn--ghost">
-            <span class="i-ph-images" />
-            All my creations
-          </NuxtLink>
-        </div>
-
-        <div v-if="pickedUrl" class="ck-editor">
-          <h3 class="ck-mini-title ck-mini-title--gap">Now add your words</h3>
-          <p class="ck-hint ck-hint--lead">
-            Pick one below, or let us write it for you. Layout and colours are free to change.
-          </p>
-          <div class="ck-msgpick">
-            <button
-              v-for="(m, i) in messageOptions"
-              :key="i"
-              class="ck-msgpick__item"
-              :class="{ 'ck-msgpick__item--on': chosenMessage === m }"
-              @click="chosenMessage = m"
-            >
-              {{ m }}
-            </button>
-            <button
-              class="ck-msgpick__item ck-msgpick__item--ai"
-              :disabled="writingMessage"
-              @click="askAI"
-            >
-              <span v-if="writingMessage" class="i-ph-spinner animate-spin" />
-              <span v-else class="i-ph-magic-wand" />
-              Write it for me
-            </button>
-          </div>
-
-          <CardComposer
-            :image-url="pickedUrl"
-            :initial-texts="prefilledTexts"
-            :saved-card="savedCard || undefined"
-            :has-paid="hasPaid"
-            :format="cardFormat"
-            :card-id="picked"
-            :meta-save-status="metaSaveStatus"
-            class="ck-editor__composer"
-            @remove-watermark="openPaywall"
-            @finalized="onFinalized"
-            @update:card="onCardUpdate"
-          />
-          <p v-if="finishToast" class="ck-finish-toast">
-            <span class="i-ph-check-circle" /> Saved to your creations — share link shows the finished card. Download is separate below.
-          </p>
-        </div>
-      </section>
-
+              <CardComposer
+                :image-url="pickedUrl"
+                :initial-texts="prefilledTexts"
+                :saved-card="savedCard || undefined"
+                :has-paid="hasPaid"
+                :format="cardFormat"
+                :card-id="picked"
+                :meta-save-status="metaSaveStatus"
+                class="ck-editor__composer"
+                data-act="composer"
+                @remove-watermark="openPaywall"
+                @finalized="onFinalized"
+                @update:card="onCardUpdate"
+              />
+              <p v-if="finishToast" class="ck-finish-toast">
+                <span class="i-ph-check-circle" /> Saved to your creations — share link shows the finished card. Download is separate below.
+              </p>
+            </div>
+          </section>
         </div>
       </div><!-- /ck-formmodal__panel -->
     </div><!-- /ck-workspace -->
@@ -515,6 +516,14 @@ function backToParams() {
 function requestCloseWorkspace() {
   if (workspacePhase.value === 'generating') return
   closeForm()
+}
+/** 编辑相首屏必须看到画布：把 composer 滚到工作区可视顶，而不是滚到 Take */
+async function focusEditorPreview() {
+  await nextTick()
+  const root = document.querySelector('.ck-workspace__editor') as HTMLElement | null
+  const stage = document.querySelector('.ck-workspace .ck-comp__stage') as HTMLElement | null
+  if (root) root.scrollTop = 0
+  stage?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
 }
 
 /** 去水印付费墙：跳到站内唯一的定价页（练手项目不引入新弹窗支付流程） */
@@ -1008,6 +1017,7 @@ async function generate() {
     // 出图了 → 同一遮罩切到编辑相（不再 closeForm / 不再滚到页面下方）
     if (!formOpen.value) openForm()
     workspacePhase.value = 'editor'
+    await focusEditorPreview()
   } catch (e: any) {
     // 失败回到参数相，输入保留；绝不关工作区
     if (formOpen.value) workspacePhase.value = 'params'
@@ -1122,7 +1132,10 @@ onMounted(async () => {
   // GI 便利性：落地即开工作区（预选值已由 URL/草稿带入），不再多点一次
   await nextTick()
   if (!formOpen.value) openForm()
-  if (candidates.value.length) workspacePhase.value = 'editor'
+  if (candidates.value.length) {
+    workspacePhase.value = 'editor'
+    await focusEditorPreview()
+  }
 
   if (import.meta.client) window.addEventListener('keydown', onWorkspaceKey)
 })
@@ -1348,11 +1361,106 @@ onBeforeUnmount(() => {
 .ck-workspace__editor {
   flex: 1 1 auto;
   overflow-y: auto;
-  padding: 1.25rem 1.5rem 2rem;
+  padding: 0.85rem 1.25rem 1.5rem;
   min-height: 0;
+  overscroll-behavior: contain;
 }
 .ck-result--workspace { margin: 0; }
 .ck-result--workspace .ck-sec__title { font-size: 1.35rem; }
+.ck-sec__sub--tight { margin: 0.35rem 0 0.75rem; font-size: 0.8125rem; }
+.ck-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+}
+.ck-cands--strip {
+  display: flex;
+  gap: 0.45rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.ck-cands--strip .ck-cand {
+  width: 3.25rem;
+  flex: 0 0 auto;
+  border-radius: 0.45rem;
+}
+.ck-cands--strip .ck-cand img { aspect-ratio: 3 / 4; }
+.ck-regen { margin-top: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.ck-btn--sm { padding: 0.45rem 0.85rem; font-size: 0.8125rem; }
+.ck-editor--workspace {
+  margin-top: 0.35rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--ck-line);
+}
+.ck-msgfold {
+  margin: 0 0 0.85rem;
+  border: 1px solid var(--ck-line);
+  border-radius: 0.65rem;
+  background: #faf6ef;
+  padding: 0.35rem 0.75rem;
+}
+.ck-msgfold > summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ck-ink);
+  padding: 0.35rem 0;
+  list-style: none;
+}
+.ck-msgfold > summary::-webkit-details-marker { display: none; }
+.ck-msgfold__hint { font-weight: 500; color: var(--ck-ink-2); font-size: 0.75rem; }
+.ck-msgpick--compact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.35rem 0 0.5rem;
+  max-height: 12rem;
+  overflow-y: auto;
+}
+/*
+  桌面：左右分栏独立滚动 —— 预览栏固定在首屏可见，
+  右侧 Keep/Take 自行滚动，避免整窗一滚画布消失。
+  ⚠️ 必须 :deep()：.ck-comp* 在子组件 CardComposer 的 scoped DOM 里。
+*/
+@media (min-width: 901px) {
+  .ck-workspace__editor {
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .ck-result--workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .ck-editor--workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .ck-workspace__editor :deep(.ck-comp) {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: 100%;
+    align-items: stretch;
+  }
+  .ck-workspace__editor :deep(.ck-comp__stage) {
+    position: relative;
+    z-index: 1;
+    align-self: stretch;
+    overflow: auto;
+    max-height: 100%;
+  }
+  .ck-workspace__editor :deep(.ck-comp__panel) {
+    overflow-y: auto;
+    max-height: 100%;
+    overscroll-behavior: contain;
+  }
+}
 .ck-formmodal__eyebrow {
   margin: 0 0 0.35rem;
   font-size: 0.72rem;
@@ -1847,7 +1955,7 @@ onBeforeUnmount(() => {
 .ck-cand img { display: block; width: 100%; aspect-ratio: 3 / 4; object-fit: cover; }
 .ck-cand--on { border-color: var(--ck-coral); }
 .ck-cand__tick { position: absolute; top: 0.4rem; right: 0.4rem; font-size: 1.4rem; color: #fff; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.5)); }
-.ck-regen { margin-top: 1rem; }
+.ck-result:not(.ck-result--workspace) .ck-regen { margin-top: 1rem; }
 
 /* ---------- 编辑器 ---------- */
 .ck-editor { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--ck-line); }
