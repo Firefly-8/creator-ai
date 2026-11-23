@@ -24,8 +24,6 @@ import {
   resolvePlanId,
   planAmount,
   planCards,
-  FREE_MAX_IMAGES_PER_RUN,
-  PAID_MAX_IMAGES_PER_RUN,
 } from '../utils/pricing'
 
 const ROOT = join(__dirname, '..')
@@ -51,9 +49,9 @@ describe('定价单一真相源', () => {
     expect(PLANS.free.price).toBe(0)
   })
 
-  it('张数对：单张 1 / 月付 5 / 买断 20', () => {
+  it('额度对：单张 1 / 月付 200 积分 / 买断 20（2026-11-20 原型对齐）', () => {
     expect(PLANS.single.cards).toBe(1)
-    expect(PLANS.creator.cards).toBe(5)
+    expect(PLANS.creator.cards).toBe(200)
     expect(PLANS.lifetime.cards).toBe(20)
   })
 
@@ -100,20 +98,21 @@ describe('定价单一真相源', () => {
 })
 
 describe('价格梯度', () => {
-  it('买得越多单价越低（否则单张卖不动）', () => {
+  it('单价梯度（2026-11-20 起月付=200积分，是产品决策不是笔误）', () => {
     const perCardSingle = PLANS.single.price / PLANS.single.cards
     const perCardMonthly = PLANS.creator.price / PLANS.creator.cards
     const perCardPack = PLANS.lifetime.price / PLANS.lifetime.cards
 
+    // 月付 200 积分 → 单价 $0.10，远低于买断 $3.00。梯度被有意反转：
+    // 用户口径是「订阅发 200 积分」，买断包不再有单价优势。
     expect(perCardMonthly).toBeLessThan(perCardSingle)
-    expect(perCardPack).toBeLessThan(perCardMonthly)
+    expect(perCardMonthly).toBeLessThan(perCardPack)
   })
 
-  it('买断包不能便宜到离谱（否则白送）', () => {
-    // 之前买断 20 张是 $1.00/张，单张 $3.99 —— 便宜 75%，单张根本没人买
+  it('买断包单价仍在合理区间（不白送、也不至于卖不动）', () => {
     const ratio = (PLANS.lifetime.price / PLANS.lifetime.cards) / PLANS.single.price
     expect(ratio).toBeGreaterThan(0.3)
-    expect(ratio).toBeLessThan(0.8)
+    expect(ratio).toBeLessThan(1)
   })
 
   it('月付比买断单张便宜，但比买断包贵（引导买包）', () => {
@@ -136,25 +135,22 @@ describe('定价页不能有假承诺', () => {
     expect(pricing).not.toMatch(/1 card per day/i)
   })
 
-  it('免费档的文案说的是真话（2 次/天，未验证 1 次）', () => {
-    expect(FREE_DAILY_LIMITS.image.verified).toBe(2)
-    expect(FREE_DAILY_LIMITS.image.unverified).toBe(1)
+  it('免费档的文案说的是真话（注册送 3 次、用完为止，2026-11-20 原型对齐）', () => {
+    expect(FREE_DAILY_LIMITS.image.verified).toBe(3)
+    expect(FREE_DAILY_LIMITS.image.unverified).toBe(3)
     // 文案在 pricing.ts（定价页是从那里渲染的）
-    // ⚠️ 2026-10-27：额度改成**按次**扣 —— 一次生成 = 1 次，不管出几张图。
-    //    所以写 "generations"（次数），不是 "pictures"（张数）：
-    //    写张数会让用户以为"选 4 张就扣 4 次"。
-    expect(PLANS.free.features.join(' ')).toContain('2 free generations a day')
-    expect(PLANS.free.features.join(' ')).toContain('1 if your email is not verified')
-    // 必须说清楚"一次生成消耗一次"
-    expect(PLANS.free.features.join(' ')).toMatch(/each go makes up to \d+ pictures/i)
+    // ⚠️ 一次生成 = 1 次，不管出几张图。所以写 "cards" 而不是 "pictures"。
+    expect(PLANS.free.features.join(' ')).toContain('3 free generations in total')
+    expect(PLANS.free.features.join(' ')).toContain('no daily reset')
+    // 2026-11-23：一次固定 1 张，文案说「one card per generation」，不再有多张候选的话术
+    expect(PLANS.free.features.join(' ')).toContain('One card per generation')
+    expect(PLANS.free.features.join(' ')).not.toMatch(/each go makes up to/i)
   })
 
-  it('免费档单次出图张数有上限（成本闸门，且文案要说到）', () => {
-    // MiniMax 按张收费：不限张数的话，2 次 × 4 张 = 成本 4 倍
-    expect(FREE_MAX_IMAGES_PER_RUN).toBe(2)
-    expect(PAID_MAX_IMAGES_PER_RUN).toBe(4)
-    // 文案里要出现这个上限，用户才知道一次能拿几个候选
-    expect(PLANS.free.features.join(' ')).toContain(`${FREE_MAX_IMAGES_PER_RUN} pictures`)
+  it('不再有「单次多张」常量与话术（2026-11-23 固定一张）', () => {
+    const pricing = read('utils/pricing.ts')
+    expect(pricing).not.toContain('FREE_MAX_IMAGES_PER_RUN')
+    expect(pricing).not.toContain('PAID_MAX_IMAGES_PER_RUN')
   })
 
   it('付费档的文案里说了「2K / 无水印 / 300 DPI」—— 那是真的付费点', () => {

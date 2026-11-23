@@ -69,4 +69,35 @@ describe('CardComposer · 文字编辑面板', () => {
     // grid/flex item 默认 min-width:auto，会被 canvas 固有宽度顶开
     expect(rule('\\.ck-comp__stage')).toMatch(/min-width:\s*0/)
   })
+
+  // ---- 2026-11-20 原型对齐：交付按钮化 + 打印口径 ----
+
+  it('打印/PDF 打的是合成后的成品图，不是没写字的人物底图', () => {
+    const prepare = src.match(/async function preparePrintImage[\s\S]*?\n\}/)?.[0] || ''
+    expect(prepare).toContain('exportCard(')
+    expect(prepare).not.toContain('props.imageUrl')
+    // 免费档跟下载同一口径：1024px + 水印
+    expect(prepare).toContain('targetWidth: 1024')
+    expect(prepare).toContain('watermark: true')
+    expect(src).toContain('onBeforeUnmount')
+  })
+
+  it('打印层 teleport 到 body；card 格式第一张是空白封面', () => {
+    expect(src).toContain('<Teleport to="body">')
+    expect(src).toContain('ck-print-root')
+    expect(src).toContain('ck-print-card--cover')
+    expect(src).toContain("fmt.id === 'card' && n === 1")
+    // 打印隔离必须隐藏 body 的其他直接子节点，否则会把页头页脚一起打出来
+    expect(src).toMatch(/body > \*:not\(\.ck-print-root\)/)
+  })
+
+  it('PDF 每页张数 + 出血位是真选项：驱动打印层 CSS，不是摆设（2026-11-23）', () => {
+    expect(src).toContain('pdfPerPage')
+    expect(src).toContain('pdfBleed')
+    // 打印层要按每页张数绑定 class，并有对应 CSS 排版
+    expect(src).toContain('ck-print-n${pdfPerPage}')
+    expect(src).toContain('ck-print--bleed')
+    expect(src).toContain('grid-template-columns: repeat(2, auto)')
+    expect(src).toContain('outline: 3mm solid')
+  })
 })

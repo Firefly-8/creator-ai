@@ -158,22 +158,33 @@ describe('每日额度', () => {
     mockGetDB.mockReset()
   })
 
-  it('免费用户（已验证邮箱）每天图片额度是 2', async () => {
+  it('免费用户图片额度是注册送 3 次（用完为止，不按天重置）', async () => {
     const { db } = makeDb({ user: freeUser() })
     mockGetDB.mockReturnValue(db)
     const q = await getUserQuota(event, 'u1', 'image')
     expect(q.unlimited).toBe(false)
     expect(q.mode).toBe('daily')
     expect(q.limit).toBe(FREE_DAILY_LIMITS.image.verified)
+    expect(q.limit).toBe(3)
     expect(q.remaining).toBe(q.limit)
   })
 
-  it('未验证邮箱 → 更严的档位（堵批量注册）', async () => {
+  it('免费 3 次不再区分邮箱验证（2026-11-20 原型对齐）', async () => {
     const { db } = makeDb({ user: freeUser({ email_verified: 0 }) })
     mockGetDB.mockReturnValue(db)
     const q = await getUserQuota(event, 'u1', 'image')
     expect(q.limit).toBe(FREE_DAILY_LIMITS.image.unverified)
-    expect(q.limit).toBeLessThan(FREE_DAILY_LIMITS.image.verified)
+    expect(q.limit).toBe(FREE_DAILY_LIMITS.image.verified)
+  })
+
+  it('免费图片额度落在 lifetime 哨兵行，不随 UTC 日期重置', async () => {
+    const { db, state } = makeDb({ user: freeUser() })
+    mockGetDB.mockReturnValue(db)
+    await consumeQuota(event, 'u1', 'image', 1)
+    // 扣减写入的 usage_date 必须是哨兵值，而不是今天
+    const upsert = state.runs.find(r => String(r.sql).includes('ON CONFLICT') && String(r.sql).includes('image_count'))
+    expect(upsert).toBeTruthy()
+    expect(upsert.args[1]).toBe('__lifetime__')
   })
 
   it('连续扣减到顶后，第 N+1 次被拒（429）', async () => {
@@ -325,7 +336,8 @@ describe('付费额度（credits）—— 2026-10-21 提价重构的核心', () 
 
     await consumeQuota(event, 'u1', 'image', 1)
     expect(state.usage!.image_count).toBe(1)
-    // 2 次/天 → 第 3 次被拒
+    // 注册送 3 次 → 第 4 次被拒
+    await consumeQuota(event, 'u1', 'image', 1)
     await consumeQuota(event, 'u1', 'image', 1)
     await expect(consumeQuota(event, 'u1', 'image', 1)).rejects.toMatchObject({ statusCode: 429 })
   })
@@ -344,8 +356,8 @@ describe('付费额度（credits）—— 2026-10-21 提价重构的核心', () 
     mockGetDB.mockReturnValue(db)
 
     const q = await getUserQuota(event, 'u1', 'image')
-    // 剩 1 张 + 漏掉 2 个周期 × 月付 5 张 = 11 张
-    expect(q.credits).toBe(11)
+    // 剩 1 张 + 漏掉 2 个周期 × 月付 200 积分 = 401 张
+    expect(q.credits).toBe(401)
     expect(state.user.current_period_end).toBeTruthy()
     expect(Date.parse(state.user.current_period_end)).toBeGreaterThan(Date.now())
   })
@@ -364,7 +376,7 @@ describe('付费额度（credits）—— 2026-10-21 提价重构的核心', () 
     mockGetDB.mockReturnValue(db)
 
     const q = await getUserQuota(event, 'u1', 'image')
-    expect(q.credits).toBe(6)   // 1 + 5
+    expect(q.credits).toBe(201)   // 1 + 200
   })
 
   it('订阅没到期 → 不重复发额度', async () => {
