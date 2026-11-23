@@ -37,7 +37,7 @@
               Start from an occasion, add their photo and their name, and write
               the words yourself.
             </p>
-            <NuxtLink to="/cards" class="ck-btn ck-btn--primary">
+            <NuxtLink to="/cards?format=card" class="ck-btn ck-btn--primary">
               Create a card
               <span class="i-ph-arrow-right" />
             </NuxtLink>

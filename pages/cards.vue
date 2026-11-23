@@ -1,46 +1,26 @@
 <template>
   <div class="ck-cards">
     <!--
-      ============ 步进器（吸顶） ============
-      ⚠️ 原来步骤条在 hero 里，往下走几步就滚出视野了 ——
-      用户在第 3 步（选画风）时看不到自己在第几步、回不去了。
-      现在提到页面最上方 + sticky：任何时候都在视野里。
+      ============ 顶部 ============
+      2026-11-23：三步向导收进了一个就地参数弹窗（对齐竞品/原型）。
+      这里只留一个醒目的入口按钮 —— 点开弹窗，格式/场合/照片名字/画风一次填完。
+      结果生成后弹窗关闭，编辑器和交付留在下方页面内，不再有步骤跳转。
     -->
-    <div class="ck-stepsbar">
-      <div class="ck-wrap ck-stepsbar__inner">
-        <ol class="ck-steps-nav">
-          <li
-            v-for="(s, i) in stepLabels"
-            :key="s"
-            :class="{ 'is-on': step >= i + 1, 'is-done': step > i + 1, 'is-current': step === i + 1 }"
-          >
-            <button
-              type="button"
-              class="ck-steps-nav__btn"
-              :disabled="i + 1 > maxReached"
-              @click="goTo(i + 1)"
-            >
-              <span class="ck-steps-nav__dot">
-                <span v-if="step > i + 1" class="i-ph-check" />
-                <template v-else>{{ i + 1 }}</template>
-              </span>
-              <span class="ck-steps-nav__label">{{ s }}</span>
-            </button>
-          </li>
-        </ol>
-        <p class="ck-stepsbar__now">
-          {{ step <= 3 ? `Step ${step} of 3 · ${stepLabels[step - 1]}` : 'Last step · add your words' }}
-        </p>
-      </div>
-    </div>
-
-    <!-- ============ 顶部 ============ -->
     <header class="ck-cards__head">
       <div class="ck-wrap ck-cards__headgrid">
         <div class="ck-cards__headcopy">
-          <p v-if="step < 4" class="ck-eyebrow">Step {{ step }} of 3</p>
-          <h1 class="ck-h1">{{ stepHeadline }}</h1>
-          <p class="ck-lede">{{ stepLede }}</p>
+          <p class="ck-eyebrow">{{ formatCopy.eyebrow }}</p>
+          <h1 class="ck-h1">{{ pageHeadline }}</h1>
+          <p class="ck-lede">{{ pageLede }}</p>
+          <button type="button" class="ck-btn ck-btn--primary ck-btn--lg ck-hero__cta" @click="openForm">
+            <span class="i-ph-magic-wand" />
+            {{ candidates.length ? 'Make another one' : formatCopy.ctaPhrase }}
+            <span class="i-ph-arrow-right" />
+          </button>
+          <p class="ck-hero__hint">
+            <span class="i-ph-clock-counter-clockwise" />
+            About a minute · no account needed to start
+          </p>
         </div>
 
         <!-- 真实成品卡示例：光有文字会显得又窄又空（跟首页 hero 同一个配方） -->
@@ -60,60 +40,220 @@
       </div>
     </header>
 
-    <div class="ck-wrap ck-cards__body">
-      <!-- ==================== STEP 1 · 场合 ==================== -->
-      <section v-if="step === 1" class="ck-sec ck-sec--card">
-        <h2 class="ck-sec__title">
-          <span class="ck-sec__num">1</span>
-          What is it for?
-        </h2>
-        <p class="ck-sec__sub">Pick the closest one. You can change it later.</p>
-
-        <!-- 分组 tab -->
-        <div class="ck-tabs">
-          <button
-            v-for="g in SCENARIO_GROUPS"
-            :key="g.id"
-            class="ck-tab"
-            :class="{ 'ck-tab--on': group === g.id }"
-            @click="group = g.id"
-          >
-            {{ g.label }}
+    <!--
+      ============ 参数弹窗（就地，不 Teleport）============
+      内联在 .ck-cards 内，继承它的 CSS 变量；z-index 低于登录弹窗(120)，
+      这样未登录点生成时登录框能浮在上面，参数不丢、登录后自动续跑。
+    -->
+    <div v-if="formOpen" class="ck-formmodal" role="dialog" aria-modal="true" aria-label="Make a card">
+      <div class="ck-formmodal__backdrop" @click="closeForm" />
+      <div class="ck-formmodal__panel">
+        <div class="ck-formmodal__head">
+          <div>
+            <p class="ck-formmodal__eyebrow">{{ formatCopy.eyebrow }}</p>
+            <h2 class="ck-formmodal__title">{{ formatCopy.title }}</h2>
+          </div>
+          <button type="button" class="ck-formmodal__close" aria-label="Close" @click="closeForm">
+            <span class="i-ph-x" />
           </button>
         </div>
 
-        <div class="ck-scene-grid">
-          <button
-            v-for="sc in visibleScenarios"
-            :key="sc.id"
-            class="ck-scene"
-            :class="{ 'ck-scene--on': scenario?.id === sc.id }"
-            @click="pickScenario(sc)"
-          >
-            <span class="ck-scene__icon" :class="`i-${sc.icon}`" />
-            <span class="ck-scene__label">{{ sc.label }}</span>
-            <span class="ck-scene__desc">{{ sc.desc }}</span>
-            <span v-if="sc.needReference" class="ck-scene__tag">
-              <span class="i-ph-image" /> photo
-            </span>
-          </button>
-        </div>
-      </section>
+        <div class="ck-formmodal__body">
+          <!-- ============ 主屏：一屏填完核心参数 ============
+               ⚠️ 必须常驻（不能 v-if/v-show 跟着 subPage 切换）：
+               二级子页是 absolute 定位、不占文档流高度 —— 主屏一卸载，
+               body 高度就塌成 0，弹窗只剩头尾一条缝、子页内容从缝里溢出。 -->
+          <div class="ck-mainform">
+            <!-- 场合 chip（内联当前值，点击进二级页） -->
+            <div class="ck-field">
+              <span class="ck-field__label">What is it for?</span>
+              <button type="button" class="ck-valuechip" @click="openSub('occasion')">
+                <span class="ck-valuechip__icon" :class="`i-${scenario?.icon || 'ph-calendar-heart'}`" />
+                <span class="ck-valuechip__text">{{ scenario?.label || 'Choose an occasion' }}</span>
+                <span class="ck-valuechip__change">Change</span>
+              </button>
+            </div>
 
-      <!-- ==================== STEP 2 · 照片 + 称呼 ==================== -->
-      <section v-if="step === 2 && scenario" class="ck-sec ck-sec--card">
-        <h2 class="ck-sec__title">
-          <span class="ck-sec__num">2</span>
-          Add their photo and name
-        </h2>
-        <p class="ck-sec__sub">
-          This is what makes it theirs. A photo is best, but you can skip it.
-        </p>
+            <!-- 名字（唯一必填） -->
+            <div class="ck-field">
+              <label class="ck-field__label" for="ck-name">Who is it for? <span class="ck-field__req">*</span></label>
+              <input
+                id="ck-name"
+                class="ck-input"
+                type="text"
+                :value="name"
+                :placeholder="scenario?.inputHint || 'e.g. Margaret'"
+                @input="name = ($event.target as HTMLInputElement).value"
+              />
+            </div>
 
-        <div class="ck-step2">
-          <!-- 照片 -->
-          <div class="ck-step2__col">
-            <h3 class="ck-mini-title">Their photo</h3>
+            <!-- 一句话 / 详情（格式决定是日期地点还是收件人提示） -->
+            <div class="ck-field">
+              <label class="ck-field__label" for="ck-extra">{{ formatDef.extraLabel }}</label>
+              <textarea
+                id="ck-extra"
+                class="ck-input ck-textarea"
+                :value="extra"
+                :placeholder="formatDef.extraPlaceholder"
+                @input="extra = ($event.target as HTMLInputElement).value"
+              />
+            </div>
+
+            <!-- Make it yours：风格/照片 chip（内联当前值，点击进二级页） -->
+            <div class="ck-field">
+              <span class="ck-field__label">Make it yours</span>
+              <div class="ck-chips">
+                <button type="button" class="ck-minichip" @click="openSub('style')">
+                  <span>Style</span>
+                  <b>{{ isBestMatch ? 'Best match' : currentStyleLabel }}</b>
+                  <span class="i-ph-caret-right" />
+                </button>
+                <button type="button" class="ck-minichip" @click="openSub('photo')">
+                  <span>Photo</span>
+                  <b>{{ photoAdded ? 'Added' : 'None' }}</b>
+                  <span class="i-ph-caret-right" />
+                </button>
+              </div>
+            </div>
+
+            <!-- 次要信息默认收起 -->
+            <details class="ck-moreopt">
+              <summary>More options</summary>
+              <div class="ck-moreopt__inner">
+                <p class="ck-hint">
+                  <span class="i-ph-lock-key" />
+                  Your photo stays private. Never published, never used to train anything.
+                </p>
+                <p class="ck-hint">
+                  {{ cardFormat === 'invite'
+                    ? 'Date and place print on the front, exactly as you typed them.'
+                    : 'A small detail like this makes the card much more personal.' }}
+                </p>
+              </div>
+            </details>
+
+            <!-- 额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
+            <div v-if="outOfQuota && !usageUnlimited" class="ck-quota ck-quota--main">
+              <template v-if="outOfCards">
+                <p class="ck-quota__title">You have used all your cards.</p>
+                <p class="ck-quota__text">
+                  Add one more card, or a pack of twenty, and you can keep making
+                  print-ready files.
+                </p>
+                <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">Add cards</NuxtLink>
+              </template>
+              <template v-else>
+                <p class="ck-quota__title">You've used your 3 free generations.</p>
+                <p class="ck-quota__text">
+                  Those 3 are yours for good — they don't reset. Upgrade for 2K images
+                  with no watermark, ready to print at 300 DPI, and 200 credits a month.
+                </p>
+                <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">See plans</NuxtLink>
+              </template>
+            </div>
+
+            <p v-if="genError" class="ck-error ck-error--big">{{ genError }}</p>
+          </div>
+
+          <!-- ============ 二级页 · 场合 ============ -->
+          <div v-if="subPage === 'occasion'" class="ck-sub">
+            <div class="ck-sub__head">
+              <button type="button" class="ck-sub__back" @click="closeSub">
+                <span class="i-ph-caret-left" /> Back
+              </button>
+              <b>Choose an occasion</b>
+            </div>
+            <div class="ck-tabs">
+              <button
+                v-for="g in SCENARIO_GROUPS"
+                :key="g.id"
+                class="ck-tab"
+                :class="{ 'ck-tab--on': group === g.id }"
+                @click="group = g.id"
+              >
+                <span class="ck-tab__icon" :class="`i-${g.icon}`" />
+                {{ g.label }}
+              </button>
+            </div>
+            <div class="ck-scene-grid">
+              <button
+                v-for="sc in visibleScenarios"
+                :key="sc.id"
+                class="ck-scene"
+                :class="{ 'ck-scene--on': scenario?.id === sc.id }"
+                @click="pickScenario(sc)"
+              >
+                <span class="ck-scene__icon" :class="`i-${sc.icon}`" />
+                <span class="ck-scene__label">{{ sc.label }}</span>
+                <span class="ck-scene__desc">{{ sc.desc }}</span>
+                <span v-if="sc.needReference" class="ck-scene__tag">
+                  <span class="i-ph-image" /> photo
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- ============ 二级页 · 风格 ============ -->
+          <div v-if="subPage === 'style'" class="ck-sub">
+            <div class="ck-sub__head">
+              <button type="button" class="ck-sub__back" @click="closeSub">
+                <span class="i-ph-caret-left" /> Back
+              </button>
+              <b>Choose a style</b>
+            </div>
+            <div class="ck-styles">
+              <button
+                type="button"
+                class="ck-style ck-style--best"
+                :class="{ 'ck-style--on': isBestMatch }"
+                @click="pickBestMatch"
+              >
+                <span class="ck-style__thumb ck-style__thumb--best"><span class="i-ph-sparkle" /></span>
+                <span class="ck-style__name">Best match</span>
+                <span v-if="isBestMatch" class="ck-style__check">✓</span>
+              </button>
+              <button
+                v-for="st in availableStyles"
+                :key="st.id"
+                class="ck-style"
+                :class="{ 'ck-style--on': !isBestMatch && style === st.id }"
+                @click="pickStyle(st.id)"
+              >
+                <span class="ck-style__thumb">
+                  <img
+                    v-if="st.thumb && !thumbFailed[st.id]"
+                    :src="assetUrl(st.thumb)"
+                    :alt="`${st.label} example`"
+                    loading="lazy"
+                    decoding="async"
+                    width="160"
+                    height="160"
+                    @error="thumbFailed[st.id] = true"
+                  />
+                  <span v-else class="ck-style__glyph" :class="`i-${st.icon}`" />
+                </span>
+                <span class="ck-style__name">{{ st.label }}</span>
+                <span class="ck-style__desc">{{ st.desc || st.prompt }}</span>
+              </button>
+            </div>
+            <div class="ck-pickrow">
+              <button type="button" class="ck-pickme" @click="surpriseMe">
+                <span class="i-ph-sparkle" />
+                Pick one for me
+              </button>
+              <span class="ck-pickrow__hint">{{ pickMeHint }}</span>
+            </div>
+            <p class="ck-sub__note">Not sure? Leave it on Best match — it's picked for {{ scenario?.label }}.</p>
+          </div>
+
+          <!-- ============ 二级页 · 照片 ============ -->
+          <div v-if="subPage === 'photo'" class="ck-sub">
+            <div class="ck-sub__head">
+              <button type="button" class="ck-sub__back" @click="closeSub">
+                <span class="i-ph-caret-left" /> Back
+              </button>
+              <b>Add a photo</b>
+            </div>
             <div v-if="photoPreview" class="ck-photo">
               <img :src="photoPreview" alt="Your uploaded photo" />
               <button class="ck-photo__clear" title="Remove photo" @click="clearPhoto">
@@ -126,144 +266,60 @@
               <span class="ck-drop__title">Choose a photo</span>
               <span class="ck-drop__hint">From your phone or computer. We shrink it for you.</span>
             </label>
-
             <button v-if="!photoPreview" class="ck-linkish" @click="useSample">
               <span class="i-ph-sparkle" />
               No photo handy? Try one of ours
             </button>
-
             <p v-if="photoError" class="ck-error">{{ photoError }}</p>
             <p class="ck-hint">
               <span class="i-ph-lock-key" />
               Your photo stays private. Never published, never used to train anything.
             </p>
+            <button type="button" class="ck-btn ck-btn--primary ck-sub__done" @click="closeSub">Done</button>
           </div>
+        </div><!-- /ck-formmodal__body -->
 
-          <!-- 称呼 -->
-          <div class="ck-step2__col">
-            <h3 class="ck-mini-title">Their name</h3>
-            <input
-              class="ck-input"
-              type="text"
-              :value="name"
-              :placeholder="scenario?.inputHint || 'e.g. Margaret'"
-              @input="name = ($event.target as HTMLInputElement).value"
-            />
-            <p class="ck-hint">
-              We put this on the card exactly as you type it. Check it once.
-            </p>
-
-            <h3 class="ck-mini-title ck-mini-title--gap">Anything else we should know?</h3>
-            <input
-              class="ck-input"
-              type="text"
-              :value="extra"
-              placeholder="e.g. loves gardening, has a golden retriever called Biscuit"
-              @input="extra = ($event.target as HTMLInputElement).value"
-            />
-            <p class="ck-hint">Optional. A detail like this makes the card much more personal.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- ==================== STEP 3 · 画风 + 生成 ==================== -->
-      <section v-if="step === 3 && scenario" class="ck-sec ck-sec--card">
-        <h2 class="ck-sec__title">
-          <span class="ck-sec__num">3</span>
-          Pick a look
-        </h2>
-        <p class="ck-sec__sub">Every style below has been tested — the result will look like the picture.</p>
-
-        <!-- 不知道选哪个？给个逃生口（giftsong 的 "Pick for me"） -->
-        <div class="ck-pickrow">
-          <button type="button" class="ck-pickme" @click="surpriseMe">
-            <span class="i-ph-sparkle" />
-            Pick one for me
-          </button>
-          <span class="ck-pickrow__hint">
-            {{ pickMeHint }}
-          </span>
-        </div>
-
-        <div class="ck-styles">
+        <!-- 弹窗底部：额度说明 + 生成按钮（一步到位，点完直接出结果） -->
+        <div class="ck-formmodal__foot">
+          <p class="ck-formmodal__quota">
+            <template v-if="usageUnlimited">Unlimited generations on your plan.</template>
+            <template v-else-if="usageMode === 'credit' && usageLoaded">
+              You have {{ quotaRemaining }} card{{ quotaRemaining === 1 ? '' : 's' }} left on your plan.
+            </template>
+            <template v-else-if="usageLoaded">
+              {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left in total.
+            </template>
+            <template v-else>Free to preview. Only pay when it is right.</template>
+          </p>
+          <p v-if="genError" class="ck-error">{{ genError }}</p>
           <button
-            v-for="st in availableStyles"
-            :key="st.id"
-            class="ck-style"
-            :class="{ 'ck-style--on': style === st.id }"
-            @click="style = st.id"
+            type="button"
+            class="ck-btn ck-btn--primary ck-btn--lg ck-formmodal__make"
+            :disabled="generating || !scenario"
+            @click="handleMake"
           >
-            <span class="ck-style__name">{{ st.label }}</span>
-            <span class="ck-style__desc">{{ st.desc || st.prompt }}</span>
+            <span v-if="generating" class="i-ph-spinner animate-spin" />
+            <span v-else-if="outOfQuota && !usageUnlimited" class="i-ph-sparkle" />
+            <span v-else class="i-ph-magic-wand" />
+            {{
+              generating
+                ? `Making your ${formatCopy.ctaNoun}…`
+                : (outOfQuota && !usageUnlimited)
+                  ? (outOfCards ? 'Get more cards' : `Get ${PLANS.creator.cards} credits`)
+                  : `Make ${scenario?.label.toLowerCase() || formatCopy.ctaNoun} ${formatCopy.ctaNoun}`
+            }}
           </button>
         </div>
+      </div><!-- /ck-formmodal__panel -->
+    </div><!-- /ck-formmodal -->
 
-        <!--
-          出几张 = 候选数，不是创作决定（额度改成按次后，张数不扣额度了）。
-          所以它不该跟「选画风」平级摆在这 —— 折进「More options」。
-        -->
-        <details class="ck-more">
-          <summary class="ck-more__summary">
-            <span class="i-ph-sliders-horizontal" />
-            More options
-            <span class="ck-more__tail">{{ countChoice }} picture{{ countChoice === 1 ? '' : 's' }} each go</span>
-          </summary>
-          <div class="ck-count">
-            <div class="ck-count__head">
-              <span class="ck-count__label">How many options?</span>
-              <span class="ck-count__note">
-                {{ countNote }}
-              </span>
-            </div>
-            <div class="ck-count__opts">
-              <button
-                v-for="n in countChoices"
-                :key="n"
-                type="button"
-                class="ck-count__opt"
-                :class="{ 'ck-count__opt--on': countChoice === n }"
-                @click="countChoice = n"
-              >
-                {{ n }}
-              </button>
-            </div>
-            <p v-if="countShort" class="ck-count__hint">
-              Free plan lets you make {{ maxPerRun }} at a time — you have
-              {{ quotaRemaining }} generation{{ quotaRemaining === 1 ? '' : 's' }} left today.
-            </p>
-          </div>
-        </details>
-
-        <!-- 额度用完 → 升级引导（付费点是 2K 无水印 + 300 DPI 打印规格） -->
-        <div v-if="outOfQuota && !usageUnlimited" class="ck-quota">
-          <template v-if="outOfCards">
-            <p class="ck-quota__title">You have used all your cards.</p>
-            <p class="ck-quota__text">
-              Add one more card, or a pack of twenty, and you can keep making
-              print-ready files.
-            </p>
-            <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">Add cards</NuxtLink>
-          </template>
-          <template v-else>
-            <p class="ck-quota__title">You have used today's free generations.</p>
-            <p class="ck-quota__text">
-              Upgrade for 2K images with no watermark, ready to print at 300 DPI —
-              and more generations every day.
-            </p>
-            <NuxtLink to="/pricing" class="ck-btn ck-btn--primary">See plans</NuxtLink>
-          </template>
-        </div>
-
-        <p v-if="genError" class="ck-error ck-error--big">{{ genError }}</p>
-      </section>
-
-      <!-- ==================== 结果 / 编辑器 ==================== -->
-      <section v-if="candidates.length" class="ck-sec ck-sec--card">
+    <!-- ==================== 结果 / 编辑器 ==================== -->
+    <div class="ck-wrap ck-cards__body">
+      <section v-if="candidates.length" class="ck-sec ck-sec--card ck-result">
         <h2 class="ck-sec__title">
-          <span class="ck-sec__num">4</span>
           Pick the one you like
         </h2>
-        <p class="ck-sec__sub">You can make as many as you like. Regenerate any time.</p>
+        <p class="ck-sec__sub">Add your words, then download it ready to print. Remake any time with the button above.</p>
 
         <div class="ck-cands">
           <button
@@ -320,68 +376,23 @@
             :image-url="pickedUrl"
             :initial-texts="[]"
             :has-paid="hasPaid"
+            :format="cardFormat"
+            :card-id="picked"
             class="ck-editor__composer"
+            @remove-watermark="openPaywall"
+            @finalized="onFinalized"
           />
+          <p v-if="finishToast" class="ck-finish-toast">
+            <span class="i-ph-check-circle" /> Saved — your share link now shows the finished card.
+          </p>
         </div>
       </section>
-    </div>
-
-    <!-- ============ 底部操作栏：返回 / 继续 ============ -->
-    <div v-if="step <= 3" class="ck-nav">
-      <div class="ck-wrap ck-nav__inner">
-        <button
-          v-if="step > 1"
-          type="button"
-          class="ck-btn ck-btn--ghost ck-btn--lg"
-          @click="goBack"
-        >
-          <span class="i-ph-arrow-left" />
-          Back
-        </button>
-        <span v-else class="ck-nav__spacer" />
-
-        <button
-          v-if="step < 3"
-          type="button"
-          class="ck-btn ck-btn--primary ck-btn--lg"
-          :disabled="!canContinue"
-          @click="goNext"
-        >
-          Continue
-          <span class="i-ph-arrow-right" />
-        </button>
-        <button
-          v-else
-          type="button"
-          class="ck-btn ck-btn--primary ck-btn--lg"
-          :disabled="generating || !scenario || (outOfQuota && !usageUnlimited)"
-          @click="generate"
-        >
-          <span v-if="generating" class="i-ph-spinner animate-spin" />
-          <span v-else class="i-ph-magic-wand" />
-          {{ generating ? 'Making your card…' : (outOfQuota && !usageUnlimited ? (outOfCards ? 'No cards left' : 'Daily limit reached') : `Make ${scenario?.label.toLowerCase() || 'card'}`) }}
-        </button>
-      </div>
-      <p v-if="step === 3" class="ck-nav__hint">
-        <template v-if="usageUnlimited">Unlimited generations on your plan.</template>
-        <template v-else-if="usageMode === 'credit' && usageLoaded">
-          You have {{ quotaRemaining }} card{{ quotaRemaining === 1 ? '' : 's' }} left on your plan.
-        </template>
-        <template v-else-if="usageLoaded">
-          <!-- ⚠️ 额度是**按次**扣的（2026-10-27 改）：一次生成 = 1 次，
-               出几张都算这 1 次。所以直接说"几次"，别再混着说"张"——
-               说错会让用户以为"选 4 张就扣 4 次"。 -->
-          You have {{ quotaRemaining }} free generation{{ quotaRemaining === 1 ? '' : 's' }} left today —
-          each go makes up to {{ maxPerRun }} pictures to choose from.
-        </template>
-        <template v-else>Free to preview. Only pay when it is right.</template>
-      </p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, nextTick } from 'vue'
 import {
   IMAGE_SCENARIOS,
   SCENARIO_GROUPS,
@@ -389,6 +400,14 @@ import {
   stylesForScenario,
   type ImageScenarioDef,
 } from '~/utils/imageScenarios'
+import {
+  CARD_FORMAT_COPY,
+  getCardFormat,
+  parseCardFormat,
+  type CardFormat,
+} from '~/utils/cardFormats'
+import { PLANS } from '~/utils/pricing'
+import { assetUrl } from '~/utils/assets'
 import CardComposer from '~/components/cards/CardComposer.vue'
 
 definePageMeta({ layout: 'marketing' })
@@ -398,74 +417,89 @@ useHead({
   description: 'Make a birthday card, thank you card or wall print for someone you love. Add their photo, their name and your words. Ready to print.',
 })
 
-// ⚠️ 名字要**名词化**（一个名字 = 一件事），别把两件事塞一个名字：
-//    旧 'Style & make' = 选画风 + 生成，两件事挤在一起 → 用户不知道自己在第几步。
-//    （giftsong 用的是 Style / Recipient / Story / Song，每个都是一件事）
-const stepLabels = ['Occasion', 'Name & photo', 'Look']
+// ── 参数弹窗（2026-11-23 重构：三步向导 → 一步到位）─────────
+// 竞品/原型都是「就地弹窗一次填完参数」，以前这里做成了三步向导，跳转多。
+// 现在格式/场合/照片名字/画风都在一个弹窗里，填完点生成直接出结果。
+const formOpen = ref(false)
 
-// ── 分步向导 ─────────────────────────────────────────────
-// 以前三步是**滚动**的一整页（一个 section 接一个 section），
-// 引导太少、不知道自己在哪。现在一个步骤一个视图，带返回/继续。
-// ⚠️ step 以前**根本没定义** —— 模板里 `step >= i + 1` 全是 undefined >= 1，
-//    所以步骤指示器从来没点亮过。
-const step = ref(1)
-/** 走到过的最远步骤（只允许回退到走过的步骤） */
-const maxReached = ref(1)
+/**
+ * 弹窗二级导航栈（2026-11-23 竞品 UX 对齐）。
+ * 竞品把场合/风格/配色全收进带 ‹ 返回的二级子页，主界面只留自然语言字段。
+ * 这里同构：main 一屏填完，点 chip push 到子页，选完 pop 回 main。
+ * 子页切换只是弹窗内的 UI 状态，不写 URL、不碰生成参数。
+ */
+type SubPage = '' | 'occasion' | 'style' | 'photo'
+const subPage = ref<SubPage>('')
+function openSub(page: Exclude<SubPage, ''>) { subPage.value = page }
+function closeSub() { subPage.value = '' }
 
-// 文案按步骤一一对应：index 0 = 第 1 步（选场合），依此类推
-const STEP_COPY = [
-  {
-    headline: "Let's make their day.",
-    lede: 'Three small steps — no prompt to write, no font to pick. Start with the occasion: it decides the picture. You can change it later.',
-  },
-  {
-    headline: 'Add their photo and name.',
-    lede: 'This is what makes it theirs. A photo is best, but you can skip it and still get a lovely card.',
-  },
-  {
-    headline: 'Choose a look, then make it.',
-    lede: 'Every style below has been tested — the result will look like the picture. Pick one and we will do the rest.',
-  },
-  {
-    headline: 'Pick the one you like.',
-    lede: 'Here are your cards. Add your words, then download it ready to print.',
-  },
-]
+const pageHeadline = computed(() =>
+  candidates.value.length ? 'Ready for another one?' : formatCopy.value.heroHeadline,
+)
+const pageLede = computed(() =>
+  candidates.value.length
+    ? 'Same quick form — a different occasion, a different person, a brand-new card.'
+    : formatCopy.value.heroLede,
+)
 
-const stepHeadline = computed(() => {
-  // 从「My cards」打开旧卡时，第 4 步不是「挑一张」，而是「继续做这张」
-  if (step.value === 4 && route.query.from) return 'Your card, ready to finish.'
-  return STEP_COPY[step.value - 1]?.headline || STEP_COPY[0].headline
-})
-const stepLede = computed(() => STEP_COPY[step.value - 1]?.lede || STEP_COPY[0].lede)
-
-/** 能不能继续：第 1 步必须先选了场合 */
-const canContinue = computed(() => {
-  if (step.value === 1) return !!scenario.value
-  return true
-})
-
-function goTo(n: number) {
-  if (n < 1 || n > 3) return
-  if (n > maxReached.value) return
-  step.value = n
+function openForm() {
+  formOpen.value = true
+  subPage.value = '' // 每次都从主屏开始，不残留上次停在的子页
+  genError.value = ''
+  // 弹窗打开时锁背景滚动；关闭时恢复（在 closeForm 里）
+  document.body.style.overflow = 'hidden'
+}
+function closeForm() {
+  formOpen.value = false
+  document.body.style.overflow = ''
 }
 
-function goNext() {
-  if (!canContinue.value) return
-  if (step.value >= 3) return
-  step.value += 1
-  if (step.value > maxReached.value) maxReached.value = step.value
+/** 去水印付费墙：跳到站内唯一的定价页（练手项目不引入新弹窗支付流程） */
+const router = useRouter()
+function openPaywall() {
+  router.push('/pricing')
 }
 
-function goBack() {
-  if (step.value <= 1) return
-  step.value -= 1
+const finishToast = ref(false)
+function onFinalized() {
+  finishToast.value = true
+  setTimeout(() => { finishToast.value = false }, 3500)
 }
+
+/**
+ * 「生成」按钮统一入口（2026-11-23 原型对齐）。
+ * 额度用完时按钮不再 disabled —— 改为点击直接去付费墙（原型里按钮会变成
+ * 「订阅得 200 积分」，点了弹付费墙）。未登录时 quotaRemaining=0 但
+ * usageLoaded=false → outOfQuota=false，仍走 generate，由服务端 401 弹登录框。
+ */
+function handleMake() {
+  if (outOfQuota.value && !usageUnlimited.value) {
+    openPaywall()
+    return
+  }
+  void generate()
+}
+
+/**
+ * 卡片格式（2026-11-23：由落地页入口决定，不在弹窗里切）
+ *   ?format=invite → 邀请函（首页 Invitation 卡入口）
+ *   ?format=card   → 贺卡（其余全部落地页）
+ * 白名单解析：非法值回落 card。续编旧卡 ?from= 时再按旧卡 meta.format 覆盖。
+ */
+const route = useRoute()
+const cardFormat = ref<CardFormat>(parseCardFormat(String(route.query.format || '')))
+const formatDef = computed(() => getCardFormat(cardFormat.value))
+/** 当前格式的整套文案（eyebrow/标题/hero/CTA），跟着入口走 */
+const formatCopy = computed(() => CARD_FORMAT_COPY[cardFormat.value])
 
 const group = ref<string>('birthday')
-const scenario = ref<ImageScenarioDef | null>(null)
+// 默认选中 birthday：弹窗一开，照片/名字/画风三个分区就都在（真·一步到位），
+// 场合只是「换一个」，不是「解锁后面」。?scenario=xxx 会在下面覆盖成指定场景。
+const defaultScenario = IMAGE_SCENARIOS.find(s => s.id === 'birthday') || IMAGE_SCENARIOS[0]
+const scenario = ref<ImageScenarioDef | null>(defaultScenario || null)
 const style = ref('watercolor')
+/** 缩略图加载失败时回退到语义矢量图标（R2 偶发失败也不留空白） */
+const thumbFailed = ref<Record<string, boolean>>({})
 const name = ref('')
 const extra = ref('')
 
@@ -523,7 +557,6 @@ function openAuthForGenerate() {
 
 // ── 每日免费额度 ────────────────────────────────────────────
 // 额度是服务端强制的（server/utils/daily-usage.ts），这里只是读出来显示。
-// 服务端会按**实际出图张数**扣，所以这里也要按剩余额度决定一次出几张。
 const usageLoaded = ref(false)
 const quotaRemaining = ref(0)
 const usageUnlimited = ref(false)
@@ -533,45 +566,8 @@ const usageMode = ref<'credit' | 'daily' | 'unlimited'>('daily')
 const hasPaid = ref(false)
 const outOfQuota = computed(() => usageLoaded.value && !usageUnlimited.value && quotaRemaining.value <= 0)
 
-/**
- * 一次出几张。
- *
- * ⚠️ 额度语义（2026-10-27 改成**按次**）：
- *   一次生成 = 1 次额度，不管出几张。用户选张数只是为了**多几个候选挑**，
- *   不是「选几张就扣几张」。
- *   免费档每天 2 次，但单次最多出 FREE_MAX_IMAGES_PER_RUN 张（成本闸门，
- *   MiniMax 按张收费，不收窄的话 2 次 × 4 张 = 成本 4 倍）。
- *   付费档一次出 4 个候选，用户只拿走 1 张。
- */
-const COUNT_CHOICES = [1, 2, 4]
-const countChoice = ref(4)
-
-/** 单次上限（服务端也会 clamp，这里只是让 UI 先说清楚） */
-const maxPerRun = ref(4)
-
-/** 给用户看的档位：不超过单次上限 */
-const countChoices = computed(() => COUNT_CHOICES.filter(n => n <= maxPerRun.value))
-
-/** 实际会出几张：受单次上限约束（不跟剩余额度挂钩 —— 那是按次的） */
-const actualCount = computed(() => {
-  if (!usageLoaded.value) return Math.min(countChoice.value, 4)
-  return Math.max(1, Math.min(countChoice.value, maxPerRun.value))
-})
-
-/** 选项区的那句说明 */
-const countNote = computed(() => {
-  if (!usageLoaded.value) return 'More to choose from — each one is part of the same go.'
-  if (usageUnlimited.value) return 'More to choose from — each one is part of the same go.'
-  if (usageMode.value === 'credit') {
-    return `One go uses one card, no matter how many options you get.`
-  }
-  return `One go uses one of your ${quotaRemaining} daily generations, no matter how many options you get.`
-})
-
-/** 选了超出单次上限的档位 → 要说清楚（免费用户选了 4 但只能出 2） */
-const countShort = computed(
-  () => usageLoaded.value && !usageUnlimited.value && countChoice.value > maxPerRun.value,
-)
+// 一次固定出 1 张（2026-11-23 产品决定：不做「一次几张」选项，成本也可控）。
+// 额度仍按次扣：一次生成 = 1 次，跟张数无关。
 
 /**
  * 「帮我选一个画风」—— 借鉴 giftsong 的 "Pick for me"。
@@ -592,6 +588,7 @@ function surpriseMe() {
   const safe = hasRef ? list.filter(s => s.i2iSafe) : list
   const pool = safe.length ? safe : list
   style.value = pool[0].id
+  closeSub() // 选完退回主屏，chip 上显示新画风
 }
 
 /** 当前画风的一句说明（让用户知道选的是什么效果） */
@@ -620,17 +617,12 @@ async function loadUsage() {
         remaining: number | null
         unlimited: boolean
         mode?: 'credit' | 'daily' | 'unlimited'
-        maxPerRun?: number
       }
       paid?: boolean
     }>('/api/user/usage')
     quotaRemaining.value = res.image?.remaining ?? 0
     usageUnlimited.value = !!res.image?.unlimited
     usageMode.value = res.image?.mode || (res.image?.unlimited ? 'unlimited' : 'daily')
-    // 单次最多出几张（免费 2 / 付费 4）
-    maxPerRun.value = res.image?.maxPerRun ?? (usageUnlimited.value ? 4 : 2)
-    // 默认档位不能超过单次上限
-    if (countChoice.value > maxPerRun.value) countChoice.value = maxPerRun.value
     // ⚠️ 付费权益 = 是不是付费档，**不看他卡够不够** ——
     //    付过钱的人做过的卡，永远能下 2K 无水印的打印文件。
     hasPaid.value = !!res.paid
@@ -662,9 +654,14 @@ const visibleScenarios = computed(() =>
  * 竞品（Silly Robot / Orylia）都按「给谁 / 什么场合」分落地页，
  * 进来就直接落在对应的场景上，别让用户再选一遍。
  */
-const route = useRoute()
 const routeScenario = computed(() => String(route.query.scenario || ''))
 {
+  // 默认场景的文案预设（弹窗一开就齐）；?scenario= 会整体覆盖
+  if (defaultScenario) {
+    style.value = defaultScenario.styles?.[0] || 'watercolor'
+    messageOptions.value = defaultScenario.presetMessages ? [...defaultScenario.presetMessages] : []
+    chosenMessage.value = defaultScenario.presetMessages?.[0] || ''
+  }
   const sc = IMAGE_SCENARIOS.find(s => s.id === routeScenario.value)
   if (sc) {
     group.value = sc.group
@@ -681,15 +678,36 @@ const availableStyles = computed(() => {
   return stylesForScenario(scenario.value, !!uploadId.value || !!photoFile.value)
 })
 
+/** 主屏 chip 上显示的当前画风名（从可用画风里找，找不到给通用名） */
+const currentStyleLabel = computed(
+  () => availableStyles.value.find(s => s.id === style.value)?.label || 'Best match',
+)
+/** 是否停在「推荐画风」——默认就是第一个（对齐竞品 Best match 一等公民） */
+const isBestMatch = computed(
+  () => !availableStyles.value.length || style.value === availableStyles.value[0]?.id,
+)
+/** 照片 chip 显示 Added / None */
+const photoAdded = computed(() => !!photoPreview.value || !!uploadId.value)
+
+/** 选具体画风：设值 + 退回主屏（chip 上立刻显示新值） */
+function pickStyle(id: string) {
+  style.value = id
+  closeSub()
+}
+/** 选「Best match」：回到该场景的推荐画风（数组第一项） */
+function pickBestMatch() {
+  style.value = availableStyles.value[0]?.id || style.value
+  closeSub()
+}
+
 function pickScenario(sc: ImageScenarioDef) {
   scenario.value = sc
   messageOptions.value = sc.presetMessages ? [...sc.presetMessages] : []
   chosenMessage.value = sc.presetMessages?.[0] || ''
   const list = stylesForScenario(sc, !!uploadId.value || !!photoFile.value)
   if (!list.find(s => s.id === style.value)) style.value = list[0]?.id || 'watercolor'
-  nextTick(() => {
-    document.querySelector('.ck-sec--card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  })
+  // 选完场合自动退回主屏 —— chip 上立刻显示新场合（对齐竞品 pop 回主界面）
+  closeSub()
 }
 
 function onFile(e: Event) {
@@ -759,17 +777,17 @@ async function generate() {
   generating.value = true
   try {
     const uid = await uploadPhoto()
-    // 出图张数 = 候选数（额度按次扣，张数不扣额度了），受单次上限约束。
-    const maxN = actualCount.value
     const res = await api.post<{ images: { id: string; imageUrl: string | null }[] }>('/api/image/generate', {
       scenario: scenario.value.id,
       style: style.value,
       name: name.value,
       extra: extra.value,
       uploadId: uid || undefined,
-      n: maxN,
+      n: 1,
       aspect_ratio: '3:4',
       promptOptimizer: false,
+      // 格式 id 只在服务端映射到受控 prompt 片段（不直接拼客户端字符串）
+      formatClause: cardFormat.value,
     })
     await loadUsage()
     // ⚠️ 后端返回的是 { id, imageUrl }（签名 URL），
@@ -781,9 +799,11 @@ async function generate() {
         url: im.imageUrl as string,
       }))
     picked.value = candidates.value[0]?.id || ''
-    // 出图了 → 切到结果页（第 4 步）
-    step.value = 4
-    maxReached.value = Math.max(maxReached.value, 4)
+    // 出图了 → 关掉参数弹窗，结果/编辑器留在页面上；滚动过去接着写文字
+    closeForm()
+    nextTick(() => {
+      document.querySelector('.ck-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
   } catch (e: any) {
     // 401 = 需要登录。判断放在服务端返回上，比读本地 auth 状态可靠
     //（useAuth 每次调用返回新 ref，组件里拿到的 user 常常是空的）
@@ -798,7 +818,7 @@ async function generate() {
     } else if (e?.statusCode === 429 || e?.data?.statusCode === 429) {
       // 每日免费额度用完 —— 说人话 + 给升级入口
       quotaRemaining.value = 0
-      genError.value = "You've used today's free generations. Upgrade for no-watermark 2K prints."
+      genError.value = "You've used your 3 free generations. Upgrade for no-watermark 2K prints."
       await loadUsage()
     } else {
       genError.value =
@@ -839,13 +859,14 @@ async function loadFromCard() {
   const id = String(route.query.from || '')
   if (!id) return
   try {
-    const res = await api.get<{ images: { id: string; imageUrl: string | null }[] }>('/api/images')
+    const res = await api.get<{ images: { id: string; imageUrl: string | null; format?: string | null }[] }>('/api/images')
     const hit = (res.images || []).find(i => i.id === id)
     if (!hit?.imageUrl) return
+    // 续编旧卡：格式以旧卡为准（覆盖 URL 的 ?format=），否则邀请函会按贺卡版式编辑
+    if (hit.format) cardFormat.value = parseCardFormat(hit.format)
     candidates.value = [{ id: hit.id, url: hit.imageUrl }]
     picked.value = hit.id
-    step.value = 4
-    maxReached.value = 4
+    // 旧卡直接进编辑区，不走参数弹窗
   } catch {
     // 没登录 / 找不到 / 没权限 → 正常走「做一张新卡」的流程
   }
@@ -854,26 +875,14 @@ async function loadFromCard() {
 // 额度：进入页面就读一次（未登录会失败，忽略即可 —— 生成时服务端会要求登录）
 onMounted(() => {
   loadUsage()
-  // 支持 /cards?step=2 直接落到某一步
-  const q = Number(route.query.step || 1)
-  if (Number.isFinite(q) && q >= 1 && q <= 3) {
-    step.value = q
-    maxReached.value = q
-  }
+  // 兼容旧链接 ?step=2：三步向导已经没了，直接当它不存在（参数弹窗自己一站填完）
   // 从「My cards」过来的 → 直接把旧卡打开
   loadFromCard()
 })
 
-// 步骤写进 URL —— 刷新和浏览器后退都保持在同一步
-watch(step, (v) => {
-  const q = { ...route.query }
-  if (v > 1) q.step = String(v)
-  else delete q.step
-  navigateTo({ path: '/cards', query: q }, { replace: true })
-})
-
-// 离开页面时把弹窗的说明/回调清掉 —— 别让别的页面误触发这一页的逻辑
+// 离开页面时：恢复背景滚动 + 把弹窗的说明/回调清掉 —— 别让别的页面误触发这一页的逻辑
 onBeforeUnmount(() => {
+  document.body.style.overflow = ''
   clearNote()
   clearAfterAuth()
 })
@@ -974,84 +983,6 @@ onBeforeUnmount(() => {
   font-style: italic;
   color: var(--ck-ink);
 }
-/* ---------- 吸顶步进器 ---------- */
-.ck-stepsbar {
-  position: sticky;
-  /* 顶栏 (.mk-top) 是 sticky top:0，高约 3.5rem —— 步进器要排在它下面 */
-  top: 3.5rem;
-  z-index: 45;
-  background: rgba(253, 250, 244, 0.94);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--ck-line);
-}
-.ck-stepsbar__inner {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-}
-.ck-stepsbar__now {
-  margin-left: auto;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #a08f81;
-  white-space: nowrap;
-}
-@media (max-width: 640px) {
-  /* 窄屏：只留圆点，标签藏起来（否则一行放不下） */
-  .ck-steps-nav__label { display: none; }
-  .ck-stepsbar__now { font-size: 0.75rem; }
-}
-
-.ck-steps-nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem 2rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #a08f81;
-}
-.ck-steps-nav li { display: inline-flex; align-items: center; gap: 0.5rem; }
-.ck-steps-nav__btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: none;
-  border: 0;
-  padding: 0.35rem 0;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-.ck-steps-nav__btn:disabled { cursor: default; opacity: 0.55; }
-.ck-steps-nav__btn:not(:disabled):hover { color: var(--ck-coral-deep); }
-.ck-steps-nav__dot {
-  display: grid;
-  place-items: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: 999px;
-  border: 1.5px solid var(--ck-line);
-  background: #fff;
-  font-size: 0.8125rem;
-}
-.ck-steps-nav li.is-on { color: var(--ck-ink); }
-.ck-steps-nav li.is-on .ck-steps-nav__dot { border-color: var(--ck-coral); color: var(--ck-coral); }
-.ck-steps-nav li.is-current { color: var(--ck-ink); }
-.ck-steps-nav li.is-current .ck-steps-nav__dot {
-  background: var(--ck-coral);
-  border-color: var(--ck-coral);
-  color: #fff;
-  box-shadow: 0 0 0 4px rgba(200, 84, 61, 0.14);
-}
-.ck-steps-nav li.is-done { color: var(--ck-coral-deep); }
-.ck-steps-nav li.is-done .ck-steps-nav__dot { background: var(--ck-coral); border-color: var(--ck-coral); color: #fff; }
-
 /* ---------- 步骤眉标 ---------- */
 .ck-eyebrow {
   margin: 0 0 0.6rem;
@@ -1062,28 +993,261 @@ onBeforeUnmount(() => {
   color: var(--ck-coral);
 }
 
-/* ---------- 底部操作栏 ---------- */
-.ck-nav {
-  position: sticky;
-  bottom: 0;
-  z-index: 40;
-  background: rgba(251, 247, 241, 0.94);
-  backdrop-filter: blur(12px);
-  border-top: 1px solid var(--ck-line);
-  padding: 1.1rem 0 1.3rem;
-}
-.ck-nav__inner {
+/* ---------- Hero 入口按钮 ---------- */
+.ck-hero__cta { margin-top: 1.6rem; }
+.ck-hero__hint {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-.ck-nav__spacer { display: block; }
-.ck-nav__hint {
-  margin: 0.7rem 0 0;
-  text-align: center;
+  gap: 0.45rem;
+  margin: 0.85rem 0 0;
   font-size: 0.85rem;
   color: var(--ck-ink-2);
+}
+
+/* ---------- 参数弹窗（就地，一步到位）----------
+   ⚠️ z-index 110：高于页面内容(≤45)和 Cookie 条(100)，低于登录弹窗(120) ——
+   未登录点「生成」时登录框仍能浮在上面，参数弹窗保持打开、参数不丢。 */
+.ck-formmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+.ck-formmodal__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 24, 20, 0.5);
+  backdrop-filter: blur(3px);
+}
+.ck-formmodal__panel {
+  position: relative;
+  width: min(54rem, 100%);
+  /* ⚠️ flex item 默认 min-width:auto —— 手机窄屏下 textarea 等内容
+     会把面板撑出视口（输入框/按钮被截断），必须压回容器宽度。 */
+  max-width: 100%;
+  min-width: 0;
+  margin: auto 0;
+  background: var(--ck-white);
+  border-radius: 1.25rem;
+  box-shadow: 0 30px 90px -30px rgba(30, 24, 20, 0.55);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 4rem);
+  overflow: hidden;
+}
+.ck-formmodal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.6rem 2rem 1.2rem;
+  border-bottom: 1px solid var(--ck-line);
+  flex: 0 0 auto;
+}
+.ck-formmodal__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ck-coral);
+}
+.ck-formmodal__title {
+  margin: 0;
+  font-family: var(--ck-serif);
+  font-size: clamp(1.4rem, 3vw, 1.85rem);
+  font-weight: 600;
+  color: var(--ck-ink);
+}
+.ck-formmodal__close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border: 1px solid var(--ck-line);
+  border-radius: 0.7rem;
+  background: transparent;
+  color: var(--ck-ink-2);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.ck-formmodal__close:hover { background: var(--ck-cream); color: var(--ck-coral-deep); }
+.ck-formmodal__body {
+  padding: 1.6rem 2rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  position: relative; /* 二级子页绝对定位覆盖在主体上 */
+}
+
+/* ---------- 主屏表单（一屏填完核心参数） ---------- */
+.ck-mainform { display: flex; flex-direction: column; gap: 1.25rem; }
+.ck-field { display: flex; flex-direction: column; gap: 0.5rem; }
+.ck-field__label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--ck-ink);
+}
+.ck-field__req { color: var(--ck-coral); }
+.ck-textarea { min-height: 5.5rem; resize: vertical; line-height: 1.5; font-family: inherit; }
+
+/* 值 chip：内联当前值，点开二级页 */
+.ck-valuechip {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.8rem 0.9rem;
+  border: 1.5px solid var(--ck-line);
+  border-radius: 0.7rem;
+  background: var(--ck-cream);
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.ck-valuechip:hover { border-color: var(--ck-coral); background: rgba(200, 84, 61, 0.05); }
+.ck-valuechip__icon { font-size: 1.15rem; color: var(--ck-coral); line-height: 1; }
+.ck-valuechip__text { font-size: 0.9375rem; font-weight: 700; color: var(--ck-ink); }
+.ck-valuechip__change {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--ck-coral-deep);
+}
+
+/* mini chip：Style / Photo */
+.ck-chips { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+.ck-minichip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid var(--ck-line);
+  border-radius: 999px;
+  background: var(--ck-white);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  color: var(--ck-ink-2);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.ck-minichip:hover { border-color: var(--ck-coral); background: rgba(200, 84, 61, 0.05); }
+.ck-minichip b { color: var(--ck-ink); font-weight: 700; }
+
+/* More options（次要信息默认收起） */
+.ck-moreopt { border-top: 1px solid var(--ck-line); padding-top: 0.9rem; }
+.ck-moreopt summary {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ck-ink-2);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+.ck-moreopt summary::-webkit-details-marker { display: none; }
+.ck-moreopt summary::before { content: '▸ '; color: var(--ck-coral); }
+.ck-moreopt[open] summary::before { content: '▾ '; }
+.ck-moreopt__inner { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.9rem; }
+.ck-quota--main { margin-top: 0.25rem; }
+
+/* ---------- 二级子页（覆盖在弹窗 body 上，导航栈 push/pop） ----------
+   ⚠️ absolute 不占流高度 → 依赖主屏常驻撑起 body 高度；
+   自己要带 padding（inset:0 盖住的是 body 的 padding box）和内部滚动。 */
+.ck-sub {
+  position: absolute;
+  inset: 0;
+  padding: 1.6rem 2rem;
+  background: var(--ck-bg);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: ck-sub-in 0.2s ease-out;
+}
+@keyframes ck-sub-in {
+  from { opacity: 0; transform: translateX(1rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.ck-sub__head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 0.9rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--ck-line);
+}
+.ck-sub__head b { font-size: 0.95rem; }
+.ck-sub__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--ck-coral-deep);
+  cursor: pointer;
+}
+.ck-sub__back:hover { text-decoration: underline; }
+.ck-sub__note { margin: 0.9rem 0 0; font-size: 0.78rem; color: var(--ck-ink-2); }
+.ck-sub__done { width: 100%; margin-top: 1rem; }
+
+/* Best match：一等公民（对齐竞品渐变边框 + 对勾） */
+.ck-style--best {
+  border-color: #7c5cd6;
+  box-shadow: 0 0 0 2px rgba(124, 92, 214, 0.14);
+}
+.ck-style__thumb--best {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #f6d9c9, #e9a994 55%, var(--ck-coral));
+  color: #fff;
+  font-size: 1.6rem;
+}
+.ck-style__check {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  display: grid;
+  place-items: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 999px;
+  background: #7c5cd6;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.ck-formmodal__foot {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 1.1rem 2rem 1.4rem;
+  border-top: 1px solid var(--ck-line);
+  background: var(--ck-bg);
+}
+.ck-formmodal__quota {
+  margin: 0;
+  margin-right: auto;
+  font-size: 0.85rem;
+  color: var(--ck-ink-2);
+}
+.ck-formmodal__make { min-width: 13rem; }
+@media (max-width: 640px) {
+  .ck-formmodal { padding: 0; }
+  .ck-formmodal__panel { max-height: 100vh; border-radius: 0; margin: 0; }
+  .ck-formmodal__head, .ck-formmodal__body, .ck-formmodal__foot { padding-left: 1.2rem; padding-right: 1.2rem; }
+  .ck-formmodal__quota { width: 100%; }
+  .ck-formmodal__make { width: 100%; }
 }
 
 /* ---------- 区块 ---------- */
@@ -1106,19 +1270,6 @@ onBeforeUnmount(() => {
   line-height: 1.15;
   color: var(--ck-ink);
 }
-.ck-sec__num {
-  display: grid;
-  place-items: center;
-  flex: none;
-  width: 2.4rem;
-  height: 2.4rem;
-  border-radius: 999px;
-  background: var(--ck-coral);
-  color: #fff;
-  font-family: 'Manrope', system-ui, sans-serif;
-  font-size: 0.95rem;
-  font-weight: 700;
-}
 .ck-sec__sub {
   margin: -0.35rem 0 0.75rem;
   font-size: 1rem;
@@ -1132,6 +1283,9 @@ onBeforeUnmount(() => {
 /* ---------- tab ---------- */
 .ck-tabs { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0.25rem 0 0.5rem; }
 .ck-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   padding: 0.6rem 1.15rem;
   border: 1px solid var(--ck-line);
   border-radius: 999px;
@@ -1141,7 +1295,9 @@ onBeforeUnmount(() => {
   color: var(--ck-ink-2);
   cursor: pointer;
 }
+.ck-tab__icon { font-size: 1.05rem; line-height: 1; color: var(--ck-coral); }
 .ck-tab--on { background: var(--ck-ink); border-color: var(--ck-ink); color: #fff; }
+.ck-tab--on .ck-tab__icon { color: #fff; }
 
 /* ---------- 场景卡 ---------- */
 .ck-scene-grid {
@@ -1245,6 +1401,7 @@ onBeforeUnmount(() => {
 .ck-input:focus { outline: 2px solid rgba(200, 84, 61, 0.4); outline-offset: 1px; }
 
 .ck-hint { display: flex; align-items: flex-start; gap: 0.4rem; margin-top: 0.75rem; font-size: 0.875rem; line-height: 1.55; color: var(--ck-ink-2); }
+.ck-finish-toast { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.75rem; padding: 0.6rem 0.8rem; border-radius: 0.5rem; background: rgba(47, 64, 52, 0.1); font-size: 0.85rem; color: #2f4034; }
 /* 引导句：放在小标题下面，说明"接下来能做什么" */
 .ck-hint--lead { margin-top: 0.35rem; }
 .ck-hint--center { justify-content: center; }
@@ -1308,99 +1465,44 @@ onBeforeUnmount(() => {
   color: var(--ck-ink-soft, #8a7d72);
 }
 
-/* ---------- More options（折叠） ---------- */
-.ck-more {
-  margin-top: 1.25rem;
-  border: 1px solid var(--ck-line);
-  border-radius: 0.75rem;
-  background: transparent;
-}
-.ck-more__summary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 0.9rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--ck-ink);
-  list-style: none;
-  user-select: none;
-}
-.ck-more__summary::-webkit-details-marker { display: none; }
-.ck-more__summary:hover { color: var(--ck-coral-deep); }
-.ck-more__tail {
-  margin-left: auto;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--ck-ink-soft, #8a7d72);
-}
-.ck-more[open] .ck-more__summary { border-bottom: 1px solid var(--ck-line); }
-.ck-more .ck-count {
-  margin: 0;
-  border: none;
-  border-radius: 0 0 0.75rem 0.75rem;
-  background: transparent;
-}
-
-.ck-count {
-  margin-top: 1.5rem;
-  padding: 1.1rem 1.2rem;
-  border: 1.5px solid var(--ck-line);
-  border-radius: 0.9rem;
-  background: #faf6ef;
-}
-.ck-count__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.5rem 0.75rem;
-  margin-bottom: 0.75rem;
-}
-.ck-count__label {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--ck-ink);
-}
-.ck-count__note { font-size: 0.8125rem; color: var(--ck-ink-2); }
-.ck-count__opts { display: flex; gap: 0.5rem; }
-.ck-count__opt {
-  min-width: 3.1rem;
-  padding: 0.5rem 0.9rem;
-  border: 1.5px solid var(--ck-line);
-  border-radius: 0.7rem;
-  background: var(--ck-white);
-  font-family: inherit;
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--ck-ink-2);
-  cursor: pointer;
-  transition: border-color 0.14s ease, color 0.14s ease, background 0.14s ease;
-}
-.ck-count__opt:hover { border-color: var(--ck-coral); color: var(--ck-coral-deep); }
-.ck-count__opt--on {
-  border-color: var(--ck-coral);
-  background: var(--ck-coral);
-  color: #fff;
-}
-.ck-count__opt--on:hover { color: #fff; }
-.ck-count__hint { margin: 0.7rem 0 0; font-size: 0.8125rem; color: var(--ck-ink-2); }
 .ck-style {
+  position: relative; /* 对勾是 absolute，锚在卡片右上角（否则会飞到子页容器上） */
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding: 1.15rem 1.2rem;
+  gap: 0.4rem;
+  padding: 0.7rem 0.7rem 1rem;
   border: 1.5px solid var(--ck-line);
   border-radius: 0.9rem;
   background: #faf6ef;
   text-align: left;
   cursor: pointer;
-  transition: border-color 0.14s ease, background 0.14s ease;
+  transition: border-color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
 }
 .ck-style:hover { border-color: rgba(200, 84, 61, 0.5); background: #fff; }
-.ck-style--on { border-color: var(--ck-coral); background: rgba(200, 84, 61, 0.07); }
-.ck-style__name { font-size: 1rem; font-weight: 700; color: var(--ck-ink); }
-.ck-style__desc { font-size: 0.8125rem; line-height: 1.45; color: var(--ck-ink-2); }
+.ck-style--on {
+  border-color: var(--ck-coral);
+  background: rgba(200, 84, 61, 0.07);
+  box-shadow: 0 0 0 1px var(--ck-coral);
+}
+.ck-style__thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 0.55rem;
+  background: #f3ede3;
+}
+.ck-style__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.ck-style__glyph { font-size: 2.6rem; line-height: 1; color: var(--ck-coral); }
+.ck-style__name { font-size: 1rem; font-weight: 700; color: var(--ck-ink); padding: 0 0.35rem; }
+.ck-style__desc { font-size: 0.8125rem; line-height: 1.45; color: var(--ck-ink-2); padding: 0 0.35rem; }
 
 /* ---------- 生成 ---------- */
 .ck-generate { margin-top: 1.5rem; display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem; }

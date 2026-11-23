@@ -145,8 +145,6 @@
     "referenceHint": "Solo ritratto personale, frontale funziona meglio.",
     "model": "Modello",
     "aspectRatio": "Proporzione",
-    "count": "Quantità",
-    "countCapped": "Piano gratuito: fino a 2 immagini per volta.",
     "styleType": "Stile (live)",
     "generateFailed": "Generazione immagine fallita",
     "noImages": "Nessuna immagine ancora",

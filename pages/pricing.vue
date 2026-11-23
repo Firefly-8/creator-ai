@@ -43,7 +43,7 @@
               @need-login="requireLogin"
               @paid="onPaid"
             />
-            <NuxtLink v-else to="/cards" class="ck-btn ck-btn--ghost ck-btn--full">
+            <NuxtLink v-else to="/cards?format=card" class="ck-btn ck-btn--ghost ck-btn--full">
               {{ p.cta }}
             </NuxtLink>
           </div>
@@ -126,7 +126,7 @@ useHead({
   title: 'Pricing — Create Keepsakes',
   meta: [{
     name: 'description',
-    content: `One card for $${PLANS.single.price.toFixed(2)}. A monthly plan of $${PLANS.creator.price.toFixed(2)} includes 5 print-ready cards. Cancel anytime.`,
+    content: `One card for $${PLANS.single.price.toFixed(2)}. A monthly plan of $${PLANS.creator.price.toFixed(2)} includes ${PLANS.creator.cards} credits for print-ready cards. Cancel anytime.`,
   }],
   link: [{ rel: 'canonical', href: 'https://create.yozzytools.com/pricing' }],
 })
@@ -168,10 +168,10 @@ async function onPaid(info: any) {
 const faqs = [
   {
     q: `What exactly do I get for ${money(PLANS.creator.price)} a month?`,
-    a: 'Five cards a month, at full print resolution — 300 DPI, sized for a 5 × 7 inch card — with no mark on the file. If you do not use all five, they roll over to the next month instead of disappearing.',
+    a: `${PLANS.creator.cards} credits a month. Each card you make uses one credit, at full print resolution — 300 DPI, sized for a 5 × 7 inch card — with no mark on the file. Unused credits roll over to the next month instead of disappearing.`,
   },
   {
-    q: 'What happens if I need more than five?',
+    q: 'What happens if I run out of credits?',
     a: `Each extra card is ${money(PLANS.single.price)} — the same price as buying one card on its own. You can add them whenever you want, and you will always see the price before you pay.`,
   },
   {

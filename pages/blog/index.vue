@@ -78,7 +78,7 @@
             Start from an occasion, add their photo and their name, and write
             something only you would write.
           </p>
-          <NuxtLink to="/cards" class="ck-btn ck-btn--primary ck-btn--lg">
+          <NuxtLink to="/cards?format=card" class="ck-btn ck-btn--primary ck-btn--lg">
             Make a card
             <span class="i-ph-arrow-right" />
           </NuxtLink>

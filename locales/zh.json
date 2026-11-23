@@ -188,8 +188,6 @@
     "referenceHint": "仅支持人物参考，正面照效果最佳。",
     "model": "模型",
     "aspectRatio": "比例",
-    "count": "数量",
-    "countCapped": "免费版每次最多出 2 张。",
     "styleType": "风格（live）",
     "generateFailed": "图像生成失败",
     "noImages": "还没有图像",

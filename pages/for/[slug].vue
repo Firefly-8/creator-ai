@@ -37,7 +37,7 @@
         <NuxtLink
           v-for="s in aud.scenarios"
           :key="s.id"
-          :to="`/cards?scenario=${s.id}&for=${aud.slug}`"
+          :to="`/cards?scenario=${s.id}&for=${aud.slug}&format=card`"
           class="ck-lp__scen"
         >
           <span class="ck-lp__scen-ico">{{ scenarioIcon(s.id) }}</span>
@@ -85,6 +85,19 @@
       </ol>
     </section>
 
+    <!-- ============ 痛点 → 功能对应 ============ -->
+    <section class="ck-lp__section">
+      <h2 class="ck-lp__h2">The little worries, sorted</h2>
+      <p class="ck-lp__lead">What most people wonder before they start — and what we do about it.</p>
+      <div class="ck-lp__pain">
+        <div v-for="p in painPoints" :key="p.pain" class="ck-lp__pain-row">
+          <p class="ck-lp__pain-q"><span class="i-ph-question" /> {{ p.pain }}</p>
+          <p class="ck-lp__pain-a">{{ p.feature }}</p>
+          <span class="ck-lp__pain-where">{{ p.where }}</span>
+        </div>
+      </div>
+    </section>
+
     <!-- ============ FAQ ============ -->
     <section class="ck-lp__section ck-lp__faq-wrap">
       <h2 class="ck-lp__h2">Questions about {{ aud.short.toLowerCase() }} cards</h2>
@@ -119,7 +132,10 @@
 
 <script setup lang="ts">
 import { assetUrl } from '~/utils/assets'
-import { AUDIENCES, getAudience, type AudienceDef } from '~/utils/audiences'
+import { AUDIENCES, getAudience, PAIN_POINTS, type AudienceDef } from '~/utils/audiences'
+
+/** 场景页共用的痛点→功能对应表 */
+const painPoints = PAIN_POINTS
 import { getScenario } from '~/utils/imageScenarios'
 
 definePageMeta({ layout: 'marketing' })
@@ -136,7 +152,7 @@ if (!getAudience(String(route.params.slug || ''))) {
 // 第一个场景作为主 CTA
 const primaryHref = computed(() => {
   const s = aud.value?.scenarios[0]
-  return s ? `/cards?scenario=${s.id}&for=${aud.value!.slug}` : '/cards'
+  return s ? `/cards?scenario=${s.id}&for=${aud.value!.slug}&format=card` : '/cards?format=card'
 })
 
 // 站内互链：其他 7 个受众
@@ -424,6 +440,34 @@ useHead(() => {
 }
 .ck-lp__steps h3 { font-size: 1.05rem; margin: 0 0 0.4rem; }
 .ck-lp__steps p { font-size: 0.92rem; color: var(--lp-ink-2); line-height: 1.55; margin: 0; }
+
+/* ---------- 痛点 → 功能对应 ---------- */
+.ck-lp__pain { max-width: 900px; display: grid; gap: 0.75rem; }
+.ck-lp__pain-row {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 1rem;
+  align-items: start;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(58, 46, 38, 0.1);
+  border-radius: 0.7rem;
+  background: #fff;
+}
+@media (max-width: 720px) { .ck-lp__pain-row { grid-template-columns: 1fr; gap: 0.35rem; } }
+.ck-lp__pain-q {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--lp-ink);
+}
+.ck-lp__pain-q .i-ph-question { color: var(--lp-coral); margin-right: 0.3rem; }
+.ck-lp__pain-a { margin: 0; font-size: 0.9rem; line-height: 1.55; color: var(--lp-ink-2); }
+.ck-lp__pain-where {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--lp-coral);
+  white-space: nowrap;
+}
 
 /* ---------- FAQ ---------- */
 .ck-lp__faq { max-width: 780px; }

@@ -18,7 +18,7 @@
           </p>
 
           <div class="ck-hero__cta">
-            <NuxtLink to="/cards" class="ck-btn ck-btn--primary">
+            <NuxtLink to="/cards?format=card" class="ck-btn ck-btn--primary">
               Create their card
               <span class="i-ph-arrow-right text-[17px]" />
             </NuxtLink>
@@ -32,9 +32,40 @@
             </NuxtLink>
           </div>
 
+          <!-- 搜索入口（原型 home 页的关键词入口，2026-11-23）：本地过滤，不依赖后端 -->
+          <div class="ck-search">
+            <label class="ck-search__field">
+              <span class="i-ph-magnifying-glass" />
+              <input
+                v-model="searchQuery"
+                type="search"
+                placeholder="Try: birthday card for mum, unicorn, thank you…"
+                autocomplete="off"
+                @focus="searchFocused = true"
+                @keydown.esc="searchFocused = false"
+              />
+            </label>
+            <div v-if="searchFocused && searchQuery.trim()" class="ck-search__results">
+              <NuxtLink
+                v-for="r in searchResults"
+                :key="r.key"
+                :to="r.to"
+                class="ck-search__result"
+                @click="searchFocused = false; searchQuery = ''"
+              >
+                <span class="i-ph-magnifying-glass" />
+                <span>{{ r.label }}</span>
+                <span class="ck-search__kind">{{ r.kind }}</span>
+              </NuxtLink>
+              <p v-if="!searchResults.length" class="ck-search__none">
+                No match — try a person (mum, dad) or an occasion (birthday, thank you).
+              </p>
+            </div>
+          </div>
+
           <ul class="ck-hero__facts">
-            <li><span class="i-ph-check-circle" /> Preview free</li>
-            <li><span class="i-ph-check-circle" /> From ${{ PLANS.single.price.toFixed(2) }}</li>
+            <li><span class="i-ph-check-circle" /> Download &amp; print it yourself, or send it online</li>
+            <li><span class="i-ph-check-circle" /> Flat invite or folded card — ready for a printer</li>
             <li><span class="i-ph-check-circle" /> No design skills needed</li>
             <li><span class="i-ph-check-circle" /> Photos deleted in 30 days</li>
           </ul>
@@ -72,6 +103,24 @@
       </div>
     </section>
 
+    <!-- ================= B2b · 两种格式（竞品从入口就分 Invite / Card） ================= -->
+    <section class="ck-band ck-band--cream">
+      <div class="ck-wrap">
+        <h2 class="ck-h2">An invitation, or a card to keep?</h2>
+        <p class="ck-sub">
+          Pick the format at the start. It decides what you fill in and how the finished card prints.
+        </p>
+        <div class="ck-why">
+          <NuxtLink v-for="f in formats" :key="f.title" :to="f.to" class="ck-why__item ck-why__item--link">
+            <span class="ck-why__icon" :class="`i-${f.icon}`" />
+            <h3 class="ck-why__title">{{ f.title }}</h3>
+            <p class="ck-why__text">{{ f.text }}</p>
+            <span class="ck-why__go">{{ f.cta }} <span class="i-ph-arrow-right" /></span>
+          </NuxtLink>
+        </div>
+      </div>
+    </section>
+
     <!-- ================= B3 · 按人分类 ================= -->
     <section class="ck-band ck-band--white">
       <div class="ck-wrap">
@@ -95,7 +144,7 @@
             Their pets in festive jumpers. A family joke. A card that is
             properly theirs — and not the same one in every shop window.
           </p>
-          <NuxtLink to="/cards?scenario=christmas" class="ck-btn ck-btn--cream">
+          <NuxtLink to="/cards?scenario=christmas&format=card" class="ck-btn ck-btn--cream">
             Make a Christmas card
           </NuxtLink>
         </div>
@@ -150,7 +199,7 @@
         <p class="ck-lede ck-lede--light">
           Make the first one for free. Only pay when it is right.
         </p>
-        <NuxtLink to="/cards" class="ck-btn ck-btn--primary ck-btn--lg">
+        <NuxtLink to="/cards?format=card" class="ck-btn ck-btn--primary ck-btn--lg">
           Create their card
           <span class="i-ph-arrow-right text-[18px]" />
         </NuxtLink>
@@ -162,12 +211,51 @@
 <script setup lang="ts">
 import HomeAudience from '~/components/home/HomeAudience.vue'
 import { PLANS } from '~/utils/pricing'
+import { IMAGE_SCENARIOS } from '~/utils/imageScenarios'
+import { AUDIENCES, audienceUrl } from '~/utils/audiences'
 
 definePageMeta({ layout: 'marketing' })
 
 // 登录用户才显示「我的作品」入口（未登录时给的是 Log in / Start free）
 const { user, authReady } = useAuth()
 const loggedIn = computed(() => authReady.value && !!user.value)
+
+// ── 首页搜索（原型 home 的关键词入口，2026-11-23）────────────
+// 本地过滤场景 + 人群，不查后端：受众/场景数据都是静态的，够用且零延迟。
+interface SearchHit {
+  key: string
+  label: string
+  kind: string
+  to: string
+  haystack: string
+}
+const searchIndex = ref<SearchHit[]>([
+  ...IMAGE_SCENARIOS.map(s => ({
+    key: `scene-${s.id}`,
+    label: s.label,
+    kind: 'Occasion',
+    to: `/cards?scenario=${encodeURIComponent(s.id)}&format=card`,
+    haystack: `${s.label} ${s.id} ${(s as any).keywords || ''}`.toLowerCase(),
+  })),
+  ...AUDIENCES.map(a => ({
+    key: `who-${a.slug}`,
+    label: `Card for ${a.short}`,
+    kind: 'Who it is for',
+    to: audienceUrl(a.slug),
+    haystack: `${a.short} ${a.h1} ${a.slug}`.toLowerCase(),
+  })),
+])
+const searchQuery = ref('')
+const searchFocused = ref(false)
+const searchResults = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  // 多词 AND：命中每个词才算（"birthday mum" 要两个都沾边）
+  const words = q.split(/\s+/)
+  return searchIndex.value
+    .filter(hit => words.every(w => hit.haystack.includes(w)))
+    .slice(0, 6)
+})
 
 useHead({
   title: 'Create Keepsakes — Personalised cards & canvas prints for the people you love',
@@ -209,6 +297,26 @@ const steps = [
   {
     title: 'Make their day',
     text: 'Download it, share it, or print it on real card stock at 5 × 7 inches.',
+  },
+]
+
+// 双格式入口（2026-11-23：竞品从入口就分 Invite / Card）
+// 每张卡直接带 ?format= 进弹窗，不靠 cards.vue 的默认值兜底 ——
+// 从 Invitation 卡进来就必须是邀请函字段，从 Greeting card 卡进来就是贺卡字段。
+const formats = [
+  {
+    icon: 'ph-calendar-heart',
+    title: 'Invitation — one flat card',
+    text: 'For a party or a get-together. The date and place are printed on the front. Print on one side of card stock and cut to size.',
+    to: '/cards?format=invite',
+    cta: 'Make an invitation',
+  },
+  {
+    icon: 'ph-envelope-open',
+    title: 'Greeting card — folded, with a cover',
+    text: 'For a birthday, a thank you, or just because. The picture and your words go inside; the cover is left clean. Print and fold down the middle.',
+    to: '/cards?format=card',
+    cta: 'Make a card',
   },
 ]
 
@@ -261,7 +369,7 @@ const gallery = [
 const faqs = [
   {
     q: 'What does a card cost?',
-    a: `Cards start at $${PLANS.single.price.toFixed(2)} each. A monthly plan of $${PLANS.creator.price.toFixed(2)} includes five cards, and a one-off pack of $${PLANS.lifetime.price.toFixed(2)} gives you twenty that never expire. You can see the cost before you pay anything.`,
+    a: `Cards start at $${PLANS.single.price.toFixed(2)} each. A monthly plan of $${PLANS.creator.price.toFixed(2)} includes ${PLANS.creator.cards} credits, and a one-off pack of $${PLANS.lifetime.price.toFixed(2)} gives you ${PLANS.lifetime.cards} that never expire. You can see the cost before you pay anything.`,
   },
   {
     q: 'Do I need any design skills?',
@@ -444,6 +552,56 @@ const faqs = [
   margin-top: 2rem;
 }
 
+/* 首页搜索入口（原型 home 关键词入口，2026-11-23） */
+.ck-search { position: relative; margin-top: 1.5rem; max-width: 28rem; }
+.ck-search__field {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid var(--ck-line);
+  border-radius: 999px;
+  background: var(--ck-white);
+  color: var(--ck-ink-2);
+}
+.ck-search__field:focus-within { border-color: var(--ck-coral); }
+.ck-search__field input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  color: var(--ck-ink);
+}
+.ck-search__field input::placeholder { color: #a08f81; }
+.ck-search__results {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  border: 1px solid var(--ck-line);
+  border-radius: 0.9rem;
+  background: var(--ck-white);
+  box-shadow: 0 20px 40px -20px rgba(42, 36, 32, 0.35);
+}
+.ck-search__result {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  color: var(--ck-ink);
+  text-decoration: none;
+}
+.ck-search__result:hover, .ck-search__result:focus { background: var(--ck-cream); }
+.ck-search__result .i-ph-magnifying-glass { color: var(--ck-coral); }
+.ck-search__kind { margin-left: auto; font-size: 0.75rem; color: #a08f81; }
+.ck-search__none { margin: 0; padding: 0.9rem 1rem; font-size: 0.85rem; color: var(--ck-ink-2); }
+
 .ck-hero__facts {
   display: flex;
   flex-wrap: wrap;
@@ -579,6 +737,26 @@ const faqs = [
   padding: 1.6rem 1.4rem;
   border-radius: 1.1rem;
   background: var(--ck-cream);
+}
+/* 双格式卡可点击：整张卡就是入口（对齐竞品从入口分 Invite / Card） */
+.ck-why__item--link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.ck-why__item--link:hover {
+  box-shadow: 0 6px 20px rgba(60, 40, 25, 0.1);
+  transform: translateY(-2px);
+}
+.ck-why__go {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ck-coral-deep);
 }
 .ck-why__icon {
   display: inline-grid;

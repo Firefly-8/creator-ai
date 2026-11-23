@@ -13,11 +13,13 @@
  *     实际只扣 $9.99（少收钱 + 虚假宣传）。
  *     同步脚本：node scripts/paypal-check.mjs --sync-price
  *
- * 档位梯度（故意做成「买得越多单价越低」，但别太狠）：
- *   单张      $6.99  → $6.99 / 张
- *   月付 5 张 $19.99 → $4.00 / 张
- *   买断 20 张 $59.99 → $3.00 / 张
- *   （之前买断包是 $1.00/张，比单张便宜 75% —— 单张卖不动，定价是坏的）
+ * 档位梯度（2026-11-20 按原型稿改为「积分制」口径）：
+ *   单张      $6.99  → 1 积分
+ *   月付      $19.99 → 200 积分
+ *   买断 20 张 $59.99 → 20 积分
+ *   ⚠️ 用户口径：月付给 200 积分（一次生成扣 1），PayPal 扣款金额不变。
+ *      代价：月付单价 $0.10 远低于买断 $3.00 —— 买断包不再有价格优势。
+ *      这是产品决策，不是笔误；改回梯度只需把下面的 creator.cards 调回 5。
  */
 
 export type PlanId = 'free' | 'single' | 'creator' | 'lifetime'
@@ -59,8 +61,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
     description: 'Try it out. No card needed.',
     cta: 'Start free',
     features: [
-      '2 free generations a day (1 if your email is not verified)',
-      'Each go makes up to 2 pictures — pick the one you like',
+      '3 free generations in total — no daily reset',
+      'One card per generation',
       '1024 px download',
       'Small mark on the file',
       'Your photos stay private',
@@ -88,14 +90,14 @@ export const PLANS: Record<PlanId, PlanDef> = {
     kind: 'subscription',
     price: 19.99,
     currency: 'USD',
-    cards: 5,
+    cards: 200,
     interval: 'month',
-    label: 'Monthly plan (5 cards a month)',
+    label: 'Monthly plan (200 credits a month)',
     description: 'For when it is your turn to send one.',
     cta: 'Get Monthly',
     popular: true,
     features: [
-      '5 cards every month',
+      '200 credits every month',
       '2K, no watermark',
       '300 DPI print file',
       'Canvas prints (16×20 / A3)',
@@ -176,31 +178,29 @@ export function planCards(id: string): number {
 }
 
 /**
- * 免费用户每天的额度（未验证邮箱 / 已验证邮箱）
+ * 免费额度。
  *
- * 为什么免费能到 2 张/天还不影响付费：
+ * ⚠️ 2026-11-20 按原型稿改：图片从「2 次/天（每日重置）」改成「注册送 3 次、用完为止」。
+ *    image 用 `usage_date = LIFETIME_SENTINEL` 的行累计，永不按天重置（见 server/utils/daily-usage.ts）。
+ *    music / text 仍是按天的每日额度（这两类不是本次改造范围）。
+ *
+ * 为什么免费 3 次不影响付费：
  *   免费出的是**带水印的 1024px 预览图** —— 好看但不能印。
  *   付费点是无水印 + 2K + 300 DPI 打印规格，不是「次数」。
- *   所以免费额度再高也换不走一张能打印的成品。
  */
 export const FREE_DAILY_LIMITS: Record<UsageKind, { unverified: number; verified: number }> = {
-  image: { unverified: 1, verified: 2 },
+  // 两条都设 3：新规则不再区分邮箱是否验证（都送 3 次）。
+  // unverified 保留字段是为了兼容 music/text 共用结构，image 实际读 verified 值。
+  image: { unverified: 3, verified: 3 },
   music: { unverified: 1, verified: 1 },
   text: { unverified: 3, verified: 10 },
 }
 
-/**
- * 免费档**单次生成最多出几张**
- *
- * ⚠️ 为什么要有这个上限（成本闸门）：
- *   免费额度是「按次」计的（2 次/天），但 MiniMax 是**按张**收钱的。
- *   不收窄的话，免费用户一天 2 次 × 4 张 = 8 张图 = 成本 4 倍。
- *   收窄到 2 张 → 一天最多 4 张（成本 2 倍），用户仍能一次出 2 个候选挑一张。
- *
- * 付费档一次出 4 个候选（草稿，用户只拿走 1 张），不收窄。
- */
-export const FREE_MAX_IMAGES_PER_RUN = 2
-export const PAID_MAX_IMAGES_PER_RUN = 4
+/** 免费图片「累计 3 次」用的哨兵日期——占 daily_usage.usage_date 一个固定槽位，不随 UTC 日期变 */
+export const LIFETIME_SENTINEL = '__lifetime__'
+
+// 2026-11-23 起一次固定出 1 张，不再有「单次张数上限」概念。
+// 原先免费/付费档各有一个「单次最多几张」的常量，已随「一次几张」选项一并移除。
 
 /**
  * 付费用户每天的额度（**只有文案和音乐**，图片走 credits）

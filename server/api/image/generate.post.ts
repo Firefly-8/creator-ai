@@ -11,7 +11,6 @@ import { generateImage, optimizeImagePrompt } from '../../utils/minimax'
 import { buildSubjectReference, type SubjectReference } from '../../utils/image-reference'
 import { buildScenarioPrompt } from '../../../utils/imageScenarios'
 import { consumeQuota, refundQuota } from '../../utils/daily-usage'
-import { FREE_MAX_IMAGES_PER_RUN } from '../../../utils/pricing'
 import { recordGenerationFailure } from '../../utils/failure-monitor'
 
 export default defineEventHandler(async (event) => {
@@ -49,6 +48,10 @@ export default defineEventHandler(async (event) => {
       String(body?.style || ''),
       String(body?.name || ''),
       String(body?.extra || ''),
+      // 卡片格式的 prompt 微调。只接受受控常量，防止客户端注入任意 prompt 片段。
+      body?.formatClause === 'invite' ? 'a clean flat invitation artwork, space at the bottom for event details'
+        : body?.formatClause === 'card' ? 'an inside-page illustration for a folded greeting card, centred composition, calm background for lettering'
+          : '',
     )
     if (built) {
       prompt = built.prompt
@@ -61,17 +64,14 @@ export default defineEventHandler(async (event) => {
   }
 
   // 2.2 额度（服务端强制，客户端绕不过）
-  //     ⚠️ **按次扣**：一次生成 = 1 个单位，不管出几张。
-  //        4 个候选是草稿，用户只拿走 1 张 —— 按张扣等于「做 1 张卡付 4 张的钱」。
-  //        免费档每天 2 次 → 一次最多出 FREE_MAX_IMAGES_PER_RUN 张（成本闸门，
-  //        否则一次 4 张 = 成本 4 倍）；付费档一次出 4 个候选。
+  //     **按次扣**：一次生成 = 1 个单位。
+  //     2026-11-23 起固定一次出 1 张 —— 不做「一次几张」选项，成本可控。
   //     必须在调 MiniMax 之前扣 —— 否则并发请求会超发。
   //     失败时按同样的单位数退还（用户没拿到就不该扣）。
   const imageQuota = await consumeQuota(event, auth.uid, 'image', 1)
 
-  // 单次出图张数上限：免费档收窄（成本闸门），付费/无限档 4 张
-  const maxPerRun = imageQuota.mode === 'daily' ? FREE_MAX_IMAGES_PER_RUN : 4
-  const count = Math.min(maxPerRun, Math.max(1, body?.n || 1))
+  // 固定 1 张：忽略客户端传来的 n，防止绕过（前端也写死 n:1）
+  const count = 1
 
   // 3. 自动 Prompt 优化（深度优化走两步，普通优化走一步）
   //    场景化生图的 prompt 已经按「场景+画风」拼好了，不能再被优化器改写，
@@ -102,9 +102,8 @@ export default defineEventHandler(async (event) => {
   }
 
   // 4. 创建图片记录 + 任务
-  //    ⚠️ n > 1 时**每张图一条记录**（以前只建一条、只记第一张，
-  //    前端拿不到多张候选，也没法分别下载）。
-  //    第一条记录先建好占着（失败时状态回写用），多余的图生成后再补记录。
+  //    固定 1 张，但处理循环仍按「每张图一条记录」写，兼容模型偶尔多给图的情况。
+  //    记录先建好占着（失败时状态回写用）。
   const recordMeta = {
     title: String(body?.title || ''),
     prompt,

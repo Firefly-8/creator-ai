@@ -145,8 +145,6 @@
     "referenceHint": "Apenas retrato de personagem, frente funciona melhor.",
     "model": "Modelo",
     "aspectRatio": "Proporção",
-    "count": "Quantidade",
-    "countCapped": "Plano gratuito: até 2 imagens de cada vez.",
     "styleType": "Estilo (live)",
     "generateFailed": "Falha ao gerar imagem",
     "noImages": "Sem imagens ainda",

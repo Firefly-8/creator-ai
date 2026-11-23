@@ -34,6 +34,16 @@ export interface ImageStyleDef {
   label: string
   /** 英文画风描述，拼进 prompt */
   prompt: string
+  /** 给用户看的中文/英文一句话说明（模板里 {{ st.desc }} 用） */
+  desc?: string
+  /**
+   * 画风缩略图在 R2 上的路径（相对 ASSET_BASE）。
+   * 11 个画风用同一束花做主体，只有风格不同 —— 让用户一眼看懂差别。
+   * 没有缩略图时步骤三回退到语义图标，不影响出图逻辑。
+   */
+  thumb?: string
+  /** 无缩略图时用的语义矢量图标（Phosphor） */
+  icon: string
   /** 实测过画风能生效 */
   proven?: boolean
   /**
@@ -67,6 +77,7 @@ export interface ImageScenarioDef {
   /** 是否需要上传照片（传了就是 i2i 主体参考） */
   needReference: boolean
   aspectRatio: string
+  /** 固定 1 张（2026-11-23 起不做「一次几张」选项；字段保留仅为兼容已有数据） */
   count: number
   /** 该场景可选的画风 id；不填则用全部 */
   styles?: string[]
@@ -97,6 +108,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Photograph',
     prompt: 'photorealistic photograph, natural skin tones, sharp focus, professional photography, high detail',
     desc: 'Most lifelike — sharp, photo-quality detail',
+    thumb: 'style-thumbs/photo.webp?v=1',
+    icon: 'ph-camera',
     proven: true,
     i2iSafe: true,
   },
@@ -105,6 +118,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Watercolour',
     prompt: 'watercolor painting, soft wet brush strokes, visible paper texture, pastel colors, hand painted illustration',
     desc: 'Soft hand-painted look. The safest choice for a card.',
+    thumb: 'style-thumbs/watercolor.webp?v=1',
+    icon: 'ph-paint-brush',
     proven: true,
     i2iSafe: true,
   },
@@ -113,6 +128,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Oil Painting',
     prompt: 'oil painting on canvas, thick impasto brush strokes, rich oil colors, museum fine art portrait',
     desc: 'Thick oil paint, museum style. Looks great on a wall.',
+    thumb: 'style-thumbs/oil.webp?v=1',
+    icon: 'ph-palette',
     proven: true,
     i2iSafe: true,
   },
@@ -121,6 +138,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Oil Pastel',
     prompt: 'oil pastel drawing on textured paper, soft chalky strokes, gentle blended colors, nostalgic handmade feel',
     desc: 'Soft chalky pastels. Gentle and nostalgic.',
+    thumb: 'style-thumbs/oil-pastel.webp?v=1',
+    icon: 'ph-pencil',
     proven: true,
     i2iSafe: true,
   },
@@ -129,6 +148,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Vintage Postcard',
     prompt: 'vintage postcard illustration, faded retro colors, halftone print texture, weathered paper edges, 1950s travel poster style',
     desc: 'Faded travel-postcard look, old-world and warm.',
+    thumb: 'style-thumbs/vintage-postcard.webp?v=1',
+    icon: 'ph-stamp',
     proven: true,
   },
   {
@@ -136,6 +157,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Paper Cut',
     prompt: 'paper cut art, layered construction paper silhouettes, clean bold shapes, soft drop shadows, folk art style',
     desc: 'Cut-paper collage. Clean, layered and bright.',
+    thumb: 'style-thumbs/paper-cut.webp?v=1',
+    icon: 'ph-scissors',
     proven: true,
     i2iSafe: true,
   },
@@ -144,6 +167,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Impressionist',
     prompt: 'impressionist oil painting, loose visible brushwork, luminous broken color, plein air light, museum quality',
     desc: 'Loose impressionist brushwork. Soft and pretty.',
+    thumb: 'style-thumbs/impressionist.webp?v=1',
+    icon: 'ph-paint-brush-broad',
     proven: true,
   },
   {
@@ -151,6 +176,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Colourised Photo',
     prompt: 'restored vintage color photograph, colorized, sharp focus, natural skin tones, fine grain, 1960s family photograph, archival quality',
     desc: 'An old photo, hand-coloured. Made for memories.',
+    thumb: 'style-thumbs/vintage-color.webp?v=1',
+    icon: 'ph-image-square',
     proven: true,
     i2iSafe: true,
   },
@@ -159,6 +186,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Sepia',
     prompt: 'sepia toned vintage photograph, warm brown monochrome, soft vignette, aged film grain, antique photographic print',
     desc: 'Classic black and white with a sepia tone.',
+    thumb: 'style-thumbs/sepia.webp?v=1',
+    icon: 'ph-hourglass',
     proven: true,
   },
   {
@@ -166,6 +195,8 @@ export const IMAGE_STYLES: ImageStyleDef[] = [
     label: 'Cartoon',
     prompt: 'cute cartoon illustration, bold clean outlines, simple flat shapes, cheerful bright colors, storybook style',
     desc: 'Cute and friendly. Children love this one.',
+    thumb: 'style-thumbs/cartoon.webp?v=1',
+    icon: 'ph-smiley-wink',
     proven: true,
     i2iSafe: true,
   },
@@ -189,7 +220,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'birthday',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['photo', 'watercolor', 'oil-pastel', 'vintage-postcard', 'paper-cut', 'cartoon'],
     template:
       'A warm birthday greeting picture for {name}, {style}, a beautifully decorated cake with lit candles, balloons and confetti, festive bunting, golden warm light, joyful and full of love',
@@ -211,7 +242,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'birthday',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['photo', 'oil', 'oil-pastel', 'vintage-postcard', 'watercolor'],
     template:
       'A grand milestone birthday celebration for {name}, {style}, elegant golden balloons, champagne glasses, cascading flowers, gold and cream luxury palette, deeply sentimental and dignified',
@@ -232,7 +263,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'birthday',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['watercolor', 'oil', 'oil-pastel', 'vintage-postcard', 'photo'],
     template:
       "A tender Mother\'s or Father\'s Day greeting picture for {name}, {style}, a lush garden of roses and carnations, soft morning sunlight, lace and linen textures, warm and deeply grateful",
@@ -255,7 +286,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'family',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['watercolor', 'oil', 'vintage-postcard', 'paper-cut', 'photo'],
     template:
       'A romantic wedding and anniversary greeting for {name}, {style}, delicate white lace and ribbons, champagne gold accents, soft roses, elegant and timeless',
@@ -276,7 +307,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'family',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['watercolor', 'cartoon', 'paper-cut', 'oil-pastel', 'photo'],
     template:
       'A sweet new baby greeting for {name}, {style}, soft clouds and gentle stars, a knitted blanket, warm pastel nursery palette, tender and joyful',
@@ -297,7 +328,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'family',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['photo', 'oil', 'vintage-postcard', 'watercolor', 'paper-cut'],
     template:
       'A proud graduation celebration for {name}, {style}, a mortarboard with tassel, rolled diploma, warm university stone buildings, sunny sky, quietly proud and dignified',
@@ -318,7 +349,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'family',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['oil-pastel', 'oil', 'watercolor', 'vintage-postcard', 'photo'],
     template:
       'A warm retirement and farewell celebration for {name}, {style}, a beach sunset over calm water, a well-loved gardening chair, a glass of champagne, freedom and gratitude in the air',
@@ -341,7 +372,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'kindness',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['watercolor', 'oil-pastel', 'photo', 'vintage-postcard', 'paper-cut'],
     template:
       'A heartfelt thank you greeting for {name}, {style}, a simple table with a bunch of wildflowers and a warm cup of tea, gentle natural light, sincere and understated',
@@ -362,7 +393,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'kindness',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['watercolor', 'paper-cut', 'oil-pastel', 'photo', 'vintage-postcard'],
     template:
       'A gentle get well soon message for {name}, {style}, a bedside window with soft morning light, a small vase of spring flowers, calm muted palette, quiet and caring',
@@ -383,7 +414,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'kindness',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['paper-cut', 'watercolor', 'oil-pastel', 'vintage-postcard', 'photo'],
     template:
       'A quiet and dignified sympathy tribute for {name}, {style}, soft white lilies and a single candle, muted dove grey and ivory palette, peaceful and respectful, no bright colours',
@@ -406,7 +437,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'holiday',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['photo', 'oil-pastel', 'vintage-postcard', 'watercolor', 'paper-cut'],
     template:
       'A magical Christmas greeting picture for {name}, {style}, a beautifully decorated Christmas tree glowing with warm lights, snow falling gently outside a cottage window, deep red and forest green and gold, cosy winter evening',
@@ -427,7 +458,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'holiday',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['watercolor', 'oil-pastel', 'paper-cut', 'photo', 'vintage-postcard'],
     template:
       'A bright spring Easter greeting for {name}, {style}, decorated eggs, spring blossom branches, daffodils and lambs, soft pastel spring palette, fresh and hopeful',
@@ -448,7 +479,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'holiday',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['photo', 'oil-pastel', 'vintage-postcard', 'paper-cut', 'watercolor'],
     template:
       'A warm Hanukkah greeting for {name}, {style}, a menorah with glowing candles, dreidels and a star of david, deep blue night sky, golden candlelight, festive and reverent',
@@ -469,7 +500,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'holiday',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['oil-pastel', 'vintage-postcard', 'watercolor', 'photo', 'paper-cut'],
     template:
       'A radiant Diwali greeting for {name}, {style}, rows of lit diyas, rangoli patterns, marigold garlands, deep indigo night with golden lights, joyful and colourful',
@@ -490,7 +521,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
     group: 'holiday',
     needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['oil-pastel', 'vintage-postcard', 'watercolor', 'photo', 'paper-cut'],
     template:
       'A festive Lunar New Year greeting for {name}, {style}, red lanterns, plum blossom branches, paper cut decorations, lucky red and gold palette, fireworks in the night sky, joyful and auspicious',
@@ -514,7 +545,7 @@ export const IMAGE_SCENARIOS: ImageScenarioDef[] = [
         headlineSpace: false,
 needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['impressionist', 'oil', 'watercolor', 'vintage-postcard', 'photo'],
     template:
       'A nostalgic painting of a small hometown street, {style}, a row of old stone and brick houses, a church spire in the distance, quiet tree-lined road, warm late afternoon light, deeply nostalgic and timeless',
@@ -530,7 +561,7 @@ needReference: false,
         headlineSpace: false,
 needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['impressionist', 'oil', 'watercolor', 'vintage-postcard', 'photo'],
     template:
       'A beautiful painting of a holiday destination, {style}, a sweeping coastline with a distant headland, sailboats on calm water, cypress trees, golden Mediterranean light, peaceful travel memory',
@@ -546,7 +577,7 @@ needReference: false,
         headlineSpace: false,
 needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['impressionist', 'oil', 'watercolor', 'photo', 'vintage-postcard'],
     template:
       'A warm painting of a beloved family home, {style}, a stone cottage with a red door and window boxes full of flowers, a garden path, soft afternoon sunlight, safe and welcoming',
@@ -562,7 +593,7 @@ needReference: false,
         headlineSpace: false,
 needReference: false,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['impressionist', 'watercolor', 'oil', 'photo', 'oil-pastel'],
     template:
       'A luminous painting of a flourishing garden, {style}, overflowing flower borders, roses and lavender and ivy, a weathered wooden bench, morning light through the leaves, serene and abundant',
@@ -578,7 +609,7 @@ needReference: false,
         headlineSpace: false,
 needReference: false,
     aspectRatio: '1:1',
-    count: 4,
+    count: 1,
     styles: ['impressionist', 'oil', 'watercolor', 'paper-cut', 'vintage-postcard'],
     template:
       'A four seasons landscape painting of the same countryside scene, {style}, spring blossom, summer meadow, autumn harvest gold, winter snow, harmonious palette, classic wall art',
@@ -595,7 +626,7 @@ needReference: false,
     group: 'memory',
     needReference: true,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['vintage-color', 'photo', 'oil-pastel', 'watercolor'],
     template:
       'The same photograph from the reference, restored and colorized, {style}, clean sharp detail, natural colours, no blur, no scratches, faces preserved exactly as they were, archival restoration quality',
@@ -610,7 +641,7 @@ needReference: false,
     group: 'memory',
     needReference: true,
     aspectRatio: '3:4',
-    count: 4,
+    count: 1,
     styles: ['photo', 'oil', 'vintage-color', 'watercolor'],
     template:
       'A warm family reunion portrait of the same people from the reference photo, {style}, gathered together outdoors in soft golden light, natural relaxed expressions, everyone recognisable, joyful and nostalgic',
@@ -625,7 +656,7 @@ needReference: false,
     group: 'memory',
     needReference: true,
     aspectRatio: '1:1',
-    count: 4,
+    count: 1,
     styles: ['photo', 'watercolor', 'oil', 'cartoon', 'oil-pastel'],
     template:
       'A beautiful portrait of the same pet from the reference photo, {style}, faithful to their markings and colouring, looking directly at the camera, soft studio light, warm and charming',
@@ -681,7 +712,9 @@ export function buildScenarioPrompt(
   scenarioId: string,
   styleId: string,
   name = '',
-  extra = ''
+  extra = '',
+  /** 卡片格式的 prompt 微调（选填；不传则与旧行为完全一致） */
+  formatClause = ''
 ): { prompt: string; scenario: ImageScenarioDef; style: ImageStyleDef } | null {
   const scenario = getScenario(scenarioId)
   if (!scenario) return null
@@ -700,6 +733,9 @@ export function buildScenarioPrompt(
   }
 
   const keywords = scenario.keywords ? `, ${scenario.keywords}` : ''
+  // 卡片格式（邀请函单卡 / 贺卡对开内页）的微调，放在关键词之后、负面约束之前。
+  // 只接受受控常量（由 cardFormats.ts 传进来），不直接拼用户输入。
+  const format = formatClause && formatClause.length <= 160 ? `, ${formatClause}` : ''
 
   // ⚠️ 负面约束是硬需求，不是锦上添花。
   // 实测（2026-10-20，showcase 12 张）：模型在画面里自己写字必翻车 ——
@@ -713,7 +749,7 @@ export function buildScenarioPrompt(
     prompt += HEADLINE_SPACE_CLAUSE
   }
 
-  return { prompt: `${prompt}${keywords}`, scenario, style }
+  return { prompt: `${prompt}${keywords}${format}`, scenario, style }
 }
 
 /** 画面里不允许出现任何文字/数字/签名（实测：不加就会自己写字） */

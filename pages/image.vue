@@ -248,25 +248,6 @@
           </div>
         </div>
 
-        <!-- Count (icon buttons) -->
-        <div class="space-y-2">
-          <span class="field-label">{{ $t('image.count') }}</span>
-          <div class="flex gap-2">
-            <button
-              v-for="n in countOptions"
-              :key="n"
-              type="button"
-              class="count-btn"
-              :class="{ 'is-active': count === n }"
-              @click="count = n"
-            >
-              {{ n }}
-            </button>
-          </div>
-          <!-- ⚠️ 免费档单次最多出 2 张（成本闸门）：别让用户选了 4 只出 2 却不解释 -->
-          <p v-if="countCapped" class="field-hint">{{ $t('image.countCapped') }}</p>
-        </div>
-
         <!-- Style Type (icon buttons, only for image-01-live) -->
         <div v-if="model === 'image-01-live'" class="space-y-2">
           <span class="field-label">{{ $t('image.styleType') }}</span>
@@ -529,15 +510,7 @@ const promptOptimizer = ref(true)
 const deepOptimize = ref(false)
 const model = ref<'image-01' | 'image-01-live'>('image-01')
 const aspectRatio = ref('1:1')
-const count = ref(1)
-/**
- * 单次最多出几张 —— 免费档 2 张、付费 4 张（服务端也会 clamp）。
- * ⚠️ 场景预设里全是 count: 4，不收窄的话免费用户选场景就被静默砍成 2 张，
- *    而且界面上看不出来为什么。
- */
-const maxPerRun = ref(4)
-const countOptions = computed(() => [1, 2, 3, 4].filter(n => n <= maxPerRun.value))
-const countCapped = computed(() => maxPerRun.value < 4)
+// 一次固定出 1 张（2026-11-23 产品决定：不做「一次几张」选项）
 const styleType = ref<(typeof IMAGE_LIVE_STYLES)[number]>('Comic')
 const uploadId = ref<string | null>(null)
 const refName = ref('')
@@ -623,27 +596,15 @@ onMounted(() => {
   //    现在改成：**先进去看清楚能做什么，点 Generate 时才要登录**
   //    （generate() 里已有 requireAuth()）。
   window.addEventListener('keydown', onKeydown)
-  // 拉一次额度：只为知道「单次最多出几张」（免费 2 / 付费 4）
-  // 失败就算了 —— 服务端还会 clamp，最多出 2 张而已。
-  useApi().get<{ image?: { maxPerRun?: number } }>('/api/user/usage')
-    .then((res) => {
-      const m = res.image?.maxPerRun
-      if (m && m > 0) {
-        maxPerRun.value = m
-        if (count.value > m) count.value = m
-      }
-    })
-    .catch(() => {})
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
-/** 选场景：把画风/比例/张数/是否要参考图一次性切好 */
+/** 选场景：把画风/比例/是否要参考图一次性切好 */
 function selectScenario(s: ImageScenarioDef) {
   scenarioId.value = s.id
   const allowed = s.styles?.length ? s.styles : IMAGE_STYLES.map(x => x.id)
   if (!allowed.includes(styleId.value)) styleId.value = allowed[0]
   aspectRatio.value = s.aspectRatio
-  count.value = s.count
   if (s.needReference) {
     mode.value = 'i2i'
   } else {
@@ -796,7 +757,7 @@ async function generate() {
         model: useScenario ? undefined : model.value,
         mode: mode.value,
         aspectRatio: aspectRatio.value,
-        n: count.value,
+        n: 1,
         promptOptimizer: promptOptimizer.value,
         deepOptimize: deepOptimize.value,
         styleType: model.value === 'image-01-live' ? styleType.value : null,
@@ -806,7 +767,7 @@ async function generate() {
     })
     promptFinal.value = res.promptFinal
     const notes = res.notes ? `${res.notes} · ` : ''
-    statusText.value = `Generated ${res.images.length} images`
+    statusText.value = 'Generated 1 image'
     if (notes) optimizeNotes.value = notes
     await refresh()
   } catch (err: any) {
@@ -1204,33 +1165,5 @@ useHead({
 }
 .ratio-btn.is-active .ratio-btn__label {
   color: #b4a9ff;
-}
-
-/* —— Count Buttons —— */
-.count-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 0.6rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  color: var(--ink-2, #d0cbe0);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.count-btn:hover {
-  border-color: rgba(139, 124, 255, 0.3);
-  background: rgba(139, 124, 255, 0.08);
-  color: #fff;
-}
-.count-btn.is-active {
-  border-color: rgba(139, 124, 255, 0.5);
-  background: rgba(139, 124, 255, 0.15);
-  color: #fff;
-  box-shadow: 0 0 0 1px rgba(139, 124, 255, 0.3);
 }
 </style>

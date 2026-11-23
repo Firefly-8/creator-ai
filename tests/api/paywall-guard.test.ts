@@ -79,17 +79,70 @@ describe('付费点 — 额度文案要说实话', () => {
     const src = read('utils/pricing.ts')
     // ⚠️ 2026-10-27 改成按次：一次生成 = 1 次，出几张都算这 1 次。
     //    写 "pictures" 会让用户以为"选 4 张就扣 4 次"。
-    expect(src).toContain('2 free generations a day')
-    expect(src).not.toContain('2 free cards a day')
-    expect(src).not.toContain('2 free pictures a day')
+    expect(src).toContain('3 free generations in total')
+    expect(src).not.toContain('free cards a day')
+    expect(src).not.toContain('free pictures a day')
   })
 
-  it('生成页要说清楚额度是"次"，并说清一次能出几张', () => {
+  it('生成页要说清楚额度是"次"，不再出现「一次几张」选择器', () => {
     const src = read('pages/cards.vue')
     expect(src).toMatch(/free generation/)
-    // 单次上限也要露出来（用户得知道一次能拿几个候选）
-    expect(src).toContain('maxPerRun')
+    // 2026-11-23：固定一次 1 张，选项和单次上限字段全部移除
+    expect(src).not.toContain('maxPerRun')
+    expect(src).not.toContain('countChoice')
+    expect(src).not.toContain('How many options?')
     expect(src).not.toMatch(/one go will make as many as you have left/i)
+  })
+
+  it('创作流程是「单弹窗一次填完」，不再是三步向导（2026-11-23 对齐原型）', () => {
+    const src = read('pages/cards.vue')
+    // 参数弹窗 + 一次填完的分区
+    expect(src).toContain('ck-formmodal')
+    expect(src).toContain('formOpen')
+    expect(src).toContain('openForm')
+    // 三步向导的状态与导航全清掉
+    expect(src).not.toContain('stepLabels')
+    expect(src).not.toContain('goNext')
+    expect(src).not.toContain('goBack')
+    expect(src).not.toContain('ck-stepsbar')
+    // 弹窗层级高于 Cookie 条(100)、低于登录弹窗(120)：盖住 cookie 又不妨碍登录续跑
+    expect(src).toMatch(/\.ck-formmodal\s*\{[^}]*z-index:\s*110/)
+  })
+
+  it('弹窗是「一屏主表单 + 二级子页」，不是全平铺（2026-11-23 竞品 UX 对齐）', () => {
+    const src = read('pages/cards.vue')
+    // 主屏：场合/风格/照片都收成内联当前值的 chip，加 More options 折叠
+    expect(src).toContain('ck-mainform')
+    expect(src).toContain('ck-valuechip')
+    expect(src).toContain('ck-minichip')
+    expect(src).toContain('class="ck-moreopt"')
+    // 二级子页：场合/风格/照片三页，带返回栈
+    expect(src).toContain("openSub('occasion')")
+    expect(src).toContain("openSub('style')")
+    expect(src).toContain("openSub('photo')")
+    expect(src).toContain('function closeSub()')
+    expect(src).toContain('ck-sub__back')
+    // Best match 一等公民（对齐竞品渐变边框 + 对勾）
+    expect(src).toContain('ck-style--best')
+    expect(src).toContain('ck-style__check')
+    expect(src).toContain('function pickBestMatch()')
+    // 旧的平铺分区编号已移除（结果区仍用 ck-sec，但不能有「第1/2/3步」的分区号）
+    expect(src).not.toContain('ck-sec__num')
+    expect(src).not.toContain('What are we making?')
+    expect(src).not.toContain('Add their photo and name')
+    expect(src).not.toContain('Pick a look')
+  })
+
+  it('免费额度是累计 3 次、按完后跳付费墙，文案不能再说"今天/每日"', () => {
+    const src = read('pages/cards.vue')
+    // 后端已改成注册送 3 次、累计不重置（LIFETIME_SENTINEL）
+    expect(src).not.toMatch(/left today/i)
+    expect(src).not.toMatch(/today's free/i)
+    expect(src).not.toMatch(/Daily limit reached/i)
+    expect(src).not.toMatch(/generations every day/i)
+    // 额度用完：按钮去付费墙，不是 disabled
+    expect(src).toContain('handleMake')
+    expect(src).toContain('Get ${PLANS.creator.cards} credits')
   })
 
   it('定价页不能承诺"无需注册"（下单接口是要登录的）', () => {
@@ -98,32 +151,30 @@ describe('付费点 — 额度文案要说实话', () => {
   })
 })
 
-describe('出图张数 — 用户能自己选', () => {
-  it('贺卡向导要能选出几张（以前写死 4 张，免费额度一天才 2 张）', () => {
+describe('出图张数 — 固定一次 1 张（2026-11-23 产品决定）', () => {
+  it('贺卡向导不再有张数选项，前端写死 n:1', () => {
     const src = read('pages/cards.vue')
-    expect(src).toContain('COUNT_CHOICES')
-    expect(src).toContain('countChoice')
-    // 不能再是写死的 min(4, 剩余)
-    expect(src).not.toMatch(/const maxN = usageUnlimited\.value \? 4/)
-    expect(src).toContain('const maxN = actualCount.value')
+    expect(src).not.toContain('COUNT_CHOICES')
+    expect(src).not.toContain('countChoices')
+    expect(src).not.toContain('actualCount')
+    expect(src).toMatch(/n:\s*1,/)
   })
 
-  it('一次生成 = 1 次额度（不管出几张），服务端按次扣', () => {
-    // 前端传的 n 必须来自用户选择
+  it('一次生成 = 1 次额度，服务端按次扣且强制 1 张', () => {
     const src = read('pages/cards.vue')
-    expect(src).toMatch(/n: maxN/)
-    // 服务端按**次**扣（1），不是按张数扣
+    expect(src).toMatch(/n:\s*1,/)
     const api = read('server/api/image/generate.post.ts')
     expect(api).toContain("consumeQuota(event, auth.uid, 'image', 1)")
     expect(api).not.toContain("consumeQuota(event, auth.uid, 'image', count)")
+    // 服务端写死 count=1，忽略客户端传来的 n
+    expect(api).toMatch(/const count\s*=\s*1/)
   })
 
-  it('免费档单次张数要被收窄，并说清楚', () => {
-    const src = read('pages/cards.vue')
-    expect(src).toContain('actualCount')
-    expect(src).toContain('countShort')
-    expect(src).toContain('maxPerRun')
-    // 选项要跟单次上限走（免费只给 1/2）
-    expect(src).toContain('countChoices')
+  it('图片工具页也不再有张数选择器', () => {
+    const src = read('pages/image.vue')
+    expect(src).not.toContain('countOptions')
+    expect(src).not.toContain('countCapped')
+    expect(src).not.toContain('$t(\'image.count\')')
+    expect(src).toMatch(/n:\s*1,/)
   })
 })

@@ -80,13 +80,17 @@ function rejectCookies() {
   right: 0;
   z-index: 100;
   padding: 1rem;
+  /* ⚠️ 手机窄屏：内部按钮行不收缩会把外壳撑到 418px > 视口，
+     连带把 layout viewport 撑宽、弹窗等 fixed 元素跟着溢出。 */
+  width: 100%;
 }
 
 .ck-cookie__box {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  max-width: 56rem;
+  max-width: min(56rem, 100%);
+  min-width: 0;
   margin: 0 auto;
   padding: 1.1rem 1.25rem;
   border: 1px solid var(--ck-line);
@@ -118,7 +122,7 @@ function rejectCookies() {
   text-underline-offset: 3px;
 }
 
-.ck-cookie__actions { display: flex; gap: 0.5rem; flex: none; }
+.ck-cookie__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; flex: none; }
 .ck-cookie__btn {
   height: 2.5rem;
   padding: 0 1rem;

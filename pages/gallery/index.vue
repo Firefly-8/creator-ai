@@ -62,7 +62,7 @@
             <span class="i-ph-images" />
             My creations
           </NuxtLink>
-          <NuxtLink to="/cards" class="ck-btn ck-btn--primary">
+          <NuxtLink to="/cards?format=card" class="ck-btn ck-btn--primary">
             Make your own
             <span class="i-ph-arrow-right" />
           </NuxtLink>
@@ -105,73 +105,73 @@ const CARDS: Card[] = [
     id: 'hero-birthday', image: `${ASSET}/hero-birthday.webp`,
     alt: 'A birthday card for Margaret with a cake and balloons',
     tag: 'Birthday', caption: 'A cake, some balloons, and a name spelled right',
-    cat: 'birthday', to: '/cards?scenario=birthday',
+    cat: 'birthday', to: '/cards?scenario=birthday&format=card',
   },
   {
     id: 'person-grandma', image: `${ASSET}/person-grandma.webp`,
     alt: 'A milestone birthday card with golden balloons and white roses',
     tag: 'Milestone', caption: 'Eighty years of you, in gold and cream',
-    cat: 'birthday', to: '/cards?scenario=milestone',
+    cat: 'birthday', to: '/cards?scenario=milestone&format=card',
   },
   {
     id: 'person-mum', image: `${ASSET}/person-mum.webp`,
     alt: 'A card of garden roses beside a cup of tea',
     tag: 'For Mum', caption: 'Roses, a cup of tea, and a thank you',
-    cat: 'family', to: '/cards?scenario=parents-day',
+    cat: 'family', to: '/cards?scenario=parents-day&format=card',
   },
   {
     id: 'person-dad', image: `${ASSET}/person-dad.webp`,
     alt: 'A card showing a golf bag and a thermos of tea',
     tag: 'For Dad', caption: 'A golf bag, a thermos, and a Sunday morning',
-    cat: 'family', to: '/cards?scenario=retirement',
+    cat: 'family', to: '/cards?scenario=retirement&format=card',
   },
   {
     id: 'person-grandpa', image: `${ASSET}/person-grandpa.webp`,
     alt: 'A vintage postcard style card with a rocking chair on a porch',
     tag: 'Milestone', caption: 'A rocking chair and seventy years young',
-    cat: 'birthday', to: '/cards?scenario=milestone',
+    cat: 'birthday', to: '/cards?scenario=milestone&format=card',
   },
   {
     id: 'person-friend', image: `${ASSET}/person-friend.webp`,
     alt: 'A card of wildflowers and a warm cup of tea',
     tag: 'Thank you', caption: 'For the friend who turned up when it mattered',
-    cat: 'thanks', to: '/cards?scenario=thank-you',
+    cat: 'thanks', to: '/cards?scenario=thank-you&format=card',
   },
   {
     id: 'person-partner', image: `${ASSET}/person-partner.webp`,
     alt: 'A card of white lace and soft roses',
     tag: 'Anniversary', caption: 'Twenty-five years of you',
-    cat: 'family', to: '/cards?scenario=wedding',
+    cat: 'family', to: '/cards?scenario=wedding&format=card',
   },
   {
     id: 'person-teacher', image: `${ASSET}/person-teacher.webp`,
     alt: 'A card of a school bell, books and a red apple',
     tag: 'Thank you', caption: 'Thirty years of other people’s children',
-    cat: 'thanks', to: '/cards?scenario=retirement',
+    cat: 'thanks', to: '/cards?scenario=retirement&format=card',
   },
   {
     id: 'person-pet', image: `${ASSET}/person-pet.webp`,
     alt: 'A watercolour portrait of a golden retriever in a party hat',
     tag: 'For a pet', caption: 'The one who is really in charge',
-    cat: 'pets', to: '/cards?scenario=pet',
+    cat: 'pets', to: '/cards?scenario=pet&format=card',
   },
   {
     id: 'scene-christmas', image: `${ASSET}/scene-christmas.webp`,
     alt: 'A Christmas card with a decorated tree glowing beside a red door',
     tag: 'Christmas', caption: 'Snow, a warm window, and a tree that is properly decorated',
-    cat: 'holiday', to: '/cards?scenario=christmas',
+    cat: 'holiday', to: '/cards?scenario=christmas&format=card',
   },
   {
     id: 'scene-thankyou-parent', image: `${ASSET}/scene-thankyou-parent.webp`,
     alt: 'A quiet get well soon card with spring flowers by a window',
     tag: 'Get well soon', caption: 'Said gently, without fuss',
-    cat: 'thanks', to: '/cards?scenario=get-well',
+    cat: 'thanks', to: '/cards?scenario=get-well&format=card',
   },
   {
     id: 'scene-wallart', image: `${ASSET}/scene-wallart.webp?v=2`,
     alt: 'An impressionist painting of a small village street',
     tag: 'Wall art', caption: 'The village you grew up in, on a 16 × 20 canvas',
-    cat: 'wall', to: '/cards?scenario=hometown',
+    cat: 'wall', to: '/cards?scenario=hometown&format=card',
   },
 ]
 

@@ -22,6 +22,43 @@ export interface AudienceFaq {
   a: string
 }
 
+/**
+ * 场景页共用的「痛点 → 功能对应」（2026-11-20 按原型稿补）。
+ * 8 个受众页的痛点本质相同：不会设计 / 字写错 / 照片不像 / 不知道怎么打印，
+ * 所以做成一份共享表，而不是每个 slug 抄一遍。每行 = 用户的真实顾虑 + 我们的对应功能 + 在哪操作。
+ */
+export interface PainPoint {
+  /** 用户心里的问题 */
+  pain: string
+  /** 对应功能 */
+  feature: string
+  /** 在哪一步操作 */
+  where: string
+}
+
+export const PAIN_POINTS: PainPoint[] = [
+  {
+    pain: 'I am hopeless at design.',
+    feature: 'The layout, lettering and colours are set for you — you only write the words.',
+    where: 'Step 3 · Pick a look',
+  },
+  {
+    pain: 'Will the name and age come out right?',
+    feature: 'Every name, number and date is typeset by us, never painted by the image model.',
+    where: 'Step 2 · Their name',
+  },
+  {
+    pain: 'Will it actually look like them?',
+    feature: 'The picture is built around your photo, so they stay recognisable.',
+    where: 'Step 2 · Their photo',
+  },
+  {
+    pain: 'What do I do with the file afterwards?',
+    feature: 'Download a 300 DPI file at a real card size and print it at home or at a shop.',
+    where: 'After you finish · Download',
+  },
+]
+
 export interface AudienceDef {
   slug: string
   /** 导航/卡片上的短名 */
