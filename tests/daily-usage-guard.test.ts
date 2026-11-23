@@ -86,12 +86,12 @@ describe('每日额度闸门', () => {
     expect(src).not.toMatch(/refundQuota\([^)]*'image'[^)]*count/)
   })
 
-  it('免费档单次出图张数要收窄（成本闸门：MiniMax 按张收费）', () => {
+  it('生成张数固定为 1（2026-11-23：不做「一次几张」，服务端写死）', () => {
     const src = read('server/api/image/generate.post.ts')
-    // 免费档一次最多 FREE_MAX_IMAGES_PER_RUN 张
-    expect(src).toContain('FREE_MAX_IMAGES_PER_RUN')
-    // 且 count 必须被这个上限 clamp（客户端传 n=4 也只能出 2）
-    expect(src).toMatch(/count\s*=\s*Math\.min\(maxPerRun/)
+    expect(src).not.toContain('FREE_MAX_IMAGES_PER_RUN')
+    expect(src).not.toContain('maxPerRun')
+    // 固定 1 张，忽略客户端传来的 n
+    expect(src).toMatch(/const count\s*=\s*1/)
   })
 
   it('批量生图必须把实际张数交给额度层', () => {

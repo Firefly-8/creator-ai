@@ -6,11 +6,11 @@
         <div>
           <h1 class="ck-h1">My creations</h1>
           <p class="ck-lede">
-            Everything you have made — cards, pictures and songs — in one place.
-            Download it again whenever you need; we never delete your work.
+            Finished cards are kept forever. Unfinished drafts stay for 3 days, then disappear.
+            Download or share any of them again whenever you need.
           </p>
         </div>
-        <NuxtLink to="/cards" class="ck-btn ck-btn--primary">
+        <NuxtLink to="/cards?format=card" class="ck-btn ck-btn--primary">
           <span class="i-ph-plus" />
           Make another
         </NuxtLink>
@@ -54,29 +54,56 @@
 
       <!-- ==================== 图片 / 贺卡 ==================== -->
       <template v-else-if="tab === 'pictures'">
-        <p v-if="pictures.length" class="ck-mine__count">
-          {{ pictures.length }} picture{{ pictures.length === 1 ? '' : 's' }}
+        <!-- 草稿 / 作品 子切换（2026-11-23 原型对齐：草稿 3 天、作品永久） -->
+        <div class="ck-subtabs" role="tablist">
+          <button
+            type="button" role="tab"
+            class="ck-subtab" :class="{ 'ck-subtab--on': assetFilter === 'work' }"
+            :aria-selected="assetFilter === 'work'"
+            @click="assetFilter = 'work'"
+          >
+            <span class="i-ph-seal-check" /> Finished cards
+            <span class="ck-tab__n">{{ works.length }}</span>
+          </button>
+          <button
+            type="button" role="tab"
+            class="ck-subtab" :class="{ 'ck-subtab--on': assetFilter === 'draft' }"
+            :aria-selected="assetFilter === 'draft'"
+            @click="assetFilter = 'draft'"
+          >
+            <span class="i-ph-file-dashed" /> Drafts
+            <span class="ck-tab__n">{{ drafts.length }}</span>
+          </button>
+        </div>
+        <p v-if="assetFilter === 'draft'" class="ck-mine__note">
+          <span class="i-ph-clock" /> Unfinished drafts are kept for 3 days, then removed.
         </p>
 
-        <section v-if="!pictures.length" class="ck-empty">
+        <p v-if="visiblePictures.length" class="ck-mine__count">
+          {{ visiblePictures.length }} {{ assetFilter === 'work' ? 'finished card' : 'draft' }}{{ visiblePictures.length === 1 ? '' : 's' }}
+        </p>
+
+        <section v-if="!visiblePictures.length" class="ck-empty">
           <span class="ck-empty__icon i-ph-image" />
-          <h2 class="ck-empty__title">No pictures yet</h2>
+          <h2 class="ck-empty__title">
+            {{ assetFilter === 'work' ? 'No finished cards yet' : 'No drafts' }}
+          </h2>
           <p class="ck-empty__text">
-            Start with an occasion. We will take care of the picture, the
-            lettering and the printing size.
+            {{ assetFilter === 'work'
+              ? 'Finish a card in the editor and it will be kept here forever, ready to download or share.'
+              : 'Cards you start but do not finish show up here for 3 days.' }}
           </p>
           <div class="ck-empty__actions">
-            <NuxtLink to="/cards" class="ck-btn ck-btn--primary">Make your first card</NuxtLink>
-            <NuxtLink to="/image" class="ck-btn ck-btn--ghost">AI image studio</NuxtLink>
+            <NuxtLink to="/cards?format=card" class="ck-btn ck-btn--primary">Make a card</NuxtLink>
           </div>
         </section>
 
         <div v-else class="ck-grid">
-          <article v-for="c in pictures" :key="c.id" class="ck-card">
+          <article v-for="c in visiblePictures" :key="c.id" class="ck-card">
             <NuxtLink :to="`/cards?from=${c.id}`" class="ck-card__media">
               <img
-                v-if="c.imageUrl"
-                :src="c.imageUrl"
+                v-if="c.finalUrl || c.imageUrl"
+                :src="c.finalUrl || c.imageUrl"
                 :alt="pictureTitle(c)"
                 loading="lazy"
                 decoding="async"
@@ -92,14 +119,18 @@
               <p class="ck-card__meta">
                 {{ pictureKind(c) }}
                 <span class="ck-card__dot">·</span>
+                <span :class="c.assetType === 'work' ? 'ck-tag-work' : 'ck-tag-draft'">
+                  {{ c.assetType === 'work' ? 'Finished · kept forever' : 'Draft' }}
+                </span>
+                <span class="ck-card__dot">·</span>
                 {{ formatDate(c.createdAt) }}
               </p>
             </div>
 
             <div class="ck-card__actions">
               <a
-                v-if="c.imageUrl"
-                :href="c.imageUrl"
+                v-if="c.finalUrl || c.imageUrl"
+                :href="c.finalUrl || c.imageUrl"
                 :download="`card-${c.id}.png`"
                 class="ck-card__act"
                 title="Download"
@@ -107,9 +138,36 @@
                 <span class="i-ph-download-simple" />
                 <span>Download</span>
               </a>
-              <NuxtLink :to="`/cards?from=${c.id}`" class="ck-card__act" title="Make a new version">
-                <span class="i-ph-magic-wand" />
-                <span>Remix</span>
+              <button
+                v-if="c.assetType === 'work'"
+                class="ck-card__act"
+                title="Copy share link"
+                @click="copyAssetLink(c)"
+              >
+                <span :class="linkCopiedId === c.id ? 'i-ph-check' : 'i-ph-link'" />
+                <span>{{ linkCopiedId === c.id ? 'Copied' : 'Share' }}</span>
+              </button>
+              <button
+                v-if="c.assetType === 'work'"
+                class="ck-card__act"
+                title="Print"
+                @click="printAsset(c)"
+              >
+                <span class="i-ph-printer" />
+                <span>Print</span>
+              </button>
+              <button
+                v-if="c.assetType === 'work'"
+                class="ck-card__act"
+                title="Send by email"
+                @click="emailAsset(c)"
+              >
+                <span class="i-ph-envelope" />
+                <span>Email</span>
+              </button>
+              <NuxtLink :to="`/cards?from=${c.id}`" class="ck-card__act" title="Open in editor">
+                <span class="i-ph-pencil" />
+                <span>{{ c.assetType === 'work' ? 'Edit' : 'Continue' }}</span>
               </NuxtLink>
               <button class="ck-card__act ck-card__act--danger" title="Delete" @click="removePicture(c)">
                 <span class="i-ph-trash" />
@@ -216,6 +274,12 @@ interface PictureItem {
   scene: string
   status: string
   imageUrl: string | null
+  /** 完成设计后合成的成品图 URL（有则展示它，而非底图） */
+  finalUrl: string | null
+  /** 'work' = 完成的作品永久保存；'draft' = 3 天过期的草稿 */
+  assetType: 'draft' | 'work'
+  format: string | null
+  finalizedAt: string | null
   errorMessage: string | null
   createdAt: string
 }
@@ -228,8 +292,14 @@ const tab = ref<'pictures' | 'songs'>('pictures')
 const pictures = ref<PictureItem[]>([])
 const songs = ref<SongPublic[]>([])
 
+// 草稿 / 作品分组（2026-11-23 原型对齐）
+const assetFilter = ref<'work' | 'draft'>('work')
+const works = computed(() => pictures.value.filter(p => p.assetType === 'work'))
+const drafts = computed(() => pictures.value.filter(p => p.assetType === 'draft'))
+const visiblePictures = computed(() => assetFilter.value === 'work' ? works.value : drafts.value)
+
 const tabs = computed(() => [
-  { id: 'pictures' as const, label: 'Pictures', icon: 'i-ph-image', count: pictures.value.length },
+  { id: 'pictures' as const, label: 'Cards', icon: 'i-ph-images', count: pictures.value.length },
   { id: 'songs' as const, label: 'Songs', icon: 'i-ph-music-notes', count: songs.value.length },
 ])
 
@@ -275,6 +345,42 @@ function formatDate(s: string) {
   const d = new Date(s)
   if (Number.isNaN(d.getTime())) return ''
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+// ── 作品交付（2026-11-23 原型对齐：资产卡片直接给分享/打印/邮件）──────
+const linkCopiedId = ref('')
+async function copyAssetLink(im: PictureItem) {
+  const link = `${location.origin}/card/${im.id}`
+  try {
+    await navigator.clipboard.writeText(link)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = link
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    ta.remove()
+  }
+  linkCopiedId.value = im.id
+  setTimeout(() => { linkCopiedId.value = '' }, 2500)
+}
+
+function printAsset(im: PictureItem) {
+  const url = im.finalUrl || im.imageUrl
+  if (!url) return
+  const win = window.open(url, '_blank')
+  if (win) {
+    win.onload = () => { try { win.focus(); win.print() } catch { /* ignore */ } }
+  }
+}
+
+function emailAsset(im: PictureItem) {
+  const link = `${location.origin}/card/${im.id}`
+  const subject = encodeURIComponent('A card for you')
+  const body = encodeURIComponent(`I made this card for you.\n\nOpen it here: ${link}`)
+  window.location.href = `mailto:?subject=${subject}&body=${body}`
 }
 
 async function removePicture(im: PictureItem) {
@@ -365,6 +471,17 @@ async function removeSong(song: SongPublic) {
   margin-bottom: 1.75rem;
 }
 .ck-mine__count { margin-bottom: 1rem; font-size: 0.875rem; color: var(--ck-ink-2); }
+.ck-mine__note { display: flex; align-items: center; gap: 0.4rem; margin: -0.8rem 0 1.2rem; font-size: 0.85rem; color: #a53f2c; }
+
+/* 草稿 / 作品 子切换 */
+.ck-subtabs { display: inline-flex; gap: 0.35rem; padding: 0.3rem; margin-bottom: 1rem; border: 1.5px solid var(--ck-line); border-radius: 999px; background: var(--ck-white); }
+.ck-subtab { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.5rem 1rem; border: none; border-radius: 999px; background: transparent; font-family: inherit; font-size: 0.9rem; font-weight: 700; color: var(--ck-ink-2); cursor: pointer; }
+.ck-subtab:hover { color: var(--ck-ink); }
+.ck-subtab--on { background: var(--ck-ink); color: #fff; }
+.ck-subtab--on:hover { color: #fff; }
+
+.ck-tag-work { color: #2f7d4f; font-weight: 600; }
+.ck-tag-draft { color: #a53f2c; font-weight: 600; }
 
 .ck-btn {
   display: inline-flex;

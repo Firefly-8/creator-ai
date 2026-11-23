@@ -32,6 +32,7 @@ import { getDB } from './db-runtime'
 import {
   FREE_DAILY_LIMITS,
   PAID_DAILY_LIMITS,
+  LIFETIME_SENTINEL,
   PLANS,
   getPlan,
   isPaidPlan,
@@ -86,6 +87,18 @@ interface Entitlement {
 /** 一天的起始时刻（UTC 日期） */
 export function todayUTC(): string {
   return new Date().toISOString().split('T')[0]
+}
+
+/**
+ * 免费图片额度用的「账本日期」（2026-11-20 原型对齐）。
+ * - 免费档 image：返回 LIFETIME_SENTINEL → 所有累计落在同一行，永不按天重置
+ * - 其余（付费 image / music / text）：按当天 UTC 日期，维持原语义
+ *
+ * 为什么免费图片要「累计不重置」：原型是「注册送 3 次、用完为止」，
+ * 不是「每天 3 次」。付费 image 走 credit 模式，不读这张表，所以不受影响。
+ */
+function ledgerDate(kind: UsageKind, mode: QuotaMode): string {
+  return kind === 'image' && mode === 'daily' ? LIFETIME_SENTINEL : todayUTC()
 }
 
 /** 加 n 个自然月（按 UTC 日历算，保持「每月同一天」的语义） */
@@ -313,7 +326,7 @@ export async function getUserQuota(event: any, uid: string, kind: UsageKind): Pr
 
   const usage = await db
     .prepare('SELECT image_count, music_count, text_count FROM daily_usage WHERE user_id = ? AND usage_date = ?')
-    .bind(uid, todayUTC())
+    .bind(uid, ledgerDate(kind, 'daily'))
     .first<{ image_count: number; music_count: number; text_count: number }>()
     .catch(() => null)
 
@@ -411,7 +424,7 @@ export async function consumeQuota(
   //     按张扣的调用点传张数（批量出图）—— 两种语义要分得开，
   //     否则「一次批量出 8 张只扣 1 次」就是白送。
   const col = `${kind}_count`
-  const date = todayUTC()
+  const date = ledgerDate(kind, quota.mode)
 
   // 原子自增并返回新值
   const row = await db
@@ -510,8 +523,9 @@ export async function refundQuota(
     return
   }
 
-  // 退每日额度
+  // 退每日额度（免费图片走 lifetime 哨兵行，跟扣减时同一账本）
   const col = `${kind}_count`
+  const refundDate = kind === 'image' && mode !== 'credit' ? LIFETIME_SENTINEL : todayUTC()
   for (let i = 0; i < units; i++) {
     await db
       .prepare(
@@ -519,7 +533,7 @@ export async function refundQuota(
          updated_at = datetime('now')
          WHERE user_id = ? AND usage_date = ?`,
       )
-      .bind(uid, todayUTC())
+      .bind(uid, refundDate)
       .run()
       .catch((e) => console.error('[daily-usage] refund failed', e))
   }

@@ -62,6 +62,6 @@ export default defineEventHandler(async (event) => {
     streakDays: stats?.streak_days || 0,
     message: quota[type].unlimited
       ? `You have unlimited ${type} generations.`
-      : `You have ${quota[type].remaining} free ${type} generation(s) left today.`,
+      : `You have ${quota[type].remaining} free ${type} generation(s) left${type === 'image' ? '' : ' today'}.`,
   }
 })
