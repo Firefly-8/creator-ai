@@ -319,7 +319,7 @@
         <h2 class="ck-sec__title">
           Pick the one you like
         </h2>
-        <p class="ck-sec__sub">Add your words, then download it ready to print. Each try uses 1 of your free goes — your previous picks stay above so you can compare.</p>
+        <p class="ck-sec__sub">Add your words, keep the design in your account, then download or share when you are ready. Each try uses 1 of your free goes — your previous picks stay above so you can compare.</p>
 
         <div class="ck-cands">
           <button
@@ -384,13 +384,14 @@
             :has-paid="hasPaid"
             :format="cardFormat"
             :card-id="picked"
+            :meta-save-status="metaSaveStatus"
             class="ck-editor__composer"
             @remove-watermark="openPaywall"
             @finalized="onFinalized"
             @update:card="onCardUpdate"
           />
           <p v-if="finishToast" class="ck-finish-toast">
-            <span class="i-ph-check-circle" /> Saved — your share link now shows the finished card.
+            <span class="i-ph-check-circle" /> Saved to your creations — share link shows the finished card. Download is separate below.
           </p>
         </div>
       </section>
@@ -416,6 +417,7 @@ import {
 import { PLANS } from '~/utils/pricing'
 import { assetUrl } from '~/utils/assets'
 import CardComposer from '~/components/cards/CardComposer.vue'
+import { makeThumbnail } from '~/composables/useCardDraft'
 
 definePageMeta({ layout: 'marketing' })
 
@@ -564,14 +566,22 @@ const prefilledTexts = computed(() => {
 })
 
 // ── 旧卡复用：版式 + 文字位置（远端线 2026-11-23）─────────────
-// composer 每次改动上报 → 2.5s 防抖后静默落库（PUT /api/images/:id/card）。
-// 存不上不打断编辑（用户可能没登录 / 网络抖了）。
+// composer 每次改动上报 → 2.5s 防抖后落库（PUT /api/images/:id/card）。
+// 存不上不打断编辑；状态回传给 Composer 展示（saving/saved/error）。
 const savedCard = ref<{ layout?: string; texts: any[] } | null>(null)
 const finalCard = ref<{ layout?: string; texts: any[] } | null>(null)
+/** 自动保存排版状态 → CardComposer「Keep your design」区 */
+const metaSaveStatus = ref<'idle' | 'dirty' | 'saving' | 'saved' | 'error'>('idle')
 let saveTimer: ReturnType<typeof setTimeout> | null = null
+let saveSeq = 0
 
 function onCardUpdate(v: { layout: string; texts: any[] }) {
   finalCard.value = v
+  if (!picked.value) {
+    metaSaveStatus.value = 'idle'
+    return
+  }
+  metaSaveStatus.value = 'dirty'
   if (saveTimer) clearTimeout(saveTimer)
   saveTimer = setTimeout(() => { void saveCardNow() }, 2500)
 }
@@ -579,6 +589,8 @@ function onCardUpdate(v: { layout: string; texts: any[] }) {
 async function saveCardNow() {
   const id = picked.value
   if (!id || !finalCard.value) return
+  const seq = ++saveSeq
+  metaSaveStatus.value = 'saving'
   try {
     await api.put(`/api/images/${id}/card`, {
       name: name.value,
@@ -587,8 +599,11 @@ async function saveCardNow() {
       layout: finalCard.value.layout,
       texts: finalCard.value.texts,
     })
+    // 期间又有新改动 → 别把 dirty 盖成 saved
+    if (seq === saveSeq) metaSaveStatus.value = 'saved'
   } catch {
-    // 静默 —— 编辑不被网络问题打断
+    if (seq === saveSeq) metaSaveStatus.value = 'error'
+    // 编辑不被网络问题打断 —— 字还在页面上
   }
 }
 
@@ -638,6 +653,12 @@ function restoreDraft() {
   if (st.name) name.value = st.name
   if (st.message && !chosenMessage.value) chosenMessage.value = st.message
   if (st.extra) extra.value = st.extra
+  // 照片：只恢复缩略图预览（提醒用）。原图没了 → 清空 photoFile，出图走 t2i 或用户重选。
+  if (st.thumb && !photoPreview.value) {
+    photoPreview.value = st.thumb
+    photoFile.value = null
+    uploadId.value = ''
+  }
 }
 
 // ── 登录弹窗（全站共用那套 AuthModal）──────────────────────
@@ -655,8 +676,14 @@ const { openSignup, setNote, setAfterAuth, clearNote, clearAfterAuth } = useAuth
  * 已经填好的照片、名字、画风都还在页面上，不会丢。
  */
 function openAuthForGenerate() {
+  // 登录闸在「生成」——表单必须保持打开，关掉 Auth 后参数还在；
+  // 登录成功 afterAuth 自动续跑 generate，无需再点一次。
+  formOpen.value = true
+  document.body.style.overflow = 'hidden'
   setNote('Create an account or sign in — everything you have already entered is kept.')
   setAfterAuth(async () => {
+    // 回跳时弹窗仍开着、字段仍在（含本地草稿），再续出图
+    formOpen.value = true
     await loadUsage()
     await generate()
   })
@@ -818,7 +845,7 @@ function pickScenario(sc: ImageScenarioDef) {
   closeSub()
 }
 
-function onFile(e: Event) {
+async function onFile(e: Event) {
   const input = e.target as HTMLInputElement
   const f = input.files?.[0]
   if (!f) return
@@ -829,6 +856,12 @@ function onFile(e: Event) {
   }
   photoFile.value = f
   photoPreview.value = URL.createObjectURL(f)
+  // 缩略图进本地草稿 —— 刷新后还能看见「你传过照片」的提醒；
+  // 原图太大不进 localStorage，真出图仍须重选（服务端 i2i 要原图）。
+  try {
+    const thumb = await makeThumbnail(f)
+    if (thumb) draftStore.state.value = { ...draftStore.state.value, thumb, at: Date.now() }
+  } catch { /* 缩略失败不影响主流程 */ }
   if (scenario.value) {
     const list = stylesForScenario(scenario.value, true)
     if (!list.find(s => s.id === style.value)) style.value = list[0]?.id || style.value
@@ -839,6 +872,7 @@ function clearPhoto() {
   photoFile.value = null
   photoPreview.value = ''
   uploadId.value = ''
+  draftStore.state.value = { ...draftStore.state.value, thumb: '', at: Date.now() }
   if (scenario.value) {
     const list = stylesForScenario(scenario.value, false)
     if (!list.find(s => s.id === style.value)) style.value = list[0]?.id || style.value
@@ -1012,6 +1046,23 @@ onMounted(() => {
   // 从「My cards」过来的 → 直接把旧卡打开（旧卡参数优先，不走草稿恢复）
   if (String(route.query.from || '')) loadFromCard()
   else restoreDraft()
+
+  // 仅本机 UI 验收：?uiPreview=composer 注入一张公开 showcase 图进编辑器，
+  // 不调生成/付费接口。生产/staging 主机名不是 localhost → 无效。
+  if (import.meta.client) {
+    const host = location.hostname
+    const local = host === 'localhost' || host === '127.0.0.1'
+    if (local && String(route.query.uiPreview || '') === 'composer' && !candidates.value.length) {
+      const url = assetUrl('showcase/hero-birthday.webp')
+      currentBatch.value = [{ id: 'ui-preview', url }]
+      olderBatch.value = []
+      picked.value = 'ui-preview'
+      if (!name.value) name.value = 'Margaret'
+      if (!chosenMessage.value) {
+        chosenMessage.value = 'Happy birthday — with love from all of us.'
+      }
+    }
+  }
 })
 
 // 离开页面时：恢复背景滚动 + 把弹窗的说明/回调清掉 —— 别让别的页面误触发这一页的逻辑

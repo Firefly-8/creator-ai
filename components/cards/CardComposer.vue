@@ -127,53 +127,85 @@
         </div>
       </section>
 
-      <!-- 导出 -->
-      <section class="ck-panel-sec">
-        <h3 class="ck-panel-sec__title">Download</h3>
-        <p class="ck-print-note"><span class="i-ph-printer" /> {{ fmt.printNote }}</p>
-        <p v-if="!hasPaid" class="ck-note">
-          <span class="i-ph-info" />
-          The free version is 1024 px with a small mark — in the preview, in the
-          download and when you share it.
-          <NuxtLink to="/pricing">Get the print-ready file</NuxtLink> for 300 DPI and no mark.
+      <!--
+        ============ 保存 vs 导出（P0 2026-11-23）============
+        学 GI 的节奏：创作与交付分开。
+        - Keep：自动存排版（meta）+ Finish 把成品图落库（草稿→作品）
+        - Take：下载/分享/打印 —— 免费带水印，去水印才是付费点
+        不另加「Save draft」按钮，避免和自动保存 / Finish 重复。
+      -->
+      <section class="ck-panel-sec" data-sec="keep">
+        <h3 class="ck-panel-sec__title">Keep your design</h3>
+        <p class="ck-panel-sec__hint">
+          Saving keeps the layout in your account. Downloading is separate — you can take a file any time.
         </p>
-        <!-- 去水印：唯一的水印付费墙入口（原型对齐：3 次额度内下载/分享/打印都免费带水印） -->
-        <button v-if="!hasPaid" class="ck-remove-wm" data-act="remove-watermark" @click="$emit('remove-watermark')">
-          <span class="i-ph-sparkle" />
-          Remove the watermark · get the print-ready file
-          <NuxtLink to="/pricing" class="ck-remove-wm__link" @click.stop>See plans →</NuxtLink>
+        <p class="ck-save-status" :data-status="metaSaveStatus" aria-live="polite">
+          <span v-if="metaSaveStatus === 'saving'" class="i-ph-spinner animate-spin" />
+          <span v-else-if="metaSaveStatus === 'saved'" class="i-ph-check-circle" />
+          <span v-else-if="metaSaveStatus === 'error'" class="i-ph-warning-circle" />
+          <span v-else-if="metaSaveStatus === 'dirty'" class="i-ph-pencil-simple" />
+          <span v-else class="i-ph-cloud" />
+          {{ metaSaveLabel }}
+        </p>
+        <button
+          v-if="cardId"
+          class="ck-finish"
+          :class="{ 'ck-finish--done': finalized && !finishDirty }"
+          :disabled="exporting || finishing || (finalized && !finishDirty)"
+          data-act="finish"
+          @click="finishCard"
+        >
+          <span :class="finalized && !finishDirty ? 'i-ph-check-circle' : (finishing ? 'i-ph-spinner animate-spin' : 'i-ph-sparkle')" />
+          {{ finishButtonLabel }}
         </button>
+        <p class="ck-hint">
+          Finish puts the card with your words into My creations and updates the share link.
+          Free cards stay watermarked — removing the mark is the only paid step.
+        </p>
+        <p v-if="finishError" class="ck-error">{{ finishError }}</p>
+      </section>
+
+      <section class="ck-panel-sec" data-sec="take">
+        <h3 class="ck-panel-sec__title">Download &amp; share</h3>
+        <p class="ck-print-note"><span class="i-ph-printer" /> {{ fmt.printNote }}</p>
+
+        <!-- 权限透明：不弹阻断窗，两行说清楚免费 vs 付费 -->
+        <div class="ck-perm" data-act="export-permission">
+          <div class="ck-perm__row ck-perm__row--free">
+            <span class="ck-perm__badge">Free</span>
+            <span class="ck-perm__text">1024 px file with a small mark — preview, download and share.</span>
+          </div>
+          <div class="ck-perm__row" :class="hasPaid ? 'ck-perm__row--paid-on' : 'ck-perm__row--paid'">
+            <span class="ck-perm__badge">{{ hasPaid ? 'Included' : 'Print-ready' }}</span>
+            <span class="ck-perm__text">
+              2K · 300 DPI · no mark.
+              <template v-if="!hasPaid">
+                <button type="button" class="ck-perm__link" data-act="remove-watermark" @click="$emit('remove-watermark')">
+                  Remove the watermark
+                </button>
+                or
+                <NuxtLink to="/pricing">see plans</NuxtLink>.
+              </template>
+              <template v-else>Ready on your plan.</template>
+            </span>
+          </div>
+        </div>
 
         <div class="ck-panel-sec__actions">
-          <button class="ck-btn ck-btn--primary" :disabled="exporting" @click="doDownload">
+          <button class="ck-btn ck-btn--primary" data-act="download" :disabled="exporting" @click="doDownload">
             <span v-if="exporting" class="i-ph-spinner animate-spin" />
             <span v-else class="i-ph-download-simple" />
-            {{ hasPaid ? 'Download print file' : 'Download free version' }}
+            {{ hasPaid ? 'Download print file' : 'Download free version (with mark)' }}
           </button>
-          <button class="ck-btn ck-btn--ghost" :disabled="exporting" @click="doShare">
+          <button class="ck-btn ck-btn--ghost" data-act="share" :disabled="exporting" @click="doShare">
             <span class="i-ph-share-network" />
             Share
           </button>
         </div>
-
-        <!-- 完成设计：把带字+水印的成品存为作品（草稿→作品，永久保存） -->
-        <button
-          v-if="cardId"
-          class="ck-finish"
-          :class="{ 'ck-finish--done': finalized }"
-          :disabled="exporting || finishing || finalized"
-          data-act="finish"
-          @click="finishCard"
-        >
-          <span :class="finalized ? 'i-ph-check-circle' : 'i-ph-sparkle'" />
-          {{ finalized ? 'Saved to your creations' : (finishing ? 'Saving…' : 'Finish & save to my creations') }}
-        </button>
-        <p class="ck-hint">
-          Finish once to keep it forever and make the share link show your finished card.
-          Free cards stay watermarked — removing it is the only paid step.
+        <p v-if="!hasPaid" class="ck-hint">
+          Share and print use the same free file with the mark. Upgrade only if you need a clean print file.
         </p>
 
-        <!-- 就地交付：复制链接 / 打印 / 邮件 / PDF —— 都是按钮，不跳独立交付页 -->
         <div class="ck-deliver">
           <button class="ck-deliver__btn" :disabled="exporting || !cardId" @click="copyShareLink">
             <span class="i-ph-link" />
@@ -192,8 +224,7 @@
             Download PDF
           </button>
         </div>
-        <p v-if="!cardId" class="ck-hint">Save the card to your creations before copying a link.</p>
-        <p v-if="finishError" class="ck-error">{{ finishError }}</p>
+        <p v-if="!cardId" class="ck-hint">Finish the card first so the share link can open it.</p>
         <p v-if="error" class="ck-error">{{ error }}</p>
       </section>
     </div>
@@ -306,6 +337,11 @@ const props = defineProps<{
    *   有 texts 就直接用（位置是精确的），别再套一次版式把它覆盖了。
    */
   savedCard?: { layout?: string; texts?: CardTextItem[] }
+  /**
+   * 页面层自动保存排版（PUT /card）的状态 —— 只展示，不另开 Save 按钮。
+   * idle | dirty | saving | saved | error
+   */
+  metaSaveStatus?: 'idle' | 'dirty' | 'saving' | 'saved' | 'error'
 }>()
 
 /** 成品状态变化 → 通知页面层去保存（update:card）；付费/完成走 finalized */
@@ -314,6 +350,17 @@ const emit = defineEmits<{
   (e: 'remove-watermark'): void
   (e: 'finalized', payload: { id: string; finalUrl: string }): void
 }>()
+
+const metaSaveStatus = computed(() => props.metaSaveStatus || 'idle')
+const metaSaveLabel = computed(() => {
+  switch (metaSaveStatus.value) {
+    case 'saving': return 'Saving your layout…'
+    case 'saved': return 'Layout saved'
+    case 'error': return 'Could not save layout — your edits are still here. Try again in a moment.'
+    case 'dirty': return 'Unsaved layout changes…'
+    default: return props.cardId ? 'Layout saves automatically while you edit' : 'Layout saves after the picture is ready'
+  }
+})
 
 /** 当前格式的定义（给版式提示和打印说明用） */
 const fmt = computed(() => getCardFormat(props.format))
@@ -365,12 +412,23 @@ onMounted(() => {
   if (!props.savedCard?.texts?.length) applyLayout(layoutId.value)
 })
 
+/** Finish 状态要在 watch 之前声明（下方改字会读这两个 ref） */
+const finishing = ref(false)
+const finalized = ref(false)
+/** Finish 成功后又改过 → 允许再 Finish，更新分享页成品 */
+const finishDirty = ref(false)
+const finishError = ref('')
+
 /**
  * 成品状态一变就报给页面层 → 页面层防抖存到服务器。
  *
  * ⚠️ 用 watch 而不是手动在每个函数里 emit —— 拖字、改字、换版式
  *    都会走到 draft.texts，手动 emit 迟早漏掉一处。
+ *
+ * Finish 之后若再改字/换版式 → finishDirty，允许再次 Finish 更新成品图
+ * （否则「Saved」锁死，分享链接停在旧字上）。
  */
+let skipFinishDirty = true
 watch(
   [layoutId, () => draft.value.texts],
   () => {
@@ -379,6 +437,11 @@ watch(
       // 深拷贝：draft 里的对象是响应式的，直接传出去会被外部改到
       texts: JSON.parse(JSON.stringify(draft.value.texts)) as CardTextItem[],
     })
+    if (skipFinishDirty) {
+      skipFinishDirty = false
+      return
+    }
+    if (finalized.value) finishDirty.value = true
   },
   { deep: true, immediate: true }
 )
@@ -500,13 +563,18 @@ async function doShare() {
 const linkCopied = ref(false)
 
 /** 完成设计：导出带字+水印的成品 → 上传落库 → 草稿转作品（2026-11-23 原型对齐） */
-const finishing = ref(false)
-const finalized = ref(false)
-const finishError = ref('')
 const api = useApi()
 
+const finishButtonLabel = computed(() => {
+  if (finishing.value) return 'Saving…'
+  if (finalized.value && !finishDirty.value) return 'Saved to your creations'
+  if (finalized.value && finishDirty.value) return 'Save updates to your creations'
+  return 'Finish & save to my creations'
+})
+
 async function finishCard() {
-  if (!props.cardId || finishing.value || finalized.value) return
+  if (!props.cardId || finishing.value) return
+  if (finalized.value && !finishDirty.value) return
   finishing.value = true
   finishError.value = ''
   try {
@@ -535,6 +603,7 @@ async function finishCard() {
       },
     )
     finalized.value = true
+    finishDirty.value = false
     emit('finalized', { id: props.cardId, finalUrl: res.finalUrl })
   } catch (e: any) {
     finishError.value =
@@ -886,6 +955,86 @@ async function doPdf() {
 .ck-note .i-ph-info { vertical-align: -0.15em; margin-right: 0.25rem; }
 .ck-note a { color: #a53f2c; font-weight: 600; }
 .ck-error { font-size: 0.8125rem; color: #c8543d; }
+
+/* 自动保存状态（Keep 区） */
+.ck-save-status {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+  background: rgba(58, 46, 38, 0.04);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #6b5f55;
+}
+.ck-save-status[data-status='saved'] { color: #2f4034; background: rgba(47, 64, 52, 0.08); }
+.ck-save-status[data-status='error'] { color: #a53f2c; background: rgba(200, 84, 61, 0.08); }
+.ck-save-status[data-status='dirty'],
+.ck-save-status[data-status='saving'] { color: #6b5f55; }
+.ck-save-status .i-ph-spinner,
+.ck-save-status .i-ph-check-circle,
+.ck-save-status .i-ph-warning-circle,
+.ck-save-status .i-ph-pencil-simple,
+.ck-save-status .i-ph-cloud {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+/* 导出权限透明条（不阻断） */
+.ck-perm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.ck-perm__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(58, 46, 38, 0.1);
+  background: #fff;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #6b5f55;
+}
+.ck-perm__row--free { border-color: rgba(58, 46, 38, 0.12); }
+.ck-perm__row--paid { border-color: rgba(201, 162, 39, 0.35); background: rgba(201, 162, 39, 0.08); }
+.ck-perm__row--paid-on { border-color: rgba(47, 64, 52, 0.25); background: rgba(47, 64, 52, 0.06); }
+.ck-perm__badge {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  background: rgba(58, 46, 38, 0.08);
+  color: #6b5f55;
+}
+.ck-perm__row--paid .ck-perm__badge,
+.ck-perm__row--paid-on .ck-perm__badge {
+  background: rgba(201, 162, 39, 0.25);
+  color: #7a5a12;
+}
+.ck-perm__row--paid-on .ck-perm__badge {
+  background: rgba(47, 64, 52, 0.15);
+  color: #2f4034;
+}
+.ck-perm__text a,
+.ck-perm__link {
+  color: #a53f2c;
+  font-weight: 600;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.ck-perm__link:hover { color: #c8543d; }
 
 /* ---------- 去水印入口 & 就地交付（2026-11-20） ---------- */
 .ck-remove-wm {
