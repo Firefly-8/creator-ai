@@ -5,7 +5,10 @@
       <div class="mk-top__inner">
         <NuxtLink to="/" class="mk-brand">
           <img src="/logo-mark.png" alt="Create Keepsakes" class="mk-brand__logo" />
-          <span class="mk-brand__name">Create Keepsakes</span>
+          <!-- 品牌字标：整块封装成 SVG 图片（public/brand-wordmark.svg，
+               文字已转矢量路径）。不再用 web 字体渲染 —— 字体加载期间
+               会先显示 fallback 字体再闪成 Pacifico（FOUT），图片零闪烁。 -->
+          <img src="/brand-wordmark.svg" alt="Create Keepsakes" class="mk-brand__word" />
         </NuxtLink>
 
         <nav class="mk-nav">
@@ -50,7 +53,10 @@
     <footer class="mk-foot">
       <div class="mk-foot__inner">
         <div class="mk-foot__brand">
-          <img src="/logo-mark.png" alt="Create Keepsakes" class="mk-brand__logo" />
+          <div class="mk-foot__wordmark">
+            <img src="/logo-mark.png" alt="Create Keepsakes" class="mk-brand__logo" />
+            <img src="/brand-wordmark.svg" alt="Create Keepsakes" class="mk-brand__word" />
+          </div>
           <p class="mk-foot__tag">
             Personalised cards and canvas prints for the people you love.
           </p>
@@ -147,14 +153,9 @@ const menuLinks = [
 }
 
 .mk-brand { display: inline-flex; align-items: center; gap: 0.55rem; text-decoration: none; }
-.mk-brand__logo { width: 2rem; height: 2rem; border-radius: 0.5rem; object-fit: contain; }
-.mk-brand__name {
-  font-family: var(--mk-serif);
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  color: var(--mk-ink);
-}
+.mk-brand__logo { width: 2.15rem; height: 2.15rem; border-radius: 0.5rem; object-fit: contain; }
+/* 品牌字标：SVG 图片（viewBox 353x129），按高度缩放 */
+.mk-brand__word { height: 1.75rem; width: auto; display: block; }
 
 .mk-nav { display: flex; gap: 1.5rem; margin-left: auto; }
 .mk-nav__link {
@@ -241,9 +242,10 @@ const menuLinks = [
   margin: 0 auto;
 }
 .mk-foot__brand { max-width: 20rem; }
+.mk-foot__wordmark { display: inline-flex; align-items: center; gap: 0.55rem; }
 .mk-foot__tag { margin-top: 0.75rem; font-size: 0.875rem; line-height: 1.55; color: var(--mk-ink-2); }
-.mk-foot__links { display: flex; gap: 3rem; }
-.mk-foot__links > div { display: flex; flex-direction: column; gap: 0.4rem; }
+.mk-foot__links { display: flex; flex-wrap: wrap; gap: 2rem 3rem; min-width: 0; }
+.mk-foot__links > div { display: flex; flex-direction: column; gap: 0.4rem; min-width: 0; }
 .mk-foot__label {
   margin: 0 0 0.35rem;
   font-size: 0.6875rem;

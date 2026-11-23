@@ -148,3 +148,12 @@ h4,
   font-variant-numeric: lining-nums;
   font-feature-settings: 'lnum' 1;
 }
+
+/* ---------- Pacifico（已下线 web 字体） ----------
+ * 曾用作品牌字标的 web 字体（手写 brush script，竞品配方）。
+ * 2026-11-23 字标整体封装成 SVG 图片（public/brand-wordmark.svg，
+ * 文字已转矢量路径，由 scripts/build-wordmark.mjs 生成）——
+ * web 字体有加载窗口，首屏会先显示 fallback 字体再闪成 Pacifico（FOUT）。
+ * 图片零闪烁、零额外请求，故 @font-face 一并移除。
+ * R2 上 fonts/Pacifico-Regular.ttf 保留（OFL-pacifico.txt 同在）。
+ */

@@ -103,7 +103,10 @@ export default defineNuxtConfig({
       }
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/logo.png' },
+        // favicon.ico 内含 32/16 两档（build-logo.mjs 生成）——别用 1024 的 logo.png
+        // 当 favicon，浏览器要下 52KB 再缩到 16px
+        { rel: 'icon', href: '/favicon.ico', sizes: '32x32 16x16' },
+        { rel: 'apple-touch-icon', href: '/logo-512.png' },
       ],
     },
   },
