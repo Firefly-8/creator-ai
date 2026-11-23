@@ -37,3 +37,7 @@ data/*.sqlite-*
 # OS
 Thumbs.db
 .assets/
+
+# 预览/交付物（红线：不入库）
+scripts/output/
+designs/
