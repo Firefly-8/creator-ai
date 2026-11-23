@@ -57,8 +57,12 @@ const props = withDefaults(defineProps<{
   defaultOpen: 0,
 })
 
-/** 同一个页面可能有多个手风琴 —— id 要唯一，否则 aria-controls 会指错 */
-const uid = `ck-acc-${Math.random().toString(36).slice(2, 8)}`
+/**
+ * 同一个页面可能有多个手风琴 —— id 要唯一，否则 aria-controls 会指错。
+ * ⚠️ 用 Vue 3.5 的 useId()：SSR 和客户端渲染出的 id 一致。
+ *    以前用 Math.random()，两端各生成一次随机数 → hydration mismatch 警告。
+ */
+const uid = `ck-acc-${useId()}`
 
 /** 当前展开的索引；-1 = 全收起 */
 const open = ref(props.defaultOpen)

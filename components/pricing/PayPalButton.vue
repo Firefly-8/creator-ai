@@ -57,7 +57,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{ (e: 'need-login'): void; (e: 'paid', info: any): void }>()
 
-const containerId = `pp-btn-${Math.random().toString(36).slice(2, 10)}`
+// useId()：SSR/CSR 生成一致的 id，避免 PayPal 按钮容器的 hydration mismatch
+const containerId = `pp-btn-${useId()}`
 const ready = ref(false)
 const errorMsg = ref('')
 const sandbox = ref(false)
