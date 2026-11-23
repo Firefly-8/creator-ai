@@ -28,18 +28,20 @@ AI 出图有成本（注册累计 **3 次**免费生成，用完为止）。
 
 ---
 
-## 2. 主流程（弹窗化）
+## 2. 主流程（连续遮罩工作区）
+
+详见 `docs/gi-ux-adoption.md` · `docs/cards-api-mapping.md`。
 
 ```
-落地页 CTA
-  → /cards?format=&scenario=
-  → 点「Make a card / Make an invitation」打开 ck-formmodal（可匿名）
-  → 填场合 / 名字 / 详情 / 画风 / 可选照片
-  → 点生成 → 未登录 401 → AuthModal（afterAuth 自动续跑）
-  → 出 1 张候选（Try again 保留近几张旧图）
-  → CardComposer：改字 / 版式 / 拖位置
-  → Keep：自动存排版 + Finish 落库成品
-  → Take：Download（免费带水印）/ Share / Print / Email / PDF
+落地页 CTA / 深链接
+  → /cards?format=&scenario=（落地即开工作区，可匿名）
+  → phase=params：场合 / 名字 / 详情 / 画风 / 可选照片
+  → 点生成 → phase=generating（同遮罩）
+       未登录 401 → AuthModal（afterAuth 续跑；表单保留）
+  → phase=editor：候选 + CardComposer（改字/版式/主题色/Undo·Redo）
+       「Details」可回参数相且不丢内容
+  → Keep：自动存排版 + Finish；Take：带水印下载 / Share / Print / PDF
+  → /image 默认 302→/cards；?legacy=1 保留旧台
 ```
 
 旧 `?step=` 链接被忽略。本地草稿 `craftai_card_draft_v1`（含 format + 照片缩略图）防刷新丢失；  

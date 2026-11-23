@@ -454,7 +454,24 @@ import {
   type ImageScenarioDef,
 } from '~/utils/imageScenarios'
 
-definePageMeta({ layout: 'default', middleware: ['auth'] })
+/**
+ * 入口统一：默认把「图片创作」导向贺卡连续工作区 `/cards`。
+ * 旧高级台仍可通过 ?legacy=1 或 ?advanced=1 进入（需登录）。
+ */
+definePageMeta({
+  layout: 'default',
+  middleware: [
+    function imageEntryUnify(to) {
+      const legacy = String(to.query.legacy || '') === '1' || String(to.query.advanced || '') === '1'
+      if (legacy) return
+      const query: Record<string, string> = { format: 'card' }
+      if (to.query.scenario) query.scenario = String(to.query.scenario)
+      if (to.query.for) query.for = String(to.query.for)
+      return navigateTo({ path: '/cards', query })
+    },
+    'auth',
+  ],
+})
 
 type ImagePublic = {
   id: string

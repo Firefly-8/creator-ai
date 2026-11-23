@@ -82,7 +82,9 @@ describe('P0 · 登录回跳 / 草稿 / from= / Try again', () => {
   })
 
   it('?from= 旧卡优先于本地草稿恢复', () => {
-    expect(cards).toMatch(/if \(String\(route\.query\.from \|\| ''\)\) loadFromCard\(\)\s*\n\s*else restoreDraft\(\)/)
+    expect(cards).toMatch(/const fromId = String\(route\.query\.from \|\| ''\)/)
+    expect(cards).toMatch(/if \(fromId\) await loadFromCard\(\)/)
+    expect(cards).toMatch(/else restoreDraft\(\)/)
   })
 
   it('本地草稿自动保存 + 照片缩略图进草稿', () => {
@@ -115,12 +117,16 @@ describe('P0 · 登录回跳 / 草稿 / from= / Try again', () => {
     expect(cards).toContain('uses 1 of your free goes')
   })
 
-  it('生成失败不 closeForm（输入保留在弹窗里）', () => {
+  it('生成失败不关工作区；成功切 editor 相（不 closeForm 落回营销页）', () => {
     const gen = cards.match(/async function generate\(\)[\s\S]*?\n\}/)?.[0] || ''
-    // closeForm 只应出现在成功路径（fresh 处理之后），catch 里不能关
     const catchBlock = gen.split('} catch')[1] || ''
     expect(catchBlock).not.toContain('closeForm(')
+    expect(gen).toContain("workspacePhase.value = 'editor'")
+    expect(gen).toContain("workspacePhase.value = 'params'")
     expect(gen).toContain('openAuthForGenerate()')
+    // 成功路径不再 closeForm
+    const tryBlock = gen.split('} catch')[0] || ''
+    expect(tryBlock).not.toContain('closeForm(')
   })
 
   it('uiPreview=composer 仅 localhost 注入，不走真实生成', () => {

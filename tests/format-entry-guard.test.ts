@@ -77,7 +77,9 @@ describe('弹窗文案跟入口走，不写死', () => {
 
   it('弹窗 eyebrow/标题/hero 都读 formatCopy，不写死 card', () => {
     expect(src).toContain('{{ formatCopy.eyebrow }}')
-    expect(src).toContain('{{ formatCopy.title }}')
+    // 工作区标题经 workspaceTitle/Eyebrow，参数相仍回落到 formatCopy
+    expect(src).toContain('formatCopy.value.title')
+    expect(src).toContain('formatCopy.value.eyebrow')
     expect(src).toContain('formatCopy.value.heroHeadline')
     expect(src).toContain('formatCopy.value.heroLede')
     // 不能再出现写死的旧标题
@@ -98,7 +100,8 @@ describe('弹窗文案跟入口走，不写死', () => {
     // 格式身份改由弹窗头部 eyebrow 显示（formatCopy.eyebrow 跟着入口走）。
     // 注意别用「全文是否含 ck-format-locked」断言 —— 样式区残留会造成假阳性。
     expect(src).not.toContain('class="ck-format-locked"')
-    expect(src).toContain('class="ck-formmodal__eyebrow">{{ formatCopy.eyebrow }}')
+    expect(src).toContain('class="ck-formmodal__eyebrow">{{ workspaceEyebrow }}')
+    expect(src).toContain('return formatCopy.value.eyebrow')
   })
 
   it('生成按钮与 hero CTA 文案跟格式走', () => {
