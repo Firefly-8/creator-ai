@@ -96,11 +96,20 @@
     <AuthModal v-model="authModalOpen" :initial-mode="authModalMode" />
     <FeedbackModal v-model="feedbackOpen" source="creator" />
     <CookieConsent />
+    <!--
+      ⚠️ 2026-11-17：邮箱验证守卫以前**只挂在 default 布局**。
+      营销页（/cards、/pricing、首页）看不到「去验证邮箱」的提示 →
+      新用户注册后一直卡在「未验证」的额度（1 次/天），
+      不知道验证一下能翻到 2 次/天 → 白白少用一半免费额度。
+      现在营销布局也挂上。
+    -->
+    <EmailVerificationGuard />
   </div>
 </template>
 
 <script setup lang="ts">
 import CookieConsent from '~/components/ui/CookieConsent.vue'
+import EmailVerificationGuard from '~/components/auth/EmailVerificationGuard.vue'
 import FeedbackModal from '~/components/ui/FeedbackModal.vue'
 import { AUDIENCES } from '~/utils/audiences'
 
@@ -222,6 +231,21 @@ const menuLinks = [
   .mk-nav, .mk-top__actions { display: none; }
   .mk-burger { display: grid; place-items: center; }
   .mk-mobile { display: flex; }
+}
+
+/* ⚠️ 2026-11-17：页脚三列在窄屏下横向撑破（实测 390px 视口 scrollWidth 423）——
+   每列都 nowrap，flex 不换行就一直往外顶。
+   → 窄屏改成两列网格，更窄改成单列。 */
+@media (max-width: 640px) {
+  .mk-foot__inner { gap: 1.75rem; }
+  .mk-foot__links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+    width: 100%;
+  }
+  .mk-foot__links > div { min-width: 0; }
+  .mk-foot__links a { overflow-wrap: anywhere; }
 }
 
 .mk-main { flex: 1; }

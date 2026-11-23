@@ -161,6 +161,14 @@ export async function publicImage(img: ImageRow) {
     }
   }
 
+  // ⚠️ 2026-11-17（远端线）：把卡面数据（名字/留言/版式）一起带出去 ——
+  //    以前只存图不存字，用户从「我的作品」打开旧卡得重写一遍。
+  //    meta_json 里没有 card 字段的老记录 → undefined，前端跳过。
+  const rawCard = (meta as unknown as Record<string, unknown>).card
+  const card = rawCard && typeof rawCard === 'object'
+    ? rawCard as { name?: string; message?: string; style?: string; layout?: string; texts?: unknown[] }
+    : undefined
+
   return {
     id: img.id,
     title: img.title,
@@ -177,6 +185,8 @@ export async function publicImage(img: ImageRow) {
     expired: isExpiredDraft(img),
     format: meta.format || null,
     finalizedAt: meta.finalizedAt || null,
+    /** 卡面数据（名字/留言/版式/文字位置），老记录无此字段 */
+    card,
     errorMessage: img.error_message,
     createdAt: img.created_at,
     updatedAt: img.updated_at,

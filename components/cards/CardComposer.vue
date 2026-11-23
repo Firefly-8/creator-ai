@@ -291,7 +291,7 @@ import { getCardFormat } from '~/utils/cardFormats'
 
 const props = defineProps<{
   imageUrl: string
-  /** 预置文字（来自场景 presetMessages） */
+  /** 预置文字（来自场景 presetMessages / 生成前用户写好的字） */
   initialTexts?: Partial<CardTextItem>[]
   /** 是否有付费权限（决定导出版本） */
   hasPaid?: boolean
@@ -299,9 +299,18 @@ const props = defineProps<{
   format?: 'invite' | 'card'
   /** 资产 id（复制免登录分享链接用；从 /my-assets 打开旧卡时有值） */
   cardId?: string
+  /**
+   * ⚠️ 2026-11-17（远端线）：旧卡恢复用。
+   *   用户从「我的作品」打开一张做过的卡 → 这里带的是**当时的成品数据**
+   *   （版式 id + 每条文字的精确位置/字号/颜色）。
+   *   有 texts 就直接用（位置是精确的），别再套一次版式把它覆盖了。
+   */
+  savedCard?: { layout?: string; texts?: CardTextItem[] }
 }>()
 
+/** 成品状态变化 → 通知页面层去保存（update:card）；付费/完成走 finalized */
 const emit = defineEmits<{
+  (e: 'update:card', v: { layout: string; texts: CardTextItem[] }): void
   (e: 'remove-watermark'): void
   (e: 'finalized', payload: { id: string; finalUrl: string }): void
 }>()
@@ -320,20 +329,59 @@ const {
   // ⚠️ 默认**只有两个必填字段**（名字 + 留言）。
   //    签名是可选的 → 用户点了「+ Add a signature」才加。
   //    （以前默认三条，等于给用户塞了三个输入框）
-  texts: [
-    { id: 'name', kind: 'name', text: '', x: 0.5, y: 0.79, size: 0.075, color: '#c8543d', align: 'center', font: 'display', rotate: 0 },
-    { id: 'message', kind: 'message', text: '', x: 0.5, y: 0.868, size: 0.028, color: '#3a2f28', align: 'center', font: 'body', rotate: 0 },
-  ],
+  //
+  // ⚠️ 2026-11-17：initialTexts 以前声明了却**根本没用** ——
+  //    页面层传什么进来都被这三条默认文本覆盖掉。
+  //    现在真正接上：用户在新流程里提前写好的名字和留言，
+  //    出图后直接落在成品上（不用再手打一遍）。
+  texts: props.savedCard?.texts?.length
+    ? props.savedCard.texts
+    : props.initialTexts?.length
+      ? (props.initialTexts as CardTextItem[])
+      : [
+          { id: 'name', kind: 'name', text: '', x: 0.5, y: 0.79, size: 0.075, color: '#c8543d', align: 'center', font: 'display', rotate: 0 },
+          { id: 'message', kind: 'message', text: '', x: 0.5, y: 0.868, size: 0.028, color: '#3a2f28', align: 'center', font: 'body', rotate: 0 },
+        ],
 })
 
 const hasPaid = computed(() => !!props.hasPaid)
 
-/** 当前版式 id */
-const layoutId = ref('classic')
+/**
+ * 当前版式 id
+ *
+ * ⚠️ 旧卡恢复：版式 id 也存下来了 → 直接回到用户当时选的那一版。
+ *    传了不存在的 id 就当 classic（别让一张脏数据把编辑器搞挂）。
+ */
+const layoutId = ref(
+  CARD_LAYOUTS.some(l => l.id === props.savedCard?.layout) ? (props.savedCard!.layout as string) : 'classic'
+)
 
 // 初始值已跟 classic 对齐（见上面的 texts）—— 这里再套一次，
 // 保证以后改版式数据时初始态不会跟版式脱节
-onMounted(() => applyLayout(layoutId.value))
+//
+// ⚠️ 但如果是从旧卡恢复的，texts 里带着**当时的精确位置**，
+//    再套一次版式就把它覆盖了 → 恢复出来的卡长得跟用户做的不一样。
+onMounted(() => {
+  if (!props.savedCard?.texts?.length) applyLayout(layoutId.value)
+})
+
+/**
+ * 成品状态一变就报给页面层 → 页面层防抖存到服务器。
+ *
+ * ⚠️ 用 watch 而不是手动在每个函数里 emit —— 拖字、改字、换版式
+ *    都会走到 draft.texts，手动 emit 迟早漏掉一处。
+ */
+watch(
+  [layoutId, () => draft.value.texts],
+  () => {
+    emit('update:card', {
+      layout: layoutId.value,
+      // 深拷贝：draft 里的对象是响应式的，直接传出去会被外部改到
+      texts: JSON.parse(JSON.stringify(draft.value.texts)) as CardTextItem[],
+    })
+  },
+  { deep: true, immediate: true }
+)
 
 /** 签名在不在版式里（不在就用户自己加） */
 /** 当前有没有签名文本（没有才显示「+ Add a signature」的按钮） */

@@ -306,7 +306,7 @@
                 ? `Making your ${formatCopy.ctaNoun}…`
                 : (outOfQuota && !usageUnlimited)
                   ? (outOfCards ? 'Get more cards' : `Get ${PLANS.creator.cards} credits`)
-                  : `Make ${scenario?.label.toLowerCase() || formatCopy.ctaNoun} ${formatCopy.ctaNoun}`
+                  : formatCopy.ctaPhrase
             }}
           </button>
         </div>
@@ -319,7 +319,7 @@
         <h2 class="ck-sec__title">
           Pick the one you like
         </h2>
-        <p class="ck-sec__sub">Add your words, then download it ready to print. Remake any time with the button above.</p>
+        <p class="ck-sec__sub">Add your words, then download it ready to print. Each try uses 1 of your free goes — your previous picks stay above so you can compare.</p>
 
         <div class="ck-cands">
           <button
@@ -338,6 +338,11 @@
           <button class="ck-btn ck-btn--ghost" :disabled="generating" @click="generate">
             <span class="i-ph-arrow-clockwise" />
             Try again
+            <!-- ⚠️ 成本要标出来（远端线 2026-11-23）——
+                 以前这里一点就又扣一次额度，界面上一个字都没提。 -->
+            <span v-if="usageLoaded && !outOfQuota && !usageUnlimited" class="ck-nav__cost">
+              uses 1 of your free goes
+            </span>
           </button>
           <!-- 生成完顺手给个「看全部作品」的出口 -->
           <NuxtLink to="/my-assets" class="ck-btn ck-btn--ghost">
@@ -374,13 +379,15 @@
 
           <CardComposer
             :image-url="pickedUrl"
-            :initial-texts="[]"
+            :initial-texts="prefilledTexts"
+            :saved-card="savedCard || undefined"
             :has-paid="hasPaid"
             :format="cardFormat"
             :card-id="picked"
             class="ck-editor__composer"
             @remove-watermark="openPaywall"
             @finalized="onFinalized"
+            @update:card="onCardUpdate"
           />
           <p v-if="finishToast" class="ck-finish-toast">
             <span class="i-ph-check-circle" /> Saved — your share link now shows the finished card.
@@ -510,7 +517,15 @@ const uploadId = ref('')
 
 const generating = ref(false)
 const genError = ref('')
-const candidates = ref<{ id: string; url: string }[]>([])
+/**
+ * 候选图分两段存（远端线 2026-11-23 移植）：
+ * ⚠️ 以前点「Try again」会直接把上一张顶掉 —— 用户好不容易挑到一张还不错的，
+ *    一按就没了，只能再花一次额度重来。现在新出的在上面，老的留在下面对比。
+ *    n:1 之后每批只有一张，共保留最近 3 张，不会越滚越长。
+ */
+const currentBatch = ref<{ id: string; url: string }[]>([])
+const olderBatch = ref<{ id: string; url: string }[]>([])
+const candidates = computed(() => [...currentBatch.value, ...olderBatch.value])
 const picked = ref('')
 
 /**
@@ -531,6 +546,99 @@ const pickedUrl = computed(() => candidates.value.find(c => c.id === picked.valu
 const messageOptions = ref<string[]>([])
 const chosenMessage = ref('')
 const writingMessage = ref(false)
+
+/**
+ * 生成前填的字 → 出图后预填到编辑器（远端线 2026-11-23 移植）。
+ * ⚠️ 贺卡正文**不进 AI prompt**（模型自己写字必翻车），
+ *    它的唯一去向 = 出图后落在成品上。名字同理。
+ */
+const prefilledTexts = computed(() => {
+  const out: any[] = []
+  if (name.value.trim()) {
+    out.push({ id: 'name', kind: 'name', text: name.value.trim(), x: 0.5, y: 0.79, size: 0.075, color: '#c8543d', align: 'center', font: 'display', rotate: 0 })
+  }
+  if (chosenMessage.value.trim()) {
+    out.push({ id: 'message', kind: 'message', text: chosenMessage.value.trim(), x: 0.5, y: 0.868, size: 0.028, color: '#3a2f28', align: 'center', font: 'body', rotate: 0 })
+  }
+  return out
+})
+
+// ── 旧卡复用：版式 + 文字位置（远端线 2026-11-23）─────────────
+// composer 每次改动上报 → 2.5s 防抖后静默落库（PUT /api/images/:id/card）。
+// 存不上不打断编辑（用户可能没登录 / 网络抖了）。
+const savedCard = ref<{ layout?: string; texts: any[] } | null>(null)
+const finalCard = ref<{ layout?: string; texts: any[] } | null>(null)
+let saveTimer: ReturnType<typeof setTimeout> | null = null
+
+function onCardUpdate(v: { layout: string; texts: any[] }) {
+  finalCard.value = v
+  if (saveTimer) clearTimeout(saveTimer)
+  saveTimer = setTimeout(() => { void saveCardNow() }, 2500)
+}
+
+async function saveCardNow() {
+  const id = picked.value
+  if (!id || !finalCard.value) return
+  try {
+    await api.put(`/api/images/${id}/card`, {
+      name: name.value,
+      message: chosenMessage.value,
+      style: style.value,
+      layout: finalCard.value.layout,
+      texts: finalCard.value.texts,
+    })
+  } catch {
+    // 静默 —— 编辑不被网络问题打断
+  }
+}
+
+// ── 本地草稿（远端线 2026-11-23）—— 防「填了一半被杀掉」──────
+// 弹窗一步到位后同样适用：刷新/切后台回来，弹窗参数还在。
+// 照片原图存不进 localStorage，真要出图还得重选（缩略图仅作提醒）。
+// ⚠️ 放在 scenario/style/name/extra/cardFormat 声明之后：watch 源数组在
+//    setup 时立即求值，提前引用会踩 TDZ。
+const draftStore = useCardDraft()
+
+watch(
+  [scenario, style, name, extra, chosenMessage, cardFormat],
+  () => {
+    draftStore.state.value = {
+      ...draftStore.state.value,
+      format: cardFormat.value,
+      scenario: scenario.value?.id || '',
+      style: style.value,
+      name: name.value,
+      message: chosenMessage.value,
+      extra: extra.value,
+      count: 1,
+      step: 1,
+      thumb: draftStore.state.value.thumb,
+      at: Date.now(),
+    }
+  },
+  { deep: true },
+)
+
+/** 恢复草稿（页面加载时调一次；?from= 旧卡优先，不走这里） */
+function restoreDraft() {
+  const ok = draftStore.restore()
+  if (!ok) return
+  const st = draftStore.state.value
+  if (st.format) cardFormat.value = parseCardFormat(st.format)
+  if (st.scenario) {
+    const sc = IMAGE_SCENARIOS.find(x => x.id === st.scenario)
+    if (sc) {
+      group.value = sc.group
+      scenario.value = sc
+      messageOptions.value = sc.presetMessages ? [...sc.presetMessages] : []
+      if (!chosenMessage.value) chosenMessage.value = sc.presetMessages?.[0] || ''
+    }
+  }
+  if (st.style && getStyle(st.style)) style.value = st.style
+  if (st.name) name.value = st.name
+  if (st.message && !chosenMessage.value) chosenMessage.value = st.message
+  if (st.extra) extra.value = st.extra
+}
 
 // ── 登录弹窗（全站共用那套 AuthModal）──────────────────────
 // ⚠️ 以前这里自己画了一个 "Almost there" 弹窗，但它 Teleport 到 body 之后
@@ -781,6 +889,9 @@ async function generate() {
       scenario: scenario.value.id,
       style: style.value,
       name: name.value,
+      // ⚠️ 贺卡正文不进 prompt（模型自己写字必翻车），但要存服务端 →
+      //    以后从「我的作品」打开这张卡，字还在（远端线 2026-11-23）
+      message: chosenMessage.value,
       extra: extra.value,
       uploadId: uid || undefined,
       n: 1,
@@ -792,13 +903,18 @@ async function generate() {
     await loadUsage()
     // ⚠️ 后端返回的是 { id, imageUrl }（签名 URL），
     //    以前这里读的是 im.url → 永远是 undefined → 候选图一片空白
-    candidates.value = (res.images || [])
-      .filter((im) => !!im.imageUrl)
-      .map((im) => ({
+    const fresh = (res.images || [])
+      .filter(im => !!im.imageUrl)
+      .map(im => ({
         id: im.id,
         url: im.imageUrl as string,
       }))
-    picked.value = candidates.value[0]?.id || ''
+    // 上一批挪到 olderBatch —— 别把用户挑好的那张顶掉（远端线逻辑）
+    if (fresh.length) {
+      olderBatch.value = [currentBatch.value[0], olderBatch.value[0]].filter(Boolean).slice(0, 2)
+      currentBatch.value = fresh
+    }
+    picked.value = currentBatch.value[0]?.id || ''
     // 出图了 → 关掉参数弹窗，结果/编辑器留在页面上；滚动过去接着写文字
     closeForm()
     nextTick(() => {
@@ -859,13 +975,30 @@ async function loadFromCard() {
   const id = String(route.query.from || '')
   if (!id) return
   try {
-    const res = await api.get<{ images: { id: string; imageUrl: string | null; format?: string | null }[] }>('/api/images')
+    const res = await api.get<{ images: { id: string; imageUrl: string | null; format?: string | null; card?: { name?: string; message?: string; style?: string; layout?: string; texts?: unknown[] } }[] }>('/api/images')
     const hit = (res.images || []).find(i => i.id === id)
     if (!hit?.imageUrl) return
     // 续编旧卡：格式以旧卡为准（覆盖 URL 的 ?format=），否则邀请函会按贺卡版式编辑
     if (hit.format) cardFormat.value = parseCardFormat(hit.format)
-    candidates.value = [{ id: hit.id, url: hit.imageUrl }]
+    currentBatch.value = [{ id: hit.id, url: hit.imageUrl }]
+    olderBatch.value = []
     picked.value = hit.id
+    // 旧卡复用做完整（远端线 2026-11-23）：把当时的名字/留言/画风/版式/文字位置
+    // 都还原 —— 以前只回图不回字，用户打开旧卡得重写一遍。
+    const c = hit.card
+    if (c && typeof c === 'object') {
+      if (c.name) name.value = c.name
+      if (c.message) {
+        chosenMessage.value = c.message
+        if (!messageOptions.value.includes(c.message)) {
+          messageOptions.value = [c.message, ...messageOptions.value]
+        }
+      }
+      if (c.style && getStyle(c.style)) style.value = c.style
+      if (c.layout || (Array.isArray(c.texts) && c.texts.length)) {
+        savedCard.value = { layout: c.layout, texts: (c.texts as any[]) || [] }
+      }
+    }
     // 旧卡直接进编辑区，不走参数弹窗
   } catch {
     // 没登录 / 找不到 / 没权限 → 正常走「做一张新卡」的流程
@@ -876,8 +1009,9 @@ async function loadFromCard() {
 onMounted(() => {
   loadUsage()
   // 兼容旧链接 ?step=2：三步向导已经没了，直接当它不存在（参数弹窗自己一站填完）
-  // 从「My cards」过来的 → 直接把旧卡打开
-  loadFromCard()
+  // 从「My cards」过来的 → 直接把旧卡打开（旧卡参数优先，不走草稿恢复）
+  if (String(route.query.from || '')) loadFromCard()
+  else restoreDraft()
 })
 
 // 离开页面时：恢复背景滚动 + 把弹窗的说明/回调清掉 —— 别让别的页面误触发这一页的逻辑

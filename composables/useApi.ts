@@ -3,7 +3,7 @@
  * 所有 API 请求通过此 composable 发送
  *
  * 使用示例:
- * const { get, post, del } = useApi()
+ * const { get, post, put, del } = useApi()
  * const data = await get('/api/auth/me')
  * await post('/api/music/generate', { prompt: '...' })
  */
@@ -40,11 +40,16 @@ export function useApi() {
     return $fetch<T>(url, { method: 'DELETE', headers: await getHeaders() })
   }
 
+  /** PUT —— 改已有资源（例：保存一张卡的成品状态） */
+  async function put<T = any>(url: string, body?: any): Promise<T> {
+    return $fetch<T>(url, { method: 'PUT', body, headers: await getHeaders() })
+  }
+
   async function upload<T = any>(url: string, formData: FormData): Promise<T> {
     const headers = await getHeaders()
     delete headers['Content-Type'] // 让浏览器自动设置 multipart boundary
     return $fetch<T>(url, { method: 'POST', body: formData, headers })
   }
 
-  return { get, post, del, upload, getHeaders }
+  return { get, post, put, del, upload, getHeaders }
 }
