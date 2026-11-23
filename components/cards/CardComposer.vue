@@ -28,6 +28,14 @@
         <span class="i-ph-cursor-click" />
         Drag any text to move it. Tap it to edit the words.
       </p>
+      <div class="ck-hist" role="group" aria-label="Undo and redo">
+        <button type="button" class="ck-hist__btn" :disabled="!canUndo" aria-label="Undo" @click="undo">
+          <span class="i-ph-arrow-counter-clockwise" /> Undo
+        </button>
+        <button type="button" class="ck-hist__btn" :disabled="!canRedo" aria-label="Redo" @click="redo">
+          <span class="i-ph-arrow-clockwise" /> Redo
+        </button>
+      </div>
     </div>
 
     <!-- ============ 编辑面板 ============ -->
@@ -52,7 +60,7 @@
             class="ck-layout"
             :class="{ 'ck-layout--on': layoutId === l.id }"
             :aria-pressed="layoutId === l.id"
-            @click="applyLayout(l.id)"
+            @click="applyLayoutWithHistory(l.id)"
           >
             <span class="ck-layout__thumb" :class="`ck-layout__thumb--${l.id}`">
               <span class="ck-layout__t ck-layout__t--name" />
@@ -61,6 +69,28 @@
             </span>
             <span class="ck-layout__label">{{ l.label }}</span>
             <span class="ck-layout__desc">{{ l.desc }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 主题色（本地，不扣生成额度） -->
+      <section class="ck-panel-sec" data-sec="theme">
+        <h3 class="ck-panel-sec__title">Colour accent</h3>
+        <p class="ck-panel-sec__hint">Changes text colours only — no AI call.</p>
+        <div class="ck-themes" role="listbox" aria-label="Colour accent">
+          <button
+            v-for="th in THEMES"
+            :key="th.id"
+            type="button"
+            class="ck-theme"
+            :class="{ 'ck-theme--on': themeId === th.id }"
+            :style="{ '--swatch': th.name }"
+            :aria-pressed="themeId === th.id"
+            :aria-label="th.label"
+            @click="applyTheme(th.id)"
+          >
+            <span class="ck-theme__swatch" />
+            <span class="ck-theme__label">{{ th.label }}</span>
           </button>
         </div>
       </section>
@@ -80,7 +110,7 @@
               class="ck-field__del"
               title="Remove"
               :aria-label="`Remove ${labelOf(t.kind)}`"
-              @click="removeText(t.id)"
+              @click="removeTextWithHistory(t.id)"
             >
               <span class="i-ph-x" />
             </button>
@@ -91,6 +121,7 @@
             rows="3"
             :value="t.text"
             placeholder="Write your message here…"
+            @change="pushHistory()"
             @input="updateText(t.id, { text: ($event.target as HTMLTextAreaElement).value })"
           />
           <input
@@ -99,13 +130,14 @@
             type="text"
             :value="t.text"
             :placeholder="placeholderOf(t.kind)"
+            @change="pushHistory()"
             @input="updateText(t.id, { text: ($event.target as HTMLInputElement).value })"
           />
         </div>
 
         <!-- 签名是可选的：默认只给两个必填字段，想加签名再点 -->
         <div v-if="!hasSignatureText" class="ck-panel-sec__actions">
-          <button class="ck-btn-mini" @click="addSignature">+ Add a signature</button>
+          <button class="ck-btn-mini" @click="addSignatureWithHistory">+ Add a signature</button>
         </div>
       </section>
 
@@ -410,6 +442,12 @@ const layoutId = ref(
 //    再套一次版式就把它覆盖了 → 恢复出来的卡长得跟用户做的不一样。
 onMounted(() => {
   if (!props.savedCard?.texts?.length) applyLayout(layoutId.value)
+  // 初始快照，之后 Undo 可回到进入编辑器时的状态
+  nextTick(() => {
+    history.value = [snapshot()]
+    histIdx.value = 0
+    histReady = true
+  })
 })
 
 /** Finish 状态要在 watch 之前声明（下方改字会读这两个 ref） */
@@ -472,6 +510,81 @@ function applyLayout(id: string) {
       rotate: spec.rotate ?? 0,
     })
   }
+}
+
+const THEMES = [
+  { id: 'coral', label: 'Coral', name: '#c8543d', message: '#3a2f28' },
+  { id: 'ink', label: 'Ink', name: '#2a2420', message: '#4a4038' },
+  { id: 'sage', label: 'Sage', name: '#4f6f52', message: '#2f3e30' },
+  { id: 'navy', label: 'Navy', name: '#2c4a6e', message: '#243447' },
+] as const
+const themeId = ref<(typeof THEMES)[number]['id']>('coral')
+
+type HistSnap = { layout: string; theme: string; texts: CardTextItem[] }
+const history = ref<HistSnap[]>([])
+const histIdx = ref(-1)
+let histReady = false
+
+function snapshot(): HistSnap {
+  return {
+    layout: layoutId.value,
+    theme: themeId.value,
+    texts: JSON.parse(JSON.stringify(draft.value.texts)) as CardTextItem[],
+  }
+}
+function pushHistory() {
+  if (!histReady) return
+  const snap = snapshot()
+  const cur = history.value[histIdx.value]
+  if (cur && JSON.stringify(cur) === JSON.stringify(snap)) return
+  history.value = history.value.slice(0, histIdx.value + 1)
+  history.value.push(snap)
+  if (history.value.length > 40) history.value.shift()
+  histIdx.value = history.value.length - 1
+}
+function applySnapshot(snap: HistSnap) {
+  layoutId.value = snap.layout
+  themeId.value = snap.theme as typeof themeId.value
+  draft.value.texts = JSON.parse(JSON.stringify(snap.texts)) as CardTextItem[]
+  nextTick(() => renderPreview())
+}
+const canUndo = computed(() => histIdx.value > 0)
+const canRedo = computed(() => histIdx.value >= 0 && histIdx.value < history.value.length - 1)
+function undo() {
+  if (!canUndo.value) return
+  histIdx.value -= 1
+  applySnapshot(history.value[histIdx.value])
+}
+function redo() {
+  if (!canRedo.value) return
+  histIdx.value += 1
+  applySnapshot(history.value[histIdx.value])
+}
+function applyLayoutWithHistory(id: string) {
+  pushHistory()
+  applyLayout(id)
+  nextTick(() => pushHistory())
+}
+function applyTheme(id: string) {
+  const th = THEMES.find(t => t.id === id)
+  if (!th) return
+  pushHistory()
+  themeId.value = th.id
+  for (const t of draft.value.texts) {
+    if (t.kind === 'name' || t.kind === 'title') updateText(t.id, { color: th.name })
+    else if (t.kind === 'message' || t.kind === 'signature') updateText(t.id, { color: th.message })
+  }
+  nextTick(() => pushHistory())
+}
+function addSignatureWithHistory() {
+  pushHistory()
+  addSignature()
+  nextTick(() => pushHistory())
+}
+function removeTextWithHistory(id: string) {
+  pushHistory()
+  removeText(id)
+  nextTick(() => pushHistory())
 }
 
 /** 用户自己加一个签名（版式里没有时的可选入口） */
@@ -1097,10 +1210,52 @@ async function doPdf() {
 .ck-deliver__btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ---------- 弹窗 ---------- */
+.ck-hist {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+}
+.ck-hist__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(58, 46, 38, 0.15);
+  border-radius: 999px;
+  background: #fffdfa;
+  color: #2a2420;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.ck-hist__btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ck-themes {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.ck-theme {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 0.35rem;
+  border: 1.5px solid rgba(58, 46, 38, 0.12);
+  border-radius: 0.75rem;
+  background: #fff;
+  cursor: pointer;
+}
+.ck-theme--on { border-color: #c8543d; box-shadow: 0 0 0 1px #c8543d; }
+.ck-theme__swatch {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  background: var(--swatch);
+}
+.ck-theme__label { font-size: 0.72rem; color: #6b5f55; }
 .ck-modal {
   position: fixed;
   inset: 0;
-  z-index: 100;
+  z-index: 130; /* 高于工作区 110，低于无要求；嵌在遮罩内也能点到 */
   display: grid;
   place-items: center;
   padding: 1rem;

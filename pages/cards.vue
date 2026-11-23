@@ -2,9 +2,7 @@
   <div class="ck-cards">
     <!--
       ============ 顶部 ============
-      2026-11-23：三步向导收进了一个就地参数弹窗（对齐竞品/原型）。
-      这里只留一个醒目的入口按钮 —— 点开弹窗，格式/场合/照片名字/画风一次填完。
-      结果生成后弹窗关闭，编辑器和交付留在下方页面内，不再有步骤跳转。
+      同一遮罩工作区：params → generating → editor；出图后不落回营销页内嵌。
     -->
     <header class="ck-cards__head">
       <div class="ck-wrap ck-cards__headgrid">
@@ -41,24 +39,55 @@
     </header>
 
     <!--
-      ============ 参数弹窗（就地，不 Teleport）============
-      内联在 .ck-cards 内，继承它的 CSS 变量；z-index 低于登录弹窗(120)，
-      这样未登录点生成时登录框能浮在上面，参数不丢、登录后自动续跑。
+      ============ 连续创作工作区（就地，不 Teleport）============
+      phases: params | generating | editor · z-index 110 < Auth 120
     -->
-    <div v-if="formOpen" class="ck-formmodal" role="dialog" aria-modal="true" aria-label="Make a card">
-      <div class="ck-formmodal__backdrop" @click="closeForm" />
-      <div class="ck-formmodal__panel">
+    <div
+      v-if="formOpen"
+      class="ck-formmodal ck-workspace"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="workspacePhase === 'editor' ? 'Edit your card' : 'Make a card'"
+      data-phase="workspace"
+      :data-workspace-phase="workspacePhase"
+    >
+      <div class="ck-formmodal__backdrop" @click="requestCloseWorkspace" />
+      <div
+        class="ck-formmodal__panel"
+        :class="{ 'ck-formmodal__panel--wide': workspacePhase === 'editor' || workspacePhase === 'generating' }"
+      >
         <div class="ck-formmodal__head">
-          <div>
-            <p class="ck-formmodal__eyebrow">{{ formatCopy.eyebrow }}</p>
-            <h2 class="ck-formmodal__title">{{ formatCopy.title }}</h2>
+          <div class="ck-formmodal__headmain">
+            <button
+              v-if="workspacePhase === 'editor'"
+              type="button"
+              class="ck-formmodal__back"
+              @click="backToParams"
+            >
+              <span class="i-ph-caret-left" />
+              Details
+            </button>
+            <div>
+              <p class="ck-formmodal__eyebrow">{{ workspaceEyebrow }}</p>
+              <h2 class="ck-formmodal__title">{{ workspaceTitle }}</h2>
+            </div>
           </div>
-          <button type="button" class="ck-formmodal__close" aria-label="Close" @click="closeForm">
+          <button type="button" class="ck-formmodal__close" aria-label="Close" @click="requestCloseWorkspace">
             <span class="i-ph-x" />
           </button>
         </div>
 
-        <div class="ck-formmodal__body">
+        <div v-if="workspacePhase === 'generating'" class="ck-workspace__gen" data-phase="generating">
+          <span class="i-ph-spinner animate-spin ck-workspace__spin" aria-hidden="true" />
+          <p class="ck-workspace__gen-title">Making your {{ formatCopy.ctaNoun }}…</p>
+          <p class="ck-workspace__gen-sub">
+            {{ scenario?.label || 'Card' }}
+            <template v-if="name"> · for {{ name }}</template>
+          </p>
+          <p class="ck-workspace__gen-hint">This uses 1 generation. Your details stay here if it fails.</p>
+        </div>
+
+        <div v-show="workspacePhase === 'params'" class="ck-formmodal__body" data-phase="params">
           <!-- ============ 主屏：一屏填完核心参数 ============
                ⚠️ 必须常驻（不能 v-if/v-show 跟着 subPage 切换）：
                二级子页是 absolute 定位、不占文档流高度 —— 主屏一卸载，
@@ -279,8 +308,7 @@
           </div>
         </div><!-- /ck-formmodal__body -->
 
-        <!-- 弹窗底部：额度说明 + 生成按钮（一步到位，点完直接出结果） -->
-        <div class="ck-formmodal__foot">
+        <div v-show="workspacePhase === 'params'" class="ck-formmodal__foot" data-phase="params-foot">
           <p class="ck-formmodal__quota">
             <template v-if="usageUnlimited">Unlimited generations on your plan.</template>
             <template v-else-if="usageMode === 'credit' && usageLoaded">
@@ -310,16 +338,17 @@
             }}
           </button>
         </div>
-      </div><!-- /ck-formmodal__panel -->
-    </div><!-- /ck-formmodal -->
 
-    <!-- ==================== 结果 / 编辑器 ==================== -->
-    <div class="ck-wrap ck-cards__body">
-      <section v-if="candidates.length" class="ck-sec ck-sec--card ck-result">
+        <div
+          v-show="workspacePhase === 'editor'"
+          class="ck-workspace__editor"
+          data-phase="editor"
+        >
+      <section class="ck-result ck-result--workspace">
         <h2 class="ck-sec__title">
           Pick the one you like
         </h2>
-        <p class="ck-sec__sub">Add your words, keep the design in your account, then download or share when you are ready. Each try uses 1 of your free goes — your previous picks stay above so you can compare.</p>
+        <p class="ck-sec__sub">Edit words on the canvas — that never uses a generation. Each try uses 1 of your free goes — your previous picks stay so you can compare.</p>
 
         <div class="ck-cands">
           <button
@@ -354,7 +383,7 @@
         <div v-if="pickedUrl" class="ck-editor">
           <h3 class="ck-mini-title ck-mini-title--gap">Now add your words</h3>
           <p class="ck-hint ck-hint--lead">
-            Pick one below, or let us write it for you. You can change every word after.
+            Pick one below, or let us write it for you. Layout and colours are free to change.
           </p>
           <div class="ck-msgpick">
             <button
@@ -395,12 +424,15 @@
           </p>
         </div>
       </section>
-    </div>
+
+        </div>
+      </div><!-- /ck-formmodal__panel -->
+    </div><!-- /ck-workspace -->
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue'
+import { computed, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import {
   IMAGE_SCENARIOS,
   SCENARIO_GROUPS,
@@ -430,12 +462,13 @@ useHead({
 // 竞品/原型都是「就地弹窗一次填完参数」，以前这里做成了三步向导，跳转多。
 // 现在格式/场合/照片名字/画风都在一个弹窗里，填完点生成直接出结果。
 const formOpen = ref(false)
+/** 遮罩工作区阶段：参数 → 生成中 → 编辑（全程不落回营销页内嵌） */
+type WorkspacePhase = 'params' | 'generating' | 'editor'
+const workspacePhase = ref<WorkspacePhase>('params')
 
 /**
- * 弹窗二级导航栈（2026-11-23 竞品 UX 对齐）。
- * 竞品把场合/风格/配色全收进带 ‹ 返回的二级子页，主界面只留自然语言字段。
- * 这里同构：main 一屏填完，点 chip push 到子页，选完 pop 回 main。
- * 子页切换只是弹窗内的 UI 状态，不写 URL、不碰生成参数。
+ * 弹窗二级导航栈（场合/风格/照片子页）。
+ * 子页切换只是参数相内的 UI 状态，不写 URL、不碰生成参数。
  */
 type SubPage = '' | 'occasion' | 'style' | 'photo'
 const subPage = ref<SubPage>('')
@@ -451,16 +484,37 @@ const pageLede = computed(() =>
     : formatCopy.value.heroLede,
 )
 
+const workspaceEyebrow = computed(() => {
+  if (workspacePhase.value === 'generating') return 'Almost there'
+  if (workspacePhase.value === 'editor') return 'Edit · save · take home'
+  return formatCopy.value.eyebrow
+})
+const workspaceTitle = computed(() => {
+  if (workspacePhase.value === 'generating') return `Making your ${formatCopy.value.ctaNoun}…`
+  if (workspacePhase.value === 'editor') return 'Your card'
+  return formatCopy.value.title
+})
+
 function openForm() {
   formOpen.value = true
-  subPage.value = '' // 每次都从主屏开始，不残留上次停在的子页
+  subPage.value = ''
   genError.value = ''
-  // 弹窗打开时锁背景滚动；关闭时恢复（在 closeForm 里）
+  // 已有候选 → 直接进编辑相；否则参数相
+  workspacePhase.value = candidates.value.length ? 'editor' : 'params'
   document.body.style.overflow = 'hidden'
 }
 function closeForm() {
   formOpen.value = false
   document.body.style.overflow = ''
+}
+function backToParams() {
+  workspacePhase.value = 'params'
+  subPage.value = ''
+  genError.value = ''
+}
+function requestCloseWorkspace() {
+  if (workspacePhase.value === 'generating') return
+  closeForm()
 }
 
 /** 去水印付费墙：跳到站内唯一的定价页（练手项目不引入新弹窗支付流程） */
@@ -917,6 +971,8 @@ async function generate() {
   if (!scenario.value) return
   genError.value = ''
   generating.value = true
+  // 遮罩内进入生成相（不关工作区、不滚到营销页）
+  if (formOpen.value) workspacePhase.value = 'generating'
   try {
     const uid = await uploadPhoto()
     const res = await api.post<{ images: { id: string; imageUrl: string | null }[] }>('/api/image/generate', {
@@ -949,12 +1005,12 @@ async function generate() {
       currentBatch.value = fresh
     }
     picked.value = currentBatch.value[0]?.id || ''
-    // 出图了 → 关掉参数弹窗，结果/编辑器留在页面上；滚动过去接着写文字
-    closeForm()
-    nextTick(() => {
-      document.querySelector('.ck-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
+    // 出图了 → 同一遮罩切到编辑相（不再 closeForm / 不再滚到页面下方）
+    if (!formOpen.value) openForm()
+    workspacePhase.value = 'editor'
   } catch (e: any) {
+    // 失败回到参数相，输入保留；绝不关工作区
+    if (formOpen.value) workspacePhase.value = 'params'
     // 401 = 需要登录。判断放在服务端返回上，比读本地 auth 状态可靠
     //（useAuth 每次调用返回新 ref，组件里拿到的 user 常常是空的）
     if (isUnauthorized(e)) {
@@ -1040,15 +1096,14 @@ async function loadFromCard() {
 }
 
 // 额度：进入页面就读一次（未登录会失败，忽略即可 —— 生成时服务端会要求登录）
-onMounted(() => {
+onMounted(async () => {
   loadUsage()
-  // 兼容旧链接 ?step=2：三步向导已经没了，直接当它不存在（参数弹窗自己一站填完）
-  // 从「My cards」过来的 → 直接把旧卡打开（旧卡参数优先，不走草稿恢复）
-  if (String(route.query.from || '')) loadFromCard()
+  // 兼容旧链接 ?step=2：三步向导已经没了，直接当它不存在
+  const fromId = String(route.query.from || '')
+  if (fromId) await loadFromCard()
   else restoreDraft()
 
-  // 仅本机 UI 验收：?uiPreview=composer 注入一张公开 showcase 图进编辑器，
-  // 不调生成/付费接口。生产/staging 主机名不是 localhost → 无效。
+  // 仅本机 UI 验收：?uiPreview=composer 注入公开 showcase，不调付费 AI
   if (import.meta.client) {
     const host = location.hostname
     const local = host === 'localhost' || host === '127.0.0.1'
@@ -1063,13 +1118,27 @@ onMounted(() => {
       }
     }
   }
+
+  // GI 便利性：落地即开工作区（预选值已由 URL/草稿带入），不再多点一次
+  await nextTick()
+  if (!formOpen.value) openForm()
+  if (candidates.value.length) workspacePhase.value = 'editor'
+
+  if (import.meta.client) window.addEventListener('keydown', onWorkspaceKey)
 })
+
+function onWorkspaceKey(e: KeyboardEvent) {
+  if (e.key === 'Escape' && formOpen.value && workspacePhase.value !== 'generating') {
+    requestCloseWorkspace()
+  }
+}
 
 // 离开页面时：恢复背景滚动 + 把弹窗的说明/回调清掉 —— 别让别的页面误触发这一页的逻辑
 onBeforeUnmount(() => {
   document.body.style.overflow = ''
   clearNote()
   clearAfterAuth()
+  if (import.meta.client) window.removeEventListener('keydown', onWorkspaceKey)
 })
 </script>
 
@@ -1189,9 +1258,9 @@ onBeforeUnmount(() => {
   color: var(--ck-ink-2);
 }
 
-/* ---------- 参数弹窗（就地，一步到位）----------
+/* ---------- 连续创作工作区（就地）----------
    ⚠️ z-index 110：高于页面内容(≤45)和 Cookie 条(100)，低于登录弹窗(120) ——
-   未登录点「生成」时登录框仍能浮在上面，参数弹窗保持打开、参数不丢。 */
+   未登录点「生成」时登录框仍能浮在上面，工作区保持打开、参数不丢。 */
 .ck-formmodal {
   position: fixed;
   inset: 0;
@@ -1224,6 +1293,9 @@ onBeforeUnmount(() => {
   max-height: calc(100vh - 4rem);
   overflow: hidden;
 }
+.ck-formmodal__panel--wide {
+  width: min(72rem, 100%);
+}
 .ck-formmodal__head {
   display: flex;
   align-items: flex-start;
@@ -1233,6 +1305,54 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid var(--ck-line);
   flex: 0 0 auto;
 }
+.ck-formmodal__headmain {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+}
+.ck-formmodal__back {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--ck-line);
+  border-radius: 999px;
+  background: var(--ck-cream);
+  color: var(--ck-ink);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.ck-formmodal__back:hover { border-color: var(--ck-coral); color: var(--ck-coral-deep); }
+.ck-workspace__gen {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  padding: 3.5rem 2rem;
+  text-align: center;
+}
+.ck-workspace__spin { font-size: 2rem; color: var(--ck-coral); }
+.ck-workspace__gen-title {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.55rem;
+  color: var(--ck-ink);
+}
+.ck-workspace__gen-sub { margin: 0; color: var(--ck-ink-2); font-size: 0.95rem; }
+.ck-workspace__gen-hint { margin: 0.5rem 0 0; color: var(--ck-ink-2); font-size: 0.8rem; }
+.ck-workspace__editor {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem 2rem;
+  min-height: 0;
+}
+.ck-result--workspace { margin: 0; }
+.ck-result--workspace .ck-sec__title { font-size: 1.35rem; }
 .ck-formmodal__eyebrow {
   margin: 0 0 0.35rem;
   font-size: 0.72rem;

@@ -143,7 +143,8 @@ watch([() => user.value?.uid, authReady], async () => {
  */
 const navItems = [
   { to: '/cards', label: 'Create a card' },
-  { to: '/image', label: 'Images' },
+  // Images 入口统一到贺卡工作区；旧台保留 /image?legacy=1
+  { to: '/cards?format=card', label: 'Images' },
   { to: '/create', label: 'Music' },
   { to: '/gallery', label: 'Gallery' },
   { to: '/blog', label: 'Blog' },
