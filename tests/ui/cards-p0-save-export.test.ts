@@ -46,6 +46,13 @@ describe('P0 · Keep vs Take 分区', () => {
     expect(composer).toMatch(/if \(finalized\.value\) finishDirty\.value = true/)
     expect(composer).toMatch(/:disabled="[^"]*finalized && !finishDirty/)
   })
+
+  it('Finish 401 登录后 afterAuth 自动再 Finish（不丢稿）', () => {
+    const fn = composer.match(/async function finishCard\([\s\S]*?\n\}/)?.[0] || ''
+    expect(fn).toContain('setAfterAuth')
+    expect(fn).toContain('await finishCard()')
+    expect(fn).toContain('openLogin')
+  })
 })
 
 describe('P0 · 导出权限透明（不改计价）', () => {

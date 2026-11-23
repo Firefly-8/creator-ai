@@ -608,9 +608,12 @@ async function finishCard() {
   } catch (e: any) {
     finishError.value =
       e?.data?.statusMessage || e?.message || 'Could not save the finished card. Try again.'
-    // 401 = 会话过期/未登录，弹登录框让用户登录后重试
+    // 401 = 会话过期/未登录 → 弹登录；登录成功后自动再 Finish（稿还在内存里）
     if (e?.statusCode === 401 || e?.data?.statusCode === 401) {
-      useAuthModal().openLogin()
+      const auth = useAuthModal()
+      auth.setNote('Sign in to keep this finished card — your words are still here.')
+      auth.setAfterAuth(async () => { await finishCard() })
+      auth.openLogin()
     }
   } finally {
     finishing.value = false
